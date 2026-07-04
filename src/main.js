@@ -2,9 +2,14 @@ import * as THREE from 'three';
 import { loadAllModels } from './render/assets.js';
 import { createRenderer, createScene, createLights, updateSunFollow } from './render/scene.js';
 import { buildTerrain } from './render/terrain.js';
+import { UnitRenderer } from './render/units.js';
+import { BuildingRenderer } from './render/buildings.js';
+import { EffectsRenderer } from './render/effects.js';
 import { CameraRig } from './input/camera.js';
-import { parseMap, MAP_W, MAP_H } from './config/map.js';
+import { MAP_W, MAP_H } from './config/map.js';
 import { tileToWorld } from './sim/hex.js';
+import { TICK_MS } from './config/rules.js';
+import { World } from './sim/world.js';
 
 const dbg = (window.__game ||= { errors: [] });
 dbg.ready = false;
@@ -19,6 +24,9 @@ async function boot() {
   });
   loadStatus.textContent = 'Raising the banners…';
 
+  const humanFaction = new URLSearchParams(location.search).get('faction') || 'galicia';
+  const world = new World(humanFaction);
+
   const canvas = document.getElementById('gl');
   const renderer = createRenderer(canvas);
   const scene = createScene();
@@ -28,9 +36,20 @@ async function boot() {
   const nw = tileToWorld(0, 0), se = tileToWorld(MAP_W - 1, MAP_H - 1);
   const rig = new CameraRig(camera, { minX: nw.x + 4, maxX: se.x - 4, minZ: nw.z + 3, maxZ: se.z - 3 });
   rig.attach(canvas);
+  // open on the player's capital
+  {
+    const cap = world.entities.get(world.players[humanFaction].capitalId);
+    if (cap) { rig.jumpTo(cap.x, cap.z); rig.target.set(cap.x, 0, cap.z); rig.goalDist = 22; rig.dist = 26; }
+  }
 
-  const tiles = parseMap();
-  const terrain = buildTerrain(scene, tiles);
+  const terrain = buildTerrain(scene, world.tiles);
+  const unitR = new UnitRenderer(scene);
+  const buildingR = new BuildingRenderer(scene, world);
+  const fx = new EffectsRenderer(scene, humanFaction);
+
+  // consume the events emitted during world construction
+  const bootEvents = world.events.splice(0);
+  for (const ev of bootEvents) unitR.handleEvent(ev, world);
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -38,16 +57,39 @@ async function boot() {
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // ---- main loop ----
+  // ---- main loop: fixed-tick sim, interpolated render ----
   let last = performance.now();
+  let acc = 0;
   let frames = 0, fpsTime = 0;
+  const selection = new Set();
+
   function frame(now) {
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
 
+    acc += dt * 1000;
+    let safety = 0;
+    while (acc >= TICK_MS && safety++ < 10) {
+      world.step();
+      acc -= TICK_MS;
+    }
+    const alpha = Math.min(acc / TICK_MS, 1);
+
+    const events = world.events.splice(0);
+    for (const ev of events) {
+      unitR.handleEvent(ev, world);
+      buildingR.handleEvent(ev, world);
+      fx.handleEvent(ev, world);
+      if (ev.type === 'forest_cut') terrain.setForestCut(ev.col, ev.row, true);
+    }
+    dbg.lastEvents = events.length ? events : dbg.lastEvents;
+
     rig.update(dt);
     updateSunFollow(lights, rig.target);
     terrain.tick(now / 1000, dt);
+    unitR.update(world, dt, alpha, selection);
+    buildingR.update(world, dt);
+    fx.update(dt);
 
     renderer.render(scene, camera);
 
@@ -62,8 +104,7 @@ async function boot() {
   }
   requestAnimationFrame(frame);
 
-  // expose for the verification harness
-  Object.assign(dbg, { ready: true, scene, rig, camera, renderer, tiles, terrain });
+  Object.assign(dbg, { ready: true, scene, rig, camera, renderer, world, terrain, selection });
 
   const loading = document.getElementById('loading');
   loading.classList.add('fading');

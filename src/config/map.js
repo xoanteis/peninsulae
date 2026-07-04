@@ -12,18 +12,18 @@ export const TERRAIN_ROWS = [
   '.fgffmgmgmgmggfgmmmmmmmmgg..', // 2  Picos de Europa · Pyrenees · Empordà
   '.gfgggmghghghghghhgghmmggfg.', // 3
   '.gggfghggggggghggghggghggg..', // 4  Douro · Rioja · Ebro · Costa Brava
-  '.fggggggggggghgggghgggghgg..', // 5
+  '.fggggggggggghgggghgfgghgg..', // 5
   '.ggggghggggggggghggggghgg...', // 6  Ebro delta
-  '.ggfggggggggghggggghggggg...', // 7  Valencia coast begins
+  '.ggfggggggggghgfggghggggg...', // 7  Valencia coast begins
   '.ggggggggmmmmhggggggghgg....', // 8  Serra da Estrela · Gredos · Guadarrama
-  '.gggggggggmhgggggghgggg.....', // 9  Tajo
+  '.gggggggggmhggggfghgggg.....', // 9  Tajo
   '.ggghghggggggggggggghgg.....', // 10 Lisboa · La Mancha
   '.ggggggggggghgggggggg.......', // 11
-  '.gggggggghggggghggggg.......', // 12
-  '.ggggghgggggggggghg.........', // 13 La Mancha · Murcia
+  '.ggggggfghggggghgfggg.......', // 12
+  '.ggggghggggfggggghg.........', // 13 La Mancha · Murcia
   '.gggggggmmghggggghg.........', // 14 Sierra Morena
-  '.gggggggggghgggggg..........', // 15 Guadalquivir
-  '.ggggghgggggggmmh...........', // 16 Sierra Nevada
+  '.gggggggggghgfgggg..........', // 15 Guadalquivir
+  '.ggggghgfgggggmmh...........', // 16 Sierra Nevada
   '.gggghggggggghgg............', // 17
   '.ggggggggggggg..............', // 18 Algarve · Cádiz · Málaga
   '...gggggggg.................', // 19 the Strait

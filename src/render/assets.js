@@ -69,6 +69,7 @@ Object.assign(MODEL_MANIFEST, {
   // hand props
   weapon_sword: `${WEAP}/sword_1handed.gltf`,
   weapon_axe2h: `${WEAP}/axe_2handed.gltf`,
+  weapon_axe1h: `${WEAP}/axe_1handed.gltf`,
   weapon_crossbow: `${WEAP}/crossbow_2handed.gltf`,
   weapon_staff: `${WEAP}/staff.gltf`,
   weapon_shield: `${WEAP}/shield_badge.gltf`,
@@ -79,6 +80,75 @@ const gltfCache = new Map();
 let sharedHexMaterial = null;
 
 export function getSharedHexMaterial() { return sharedHexMaterial; }
+
+// Palette variants of the hex atlas for factions beyond KayKit's four colors.
+// We surgically recolor only strongly-saturated pixels in a hue window, so wood,
+// stone and grass stay untouched.
+const paletteCache = new Map();
+export function getPaletteMaterial(name) {
+  if (paletteCache.has(name)) return paletteCache.get(name);
+  const recipes = {
+    // whitewashed caserío for the Basques: blue accents -> chalk white
+    basque: { hue: [185, 265], minSat: 0.22, set: { s: 0.06, lMul: 1.45, lMax: 0.86 } },
+    // weathered neutral villages: yellow accents -> dry tan
+    neutral: { hue: [35, 75], minSat: 0.3, set: { s: 0.18, lMul: 0.92, lMax: 0.7 } },
+  };
+  const recipe = recipes[name];
+  const src = sharedHexMaterial.map.image;
+  const canvas = document.createElement('canvas');
+  canvas.width = src.width; canvas.height = src.height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(src, 0, 0);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const [h, s, l] = rgb2hsl(d[i], d[i + 1], d[i + 2]);
+    if (s >= recipe.minSat && h >= recipe.hue[0] && h <= recipe.hue[1]) {
+      const nl = Math.min(l * recipe.set.lMul, recipe.set.lMax);
+      const [r, g, b] = hsl2rgb(h, recipe.set.s, nl);
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.flipY = sharedHexMaterial.map.flipY;
+  tex.colorSpace = sharedHexMaterial.map.colorSpace;
+  tex.magFilter = THREE.NearestFilter;
+  const mat = sharedHexMaterial.clone();
+  mat.map = tex;
+  mat.name = `hex_${name}`;
+  paletteCache.set(name, mat);
+  return mat;
+}
+
+function rgb2hsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const dd = max - min;
+  const s = l > 0.5 ? dd / (2 - max - min) : dd / (max + min);
+  let h;
+  if (max === r) h = ((g - b) / dd + (g < b ? 6 : 0)) * 60;
+  else if (max === g) h = ((b - r) / dd + 2) * 60;
+  else h = ((r - g) / dd + 4) * 60;
+  return [h, s, l];
+}
+
+function hsl2rgb(h, s, l) {
+  h /= 360;
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const f = t => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  return [f(h + 1 / 3) * 255, f(h) * 255, f(h - 1 / 3) * 255];
+}
 
 export async function loadAllModels(onProgress) {
   const loader = new GLTFLoader();
