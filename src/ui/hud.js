@@ -123,7 +123,8 @@ export class HUD {
           <h3>Trackpad controls</h3>
           <p>🖐 <b>Two-finger scroll</b> pan · <b>pinch</b> zoom · <b>two-finger tap</b> (right-click) order<br>
           🖱 <b>Click</b> select · <b>drag</b> box-select · <b>Shift</b> add<br>
-          ⌨️ <b>WASD/arrows</b> pan · <b>Q/E</b> rotate · <b>+/−</b> zoom · <b>H</b> help · <b>M</b> mute · <b>Esc</b> cancel</p>
+          ⌨️ <b>WASD/arrows</b> pan · <b>Q/E</b> rotate · <b>+/−</b> zoom · <b>H</b> help · <b>M</b> mute · <b>Esc</b> cancel<br>
+          📱 <b>Touch:</b> drag pan · pinch zoom · tap select · <b>long-press</b> order (landscape recommended)</p>
           <h3>Economy</h3>
           <p>Workers chop <b>🪵 forests</b>, tend <b>🌾 farms</b>, dig <b>🪙 mines</b> by mountains, and cast nets at
           <b>fish shoals</b> (ripples on the coast). <b>📜 Identity</b> flows from your capital, churches and festival halls

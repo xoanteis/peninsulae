@@ -76,12 +76,14 @@ export class Controls {
   }
 
   onDown(e) {
+    if (e.pointerType === 'touch') return; // TouchControls owns touch
     if (e.button !== 0) return;
     if (this.placing) return; // click-to-place handled on up
     this.drag = { x0: e.clientX, y0: e.clientY, active: false };
   }
 
   onMove(e) {
+    if (e.pointerType === 'touch') return;
     if (this.placing) {
       const p = this.screenToGround(e.clientX, e.clientY);
       this.hoverTile = p ? worldToTile(p.x, p.z) : null;
@@ -99,15 +101,20 @@ export class Controls {
     }
   }
 
+  placeAt(cx, cy, keepPlacing) {
+    const p = this.screenToGround(cx, cy);
+    if (p) {
+      const { col, row } = worldToTile(p.x, p.z);
+      this.onOrder({ type: 'place', kind: this.placing, col, row });
+    }
+    if (!keepPlacing) this.setPlacing(null);
+  }
+
   onUp(e) {
+    if (e.pointerType === 'touch') return;
     if (e.button !== 0) return;
     if (this.placing) {
-      const p = this.screenToGround(e.clientX, e.clientY);
-      if (p) {
-        const { col, row } = worldToTile(p.x, p.z);
-        this.onOrder({ type: 'place', kind: this.placing, col, row });
-      }
-      if (!e.shiftKey) this.setPlacing(null);
+      this.placeAt(e.clientX, e.clientY, e.shiftKey);
       return;
     }
     const drag = this.drag;
@@ -128,14 +135,19 @@ export class Controls {
       return;
     }
 
-    // plain click: select (own for control, anything else for info)
-    const hit = this.pickEntity(e.clientX, e.clientY);
-    if (!e.shiftKey) this.selection.clear();
+    // plain click: select
+    this.tapSelect(e.clientX, e.clientY, e.shiftKey);
+  }
+
+  // select own entities for control, anything else for info
+  tapSelect(cx, cy, shift) {
+    const hit = this.pickEntity(cx, cy);
+    if (!shift) this.selection.clear();
     let regionKey = null;
     if (hit) {
       this.selection.add(hit.id);
     } else {
-      const p = this.screenToGround(e.clientX, e.clientY);
+      const p = this.screenToGround(cx, cy);
       if (p) {
         const { col, row } = worldToTile(p.x, p.z);
         regionKey = this.world.tileAt(col, row)?.region ?? null;
@@ -145,7 +157,14 @@ export class Controls {
   }
 
   onContext(e) {
-    // two-finger tap: contextual order for current selection
+    // two-finger tap on trackpads; suppressed while TouchControls is active
+    if (this.suppressContextUntil && performance.now() < this.suppressContextUntil) return;
+    this.contextOrder(e.clientX, e.clientY);
+  }
+
+  // contextual order for the current selection (right-click / long-press)
+  contextOrder(clientX, clientY) {
+    const e = { clientX, clientY };
     const ids = [...this.selection].filter(id => {
       const ent = this.world.entities.get(id);
       return ent?.type === 'unit';
