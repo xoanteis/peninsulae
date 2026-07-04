@@ -24,14 +24,15 @@ async function boot() {
   const loadStatus = document.getElementById('load-status');
   const loading = document.getElementById('loading');
 
-  const [humanFaction] = await Promise.all([
-    pickFaction(),
-    loadAllModels((p, key) => {
-      loadFill.style.width = `${Math.round(p * 100)}%`;
-      loadStatus.textContent = `Loading ${key}…`;
-    }),
-  ]);
-  loadStatus.textContent = 'Raising the banners…';
+  const modelsReady = loadAllModels((p, key) => {
+    loadFill.style.width = `${Math.round(p * 100)}%`;
+    loadStatus.textContent = `Loading ${key}…`;
+  }).then(() => {
+    // don't sit on top of the faction-select screen
+    loading.classList.add('fading');
+    setTimeout(() => loading.classList.add('hidden'), 700);
+  });
+  const [humanFaction] = await Promise.all([pickFaction(), modelsReady]);
 
   const world = new World(humanFaction);
   const audio = new AudioEngine();

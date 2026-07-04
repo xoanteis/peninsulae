@@ -42,6 +42,7 @@ export class HUD {
       <div id="place-hint" class="hidden"></div>
       <div id="help-overlay" class="hidden"></div>
       <div id="end-overlay" class="hidden"></div>
+      <div id="vignette"></div>
     `;
     this.el = Object.fromEntries(
       ['res-bar', 'domination', 'dom-segments', 'dom-label', 'alerts', 'minimap', 'sel-panel',
@@ -167,8 +168,18 @@ export class HUD {
     const fcolor = id => id ? `#${FACTIONS[id].color.toString(16).padStart(6, '0')}` : '#999';
     switch (ev.type) {
       case 'under_attack':
-        if (my(ev.owner)) this.alert('⚠️ We are under attack!', { x: ev.x, z: ev.z, color: '#ff6b57' });
+        if (my(ev.owner)) {
+          this.alert('⚠️ We are under attack!', { x: ev.x, z: ev.z, color: '#ff6b57' });
+          this.flashVignette();
+          this.rig.addShake(0.25);
+        }
         this.pingMinimap(ev.x, ev.z);
+        break;
+      case 'building_destroyed':
+        if (my(ev.owner)) {
+          this.flashVignette();
+          this.rig.addShake(0.6);
+        }
         break;
       case 'region_flipped': {
         const r = world.regions[ev.region];
@@ -205,6 +216,13 @@ export class HUD {
         this.alert(`✋ ${ev.message}`, { ttl: 3.5 });
         break;
     }
+  }
+
+  flashVignette() {
+    const v = document.getElementById('vignette');
+    v.classList.remove('on');
+    void v.offsetWidth; // restart the animation
+    v.classList.add('on');
   }
 
   // ---------- end screen ----------

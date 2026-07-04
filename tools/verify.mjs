@@ -37,7 +37,7 @@ try {
   page.on('response', r => { if (r.status() >= 400) report.failedRequests.push(`${r.url()} :: HTTP ${r.status()}`); });
 
   await page.goto(`http://127.0.0.1:${PORT}/${process.env.QUERY ?? ''}`, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => window.__game?.ready || window.__game?.errors?.length > 0, null, { timeout: 45000 })
+  await page.waitForFunction(() => window.__game?.ready || window.__game?.errors?.length > 0, null, { timeout: 20000 })
     .catch(() => { report.checks.readyTimeout = true; });
 
   report.gameErrors = await page.evaluate(() => window.__game?.errors || []);
@@ -51,14 +51,13 @@ try {
 
   const helpers = { shot, report, sleep: ms => new Promise(r => setTimeout(r, ms)) };
 
-  if (report.checks.ready) {
-    await page.waitForTimeout(1200); // let loading fade + first frames settle
-    if (scriptPath) {
-      const mod = await import(scriptPath);
-      await mod.run(page, helpers);
-    } else {
-      await shot('default');
-    }
+  if (report.checks.ready) await page.waitForTimeout(1200); // let loading fade + first frames settle
+  if (scriptPath) {
+    const mod = await import(scriptPath);
+    await mod.run(page, helpers);
+    report.stats = await page.evaluate(() => ({ fps: window.__game?.fps, drawCalls: window.__game?.drawCalls, triangles: window.__game?.triangles }));
+  } else if (report.checks.ready) {
+    await shot('default');
     report.stats = await page.evaluate(() => ({ fps: window.__game.fps, drawCalls: window.__game.drawCalls, triangles: window.__game.triangles }));
   } else {
     await shot('failed-state');
