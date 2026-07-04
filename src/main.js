@@ -7,6 +7,7 @@ import { BuildingRenderer } from './render/buildings.js';
 import { EffectsRenderer } from './render/effects.js';
 import { CameraRig } from './input/camera.js';
 import { Controls } from './ui/controls.js';
+import { TouchControls } from './input/touch.js';
 import { Overlays } from './ui/overlays.js';
 import { HUD } from './ui/hud.js';
 import { pickFaction } from './ui/factionSelect.js';
@@ -92,6 +93,7 @@ async function boot() {
     },
   });
 
+  const touch = new TouchControls({ canvas, rig, controls });
   const overlays = new Overlays(hudRoot, camera, canvas, world, humanFaction);
   const hud = new HUD({ root: hudRoot, world, humanId: humanFaction, controls, rig, audio });
   hud.updatePlaceHint = hud.updatePlaceHint.bind(hud);
@@ -178,7 +180,7 @@ async function boot() {
   }
   requestAnimationFrame(frame);
 
-  Object.assign(dbg, { ready: true, scene, rig, camera, renderer, world, terrain, selection, controls, hud, audio });
+  Object.assign(dbg, { ready: true, scene, rig, camera, renderer, world, terrain, selection, controls, hud, audio, touch });
 
   loading.classList.add('fading');
   setTimeout(() => loading.classList.add('hidden'), 700);

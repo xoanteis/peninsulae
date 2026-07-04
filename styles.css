@@ -168,6 +168,22 @@ button:hover { background: rgba(255, 226, 168, 0.22); }
 .end-box h1 { color: var(--accent); letter-spacing: 0.2em; font-size: 2.2rem; }
 .end-sub { margin: 12px 0 6px; font-style: italic; }
 
+/* compact layout for phones */
+@media (max-width: 920px) {
+  :root { font-size: 12px; }
+  #res-bar { gap: 8px; padding: 5px 9px; }
+  .res { min-width: 44px; }
+  #domination { width: 34vw; top: 6px; }
+  #minimap { width: 168px; height: 127px; }
+  #alerts { top: 52px; max-width: 230px; }
+  #build-menu { width: 208px; padding: 5px; }
+  .bm-item { font-size: 0.56rem; padding: 3px 1px; }
+  .bm-item .bm-icon { font-size: 0.95rem; }
+  #sel-panel { min-width: 220px; max-width: 46vw; bottom: 6px; }
+  .help-cols { grid-template-columns: 1fr; }
+  #top-right button { width: 42px; height: 38px; }
+}
+
 /* danger vignette */
 #vignette {
   position: fixed; inset: 0; pointer-events: none; z-index: 25; opacity: 0;
