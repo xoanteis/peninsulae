@@ -48,7 +48,7 @@ function grassTint(col, row) {
 // hexes only look right at 60° steps
 const hexRot = (col, row, salt) => (Math.floor(tileRand(col, row, salt) * 6) * Math.PI) / 3;
 
-export function buildTerrain(scene, tiles) {
+export function buildTerrain(scene, tiles, fishNodes = []) {
   const group = new THREE.Group();
   group.name = 'terrain';
 
@@ -176,6 +176,22 @@ export function buildTerrain(scene, tiles) {
     group.add(c);
   }
 
+  // fish shoals: animated ripple rings so players can find the fishing grounds
+  const fishRings = [];
+  if (fishNodes.length) {
+    const rGeo = new THREE.RingGeometry(0.22, 0.3, 20);
+    rGeo.rotateX(-Math.PI / 2);
+    const rMat = new THREE.MeshBasicMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.7, depthWrite: false });
+    for (const n of fishNodes) {
+      const { x, z } = tileToWorld(n.col, n.row);
+      const m = new THREE.Mesh(rGeo, rMat.clone());
+      m.position.set(x, -0.12, z);
+      m.userData.phase = tileRand(n.col, n.row, 21) * Math.PI * 2;
+      group.add(m);
+      fishRings.push(m);
+    }
+  }
+
   scene.add(group);
 
   return {
@@ -186,6 +202,11 @@ export function buildTerrain(scene, tiles) {
       for (const c of clouds) {
         c.position.x += dt * 0.55;
         if (c.position.x > cloudArea.w) c.position.x = -8;
+      }
+      for (const m of fishRings) {
+        const k = (time * 0.7 + m.userData.phase) % 1;
+        m.scale.setScalar(0.7 + k * 1.5);
+        m.material.opacity = 0.75 * (1 - k);
       }
     },
   };
