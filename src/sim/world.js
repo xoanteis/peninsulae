@@ -184,7 +184,7 @@ export class World {
       id: nextId++, type: 'building', kind, owner: own, col, row, x, z,
       hp: complete ? maxHp : Math.max(1, Math.round(maxHp * 0.1)), maxHp,
       progress: complete ? 1 : 0, trainQueue: [], attackCd: 0,
-      slots: def.slots ? [] : null,
+      slots: def.slots ? [] : null, placedAt: this.time,
     };
     t.building = b.id;
     this.entities.set(b.id, b);
@@ -238,8 +238,13 @@ export class World {
 
   findPathTo(unit, col, row) {
     const from = worldToTile(unit.x, unit.z);
-    const path = findPath(MAP_W, MAP_H, from.col, from.row, col, row, (c, r) => this.passable(c, r));
-    return path;
+    return findPath(MAP_W, MAP_H, from.col, from.row, col, row, (c, r) => this.passable(c, r));
+  }
+
+  // fallback when properly walled in: squeeze past building tiles (never sea/mountain)
+  findPathLoose(unit, col, row) {
+    const from = worldToTile(unit.x, unit.z);
+    return findPath(MAP_W, MAP_H, from.col, from.row, col, row, (c, r) => this.walkable(c, r));
   }
 
   // ---------- commands (UI + AI call these) ----------
@@ -269,12 +274,25 @@ export class World {
     const t = this.tileAt(col, row);
     if (!t || t.terrain === 'sea' || t.terrain === 'mountain' || t.building) return 'blocked';
     if (t.terrain === 'forest' && t.wood > 0) return 'blocked';
+    const { x, z } = tileToWorld(col, row);
+    if (this.unitsNear(x, z, 0.9).some(u => u.state !== 'dying')) return 'units in the way';
     if (!t.region || this.regions[t.region].owner !== pid) return 'not your region';
     const def = BUILDINGS[kind];
     if (def.era && this.players[pid].era < def.era) return 'era';
     if (def.needsMountain && !neighbors(col, row).some(([c, r]) => this.tileAt(c, r)?.terrain === 'mountain')) {
       return 'needs mountain';
     }
+    return null;
+  }
+
+  demolish(pid, buildingId) {
+    const b = this.entities.get(buildingId);
+    if (!b || b.owner !== pid || b.kind === 'capital') return 'invalid';
+    // refund most of the cost if it never got built
+    const cost = this.buildingCost(pid, b.kind);
+    const frac = b.progress < 0.1 ? 0.8 : 0.25;
+    for (const [k, v] of Object.entries(cost)) this.players[pid].res[k] += Math.floor(v * frac);
+    this.removeEntity(buildingId);
     return null;
   }
 
@@ -360,17 +378,23 @@ export class World {
       if (!u || u.owner !== pid || u.state === 'dying') continue;
       u.task = { type: 'move', x, z };
       u.workSlot = null;
-      const path = this.findPathTo(u, col, row) ?? this.pathToNearestReachable(u, col, row);
+      const path = this.findPathTo(u, col, row) ?? this.findPathLoose(u, col, row)
+        ?? this.pathToNearestReachable(u, col, row);
       u.path = path; u.pathIdx = 1; u.state = 'moving';
     }
     this.pushEvent({ type: 'order_move', x, z, count: ids.length, owner: pid });
   }
 
   pathToNearestReachable(u, col, row) {
-    // goal blocked: try neighbors
+    // goal blocked: try neighbors, then squeeze past walls as a last resort
     for (const [nc, nr] of neighbors(col, row)) {
       if (!this.passable(nc, nr)) continue;
       const p = this.findPathTo(u, nc, nr);
+      if (p) return p;
+    }
+    for (const [nc, nr] of neighbors(col, row)) {
+      if (!this.walkable(nc, nr)) continue;
+      const p = this.findPathLoose(u, nc, nr);
       if (p) return p;
     }
     return null;

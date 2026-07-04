@@ -56,7 +56,7 @@ export function updateUnit(world, u, dt) {
         if (!u.path || u.pathGoal !== spot.key) {
           const { col, row } = worldToTile(spot.x, spot.z);
           u.path = world.passable(col, row)
-            ? world.findPathTo(u, col, row)
+            ? (world.findPathTo(u, col, row) ?? world.findPathLoose(u, col, row))
             : world.pathToNearestReachable(u, col, row);
           u.pathIdx = 1;
           u.pathGoal = spot.key;
@@ -88,13 +88,22 @@ export function updateUnit(world, u, dt) {
         const goal = worldToTile(t.x, t.z);
         if (!u.path || u.chaseGoal !== `${goal.col},${goal.row}`) {
           u.path = world.passable(goal.col, goal.row)
-            ? world.findPathTo(u, goal.col, goal.row)
+            ? (world.findPathTo(u, goal.col, goal.row) ?? world.findPathLoose(u, goal.col, goal.row))
             : world.pathToNearestReachable(u, goal.col, goal.row);
           u.pathIdx = 1;
           u.chaseGoal = `${goal.col},${goal.row}`;
-          if (!u.path) { u.state = 'idle'; u.task = null; break; }
+          if (!u.path && !retargetReachable(world, u, t)) {
+            u.state = 'idle'; u.task = null;
+          }
+          break;
         }
-        followPath(world, u, dt, { x: t.x, z: t.z, arrive: stats.range + targetR });
+        const moving = followPath(world, u, dt, { x: t.x, z: t.z, arrive: stats.range + targetR });
+        if (!moving && d > stats.range + 0.3) {
+          // walked as far as the wall allows: besiege whatever blocks the way
+          const blocker = nearestEnemyBuilding(world, u, t.owner, 2.7);
+          if (blocker) { u.task = { ...u.task, targetId: blocker.id }; u.chaseGoal = null; u.path = null; }
+          else { u.state = 'idle'; u.task = null; }
+        }
       }
       break;
     }
@@ -194,6 +203,43 @@ function workSpot(world, u) {
     return { x: b.x, z: b.z, key: `w${b.id}`, arrive: 1.1 };
   }
   return null;
+}
+
+function nearestEnemyBuilding(world, u, owner, maxDist) {
+  let best = null, bestD = maxDist;
+  for (const e of world.entities.values()) {
+    if (e.type !== 'building' || e.owner !== owner || e.hp <= 0) continue;
+    const d = dist(u.x, u.z, e.x, e.z) - 0.95;
+    if (d < bestD) { best = e; bestD = d; }
+  }
+  return best;
+}
+
+// The target is walled in: besiege the nearest reachable structure of the same
+// owner instead (armies chew through the ring to reach the keep).
+function retargetReachable(world, u, original) {
+  const owner = original.owner;
+  const cands = [];
+  for (const e of world.entities.values()) {
+    if (e.id === original.id || e.owner !== owner || e.hp <= 0) continue;
+    if (e.type === 'unit' && (e.state === 'dying' || e.owner === '__dead__')) continue;
+    cands.push(e);
+  }
+  cands.sort((a, b) => dist(u.x, u.z, a.x, a.z) - dist(u.x, u.z, b.x, b.z));
+  for (const c of cands.slice(0, 6)) {
+    const g = worldToTile(c.x, c.z);
+    const path = world.passable(g.col, g.row)
+      ? world.findPathTo(u, g.col, g.row)
+      : world.pathToNearestReachable(u, g.col, g.row);
+    if (path) {
+      u.task = { ...u.task, targetId: c.id };
+      u.path = path;
+      u.pathIdx = 1;
+      u.chaseGoal = null;
+      return true;
+    }
+  }
+  return false;
 }
 
 export function nearestForest(world, col, row, maxR = 6) {

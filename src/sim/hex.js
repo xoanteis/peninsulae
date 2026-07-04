@@ -51,7 +51,9 @@ export function hexDistance(c1, r1, c2, r2) {
   return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
 }
 
-// A* over the tile grid. passable(col,row) -> bool. Returns [[col,row],...] or null.
+// A* over the tile grid. passable(col,row) -> bool.
+// Returns [[col,row],...]. If the goal is unreachable, returns a best-effort
+// partial path to the closest approach (armies besiege walls, moves get close).
 export function findPath(w, h, startC, startR, goalC, goalR, passable) {
   if (startC === goalC && startR === goalR) return [[startC, startR]];
   const idx = (c, r) => r * w + c;
@@ -62,23 +64,24 @@ export function findPath(w, h, startC, startR, goalC, goalR, passable) {
   open.push(hexDistance(startC, startR, goalC, goalR), s);
   const maxExpand = w * h * 4;
   let expanded = 0;
+  let bestNode = s, bestH = hexDistance(startC, startR, goalC, goalR);
+  const rebuild = end => {
+    const path = [[end % w, (end / w) | 0]];
+    let n = end;
+    while (cameFrom.has(n)) { n = cameFrom.get(n); path.push([n % w, (n / w) | 0]); }
+    return path.reverse();
+  };
   while (open.size > 0 && expanded < maxExpand) {
     const cur = open.pop();
     expanded++;
     const cc = cur % w, cr = (cur / w) | 0;
-    if (cc === goalC && cr === goalR) {
-      const path = [[cc, cr]];
-      let n = cur;
-      while (cameFrom.has(n)) { n = cameFrom.get(n); path.push([n % w, (n / w) | 0]); }
-      return path.reverse();
-    }
+    if (cc === goalC && cr === goalR) return rebuild(cur);
+    const hh = hexDistance(cc, cr, goalC, goalR);
+    if (hh < bestH) { bestH = hh; bestNode = cur; }
     const g = gScore.get(cur);
     for (const [nc, nr] of neighbors(cc, cr)) {
       if (nc < 0 || nr < 0 || nc >= w || nr >= h) continue;
       if (!(nc === goalC && nr === goalR) && !passable(nc, nr)) continue;
-      if (nc === goalC && nr === goalR && !passable(nc, nr)) {
-        // goal itself blocked: stop adjacent instead (caller handles truncation)
-      }
       const ni = idx(nc, nr);
       const ng = g + 1;
       if (ng < (gScore.get(ni) ?? Infinity)) {
@@ -88,7 +91,8 @@ export function findPath(w, h, startC, startR, goalC, goalR, passable) {
       }
     }
   }
-  return null;
+  if (bestNode === s) return null; // nowhere to go at all
+  return rebuild(bestNode);
 }
 
 class MinHeap {

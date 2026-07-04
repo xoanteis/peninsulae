@@ -29,7 +29,8 @@ export class AIController {
 
     const my = this.collect();
     this.workerTarget = 7 + p.era * 3 + Math.round(this.style.economy * 3);
-    this.armyTarget = 3 + Math.round(this.style.aggression * 4) + p.era * 2 + (this.underThreat ? 3 : 0);
+    this.armyTarget = 3 + Math.round(this.style.aggression * 4) + p.era * 2 + (this.underThreat ? 3 : 0)
+      + (w.time > 900 ? 2 : 0);
 
     this.defend(my);
     this.economy(my);
@@ -86,6 +87,12 @@ export class AIController {
     if (!my.cap) return;
     const capTile = worldToTile(my.cap.x, my.cap.z);
 
+    // demolish sites nobody has managed to reach — they jam the whole pipeline
+    for (const s of my.sites) {
+      if (s.progress === 0 && w.time - s.placedAt > 100) {
+        w.demolish(this.pid, s.id);
+      }
+    }
     // keep construction moving even when nobody is idle
     if (my.sites.length) {
       const busyBuilders = my.workers.filter(u => u.task?.type === 'construct').length;
@@ -94,15 +101,30 @@ export class AIController {
         if (puller) w.orderBuild(this.pid, [puller.id], my.sites[0].id);
       }
     }
+    // starvation rebalance: pull one worker onto the missing resource
+    if (p.res.wood < 60) {
+      const puller = my.workers.find(u => u.state === 'working' && u.task?.target?.type !== 'forest');
+      const f = puller && nearestForest(w, ...Object.values(worldToTile(puller.x, puller.z)), 16);
+      if (puller && f) w.orderGather(this.pid, [puller.id], { type: 'forest', col: f.col, row: f.row });
+    } else if (p.res.food < 45) {
+      const puller = my.workers.find(u => u.state === 'working' && u.task?.target?.type === 'forest');
+      const capT = worldToTile(my.cap?.x ?? 0, my.cap?.z ?? 0);
+      const n = puller && this.nearFish(capT);
+      if (puller && n) w.orderGather(this.pid, [puller.id], { type: 'fish', col: n.col, row: n.row });
+    }
 
     for (const u of my.idleWorkers) {
       // construction first
       if (my.sites.length) { w.orderBuild(this.pid, [u.id], my.sites[0].id); continue; }
-      // then whatever resource we're poorest in
+      // then whatever resource we're poorest in — starving nations farm first
       const wants = [];
-      if (p.res.wood < 200) wants.push('wood');
       const farms = my.byKind('farm').filter(b => b.slots.length < (BUILDINGS.farm.slots ?? 1));
       const mines = my.byKind('mine').filter(b => b.slots.length < (BUILDINGS.mine.slots ?? 2));
+      if (p.res.food < 90) {
+        if (farms.length) wants.push('farm', 'farm');
+        if (this.nearFish(capTile)) wants.push('fish', 'fish');
+      }
+      if (p.res.wood < 200) wants.push('wood');
       if (farms.length) wants.push('farm');
       if (mines.length) wants.push('mine');
       if (this.nearFish(capTile)) wants.push('fish');
@@ -187,14 +209,15 @@ export class AIController {
 
   findSpot(kind, capTile) {
     const w = this.world;
-    // spiral out from capital through owned regions
+    // spiral out from capital through owned regions; never wall a tile in
     const cands = [];
     for (const region of Object.values(w.regions)) {
       if (region.owner !== this.pid) continue;
       for (const t of region.tiles) {
-        if (w.canPlaceAt(this.pid, kind, t.col, t.row) === null) {
-          cands.push([t.col, t.row, hexDistance(capTile.col, capTile.row, t.col, t.row)]);
-        }
+        if (w.canPlaceAt(this.pid, kind, t.col, t.row) !== null) continue;
+        const openNb = neighbors(t.col, t.row).filter(([c, r]) => w.passable(c, r)).length;
+        if (openNb < 2) continue; // workers must be able to reach and pass by
+        cands.push([t.col, t.row, hexDistance(capTile.col, capTile.row, t.col, t.row) - openNb * 0.1]);
       }
     }
     cands.sort((a, b) => a[2] - b[2]);
@@ -235,23 +258,44 @@ export class AIController {
   war(my) {
     const w = this.world, p = w.players[this.pid];
     if (this.underThreat) return;
+    // don't spam re-orders while a wave is en route
+    const busy = my.soldiers.filter(s => s.task && !s.task.auto).length;
+    if (busy > my.soldiers.length * 0.4 && w.time - (this.lastWarOrder ?? 0) < 25) return;
     const army = my.soldiers.filter(s => s.state === 'idle' || s.task?.auto);
-    if (army.length < this.armyTarget) return;
+    const assaultSize = Math.max(5, 8 - Math.floor(Math.max(0, w.time - 900) / 300));
+    if (army.length < Math.min(this.armyTarget, assaultSize)) return;
 
     let targetRegion = this.expandTarget ? w.regions[this.expandTarget] : null;
-    // hegemon endgame: hunt capitals
-    if (this.style.aggression > 0.7 && p.era >= 1) {
+    // endgame: hunt capitals — once the map is carved up, or as the era-1 hegemon
+    const lateGame = w.time > 600 && Object.values(w.regions).every(r => r.owner);
+    const isHegemon = this.style.aggression > 0.7 && p.era >= 1 && w.time > 660;
+    if ((isHegemon || lateGame || w.time > 1080) && army.length >= assaultSize) {
       const rivals = Object.values(w.players).filter(o => o.alive && o.id !== this.pid);
       rivals.sort((a, b) => w.dominationShare(b.id) - w.dominationShare(a.id));
       const rival = rivals[0];
       const cap = rival && w.entities.get(rival.capitalId);
-      if (cap && Math.random() < 0.35) {
+      if (cap && Math.random() < 0.45) {
         w.orderAttack(this.pid, army.map(u => u.id), cap.id);
         this.attackWave = { target: cap.id };
+        this.lastWarOrder = w.time;
         return;
       }
     }
     if (!targetRegion || targetRegion.owner === this.pid) return;
+
+    // a living nation's home region can only fall with its castle — raze it
+    const capOf = targetRegion.meta.capitalOf;
+    if (capOf && targetRegion.owner === capOf && w.players[capOf].alive) {
+      const cap = w.entities.get(w.players[capOf].capitalId);
+      const needed = assaultSize;
+      if (cap && army.length >= needed) {
+        w.orderAttack(this.pid, army.map(u => u.id), cap.id);
+        this.attackWave = { target: cap.id };
+        this.lastWarOrder = w.time;
+      }
+      return; // otherwise: keep building up, don't park uselessly
+    }
+
     // attack the village guard / tower / any structure there
     const targetIds = [...targetRegion.villageIds, ...targetRegion.militiaIds]
       .filter(id => w.entities.get(id));
@@ -263,6 +307,7 @@ export class AIController {
       w.orderMove(this.pid, army.map(u => u.id), targetRegion.center.x, targetRegion.center.z);
     }
     this.attackWave = { region: targetRegion.key };
+    this.lastWarOrder = w.time;
   }
 
   eras(my) {
