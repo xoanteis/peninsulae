@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Peninsulae — Five Nations, One Iberia</title>
+<link rel="stylesheet" href="./styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>">
+<script>
+  // early error capture for the verification harness
+  window.__game = { errors: [] };
+  window.addEventListener('error', e => window.__game.errors.push(String(e.error?.stack || e.message)));
+  window.addEventListener('unhandledrejection', e => window.__game.errors.push('rejection: ' + String(e.reason?.stack || e.reason)));
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/three/addons/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="loading">
+  <div class="load-box">
+    <h1>PENINSULAE</h1>
+    <p class="tagline">Five nations, one Iberia</p>
+    <div class="load-bar"><div id="load-fill"></div></div>
+    <p id="load-status">Loading assets…</p>
+  </div>
+</div>
+
+<div id="hud" class="hidden"></div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
