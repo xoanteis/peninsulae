@@ -17,8 +17,8 @@ export const UNITS = {
     hp: 58, dmg: 9, armor: 0, speed: 2.45, range: 5.6, attackTime: 1.7,
     cost: { food: 45, wood: 30, gold: 10 }, trainTime: 13, pop: 1, aggroRange: 6.5,
   },
-  militia: { // neutral village guards
-    hp: 70, dmg: 8, armor: 0, speed: 2.3, range: 0.62, attackTime: 1.15, pop: 0, aggroRange: 4.5,
+  militia: { // neutral village guards — stiff enough that conquest isn't free
+    hp: 100, dmg: 9, armor: 0, speed: 2.3, range: 0.62, attackTime: 1.15, pop: 0, aggroRange: 4.5,
   },
 };
 

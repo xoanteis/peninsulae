@@ -177,6 +177,8 @@ export class UnitRenderer {
     if (!v) return;
     this.scene.remove(v.mesh);
     v.mixer.stopAllAction();
+    v.mixer.uncacheRoot(v.mesh);
+    for (const m of v.mats) m.dispose(); // per-unit clones, safe to free
     this.units.delete(id);
   }
 
@@ -214,14 +216,16 @@ export class UnitRenderer {
         }
 
         // faction ring
-        const f = u.owner && u.owner !== '__dead__' ? FACTIONS[u.owner] : null;
-        const isSel = selection?.has(u.id);
-        this._color.set(isSel ? 0xffffff : (f ? f.color : 0x8a8a8a));
-        this._m4.makeTranslation(x, 0.06, z);
-        if (isSel) this._m4.scale(new THREE.Vector3(1.25, 1, 1.25));
-        this.rings.setMatrixAt(ringCount, this._m4);
-        this.rings.setColorAt(ringCount, this._color);
-        ringCount++;
+        if (ringCount < 640) {
+          const f = u.owner && u.owner !== '__dead__' ? FACTIONS[u.owner] : null;
+          const isSel = selection?.has(u.id);
+          this._color.set(isSel ? 0xffffff : (f ? f.color : 0x8a8a8a));
+          this._m4.makeTranslation(x, 0.06, z);
+          if (isSel) this._m4.scale(new THREE.Vector3(1.25, 1, 1.25));
+          this.rings.setMatrixAt(ringCount, this._m4);
+          this.rings.setColorAt(ringCount, this._color);
+          ringCount++;
+        }
       } else if (v.dead) {
         v.deadT += dt;
         if (v.deadT > 1.3) v.mesh.position.y = -(v.deadT - 1.3) * 0.6; // sink away
