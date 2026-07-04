@@ -36,7 +36,7 @@ try {
   page.on('requestfailed', r => report.failedRequests.push(`${r.url()} :: ${r.failure()?.errorText}`));
   page.on('response', r => { if (r.status() >= 400) report.failedRequests.push(`${r.url()} :: HTTP ${r.status()}`); });
 
-  await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`http://127.0.0.1:${PORT}/${process.env.QUERY ?? ''}`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => window.__game?.ready || window.__game?.errors?.length > 0, null, { timeout: 45000 })
     .catch(() => { report.checks.readyTimeout = true; });
 

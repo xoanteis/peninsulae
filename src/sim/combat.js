@@ -10,6 +10,8 @@ export function acquireTarget(world, u) {
   for (const o of world.unitsNear(u.x, u.z, stats.aggroRange)) {
     if (!world.isEnemy(u.owner, o.owner) || o.state === 'dying') continue;
     if (u.owner === null && o.owner === null) continue; // militia ignore militia
+    // faction soldiers don't pick fights with neutral villagers unprovoked
+    if (u.owner !== null && o.owner === null) continue;
     const d = dist(u, o);
     if (d < bestD) { best = o; bestD = d; }
   }

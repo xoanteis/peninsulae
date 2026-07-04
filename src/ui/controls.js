@@ -128,14 +128,20 @@ export class Controls {
       return;
     }
 
-    // plain click: select
+    // plain click: select (own for control, anything else for info)
     const hit = this.pickEntity(e.clientX, e.clientY);
     if (!e.shiftKey) this.selection.clear();
-    if (hit && hit.owner === this.humanId) {
-      if (hit.type === 'unit') this.selection.add(hit.id);
-      else this.selection.add(hit.id); // buildings selectable too
+    let regionKey = null;
+    if (hit) {
+      this.selection.add(hit.id);
+    } else {
+      const p = this.screenToGround(e.clientX, e.clientY);
+      if (p) {
+        const { col, row } = worldToTile(p.x, p.z);
+        regionKey = this.world.tileAt(col, row)?.region ?? null;
+      }
     }
-    this.onSelect(hit);
+    this.onSelect(hit, regionKey);
   }
 
   onContext(e) {
