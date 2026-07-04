@@ -92,6 +92,12 @@ export class BuildingRenderer {
         }
         break;
       }
+      case 'entity_removed': {
+        // covers demolition and other silent removals (destroyed has its own case)
+        const v = this.views.get(ev.id);
+        if (v) { this.scene.remove(v.group); this.views.delete(ev.id); }
+        break;
+      }
       case 'building_destroyed': {
         const v = this.views.get(ev.id);
         if (v) {

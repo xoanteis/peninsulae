@@ -179,6 +179,7 @@ export class UnitRenderer {
     v.mixer.stopAllAction();
     v.mixer.uncacheRoot(v.mesh);
     for (const m of v.mats) m.dispose(); // per-unit clones, safe to free
+    v.mesh.traverse(o => { if (o.isSkinnedMesh) o.skeleton?.dispose(); }); // bone textures
     this.units.delete(id);
   }
 

@@ -395,9 +395,9 @@ export class HUD {
         html += `<div class="sp-row">👷 ${b.slots.length}/${def2.slots} working — send workers with a two-finger tap</div>`;
       }
     }
-    // village → region actions
+    // every building anchors a region — show its allegiance and actions
     const tile = world.tileAt(b.col, b.row);
-    if (tile?.region && (b.kind === 'village' || b.kind === 'capital')) {
+    if (tile?.region) {
       html += this.regionHtml(tile.region, true);
     }
     return html;

@@ -130,7 +130,8 @@ async function boot() {
       if (!world.winner) world.step();
       acc -= TICK_MS;
     }
-    const alpha = Math.min(acc / TICK_MS, 1);
+    // freeze interpolation once the war is decided, or units vibrate on stale ticks
+    const alpha = world.winner ? 1 : Math.min(acc / TICK_MS, 1);
 
     const events = world.events.splice(0);
     for (const ev of events) {

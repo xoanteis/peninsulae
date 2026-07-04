@@ -27,9 +27,9 @@ export class EffectsRenderer {
     this.ringGeo.rotateX(-Math.PI / 2);
   }
 
-  add(obj, ttl, tick) {
+  add(obj, ttl, tick, dispose = null) {
     this.scene.add(obj);
-    this.items.push({ obj, ttl, t: 0, tick });
+    this.items.push({ obj, ttl, t: 0, tick, dispose });
   }
 
   puff(x, z, scale = 1, y = 0.3) {
@@ -42,7 +42,7 @@ export class EffectsRenderer {
       s.scale.setScalar((0.5 + k * 1.6) * scale);
       mat.opacity = 1 - k;
       s.position.y = y + k * 0.5;
-    });
+    }, () => mat.dispose());
   }
 
   ping(x, z, color = 0x7dff9a) {
@@ -53,7 +53,7 @@ export class EffectsRenderer {
       const k = it.t / it.ttl;
       m.scale.setScalar(1 - k * 0.7);
       mat.opacity = 1 - k;
-    });
+    }, () => mat.dispose()); // ringGeo is shared, material is per-ping
   }
 
   bolt(x1, z1, x2, z2) {
@@ -84,7 +84,7 @@ export class EffectsRenderer {
       const k = it.t / it.ttl;
       mat.opacity = 0.55 * (1 - k);
       m.scale.set(1 + k * 0.7, 1, 1 + k * 0.7);
-    });
+    }, () => { geo.dispose(); mat.dispose(); });
     this.puff(x, z, 2.2, 0.5);
   }
 
@@ -131,6 +131,7 @@ export class EffectsRenderer {
       it.tick?.(it, dt);
       if (it.t >= it.ttl) {
         this.scene.remove(it.obj);
+        it.dispose?.();
         this.items.splice(i, 1);
       }
     }
