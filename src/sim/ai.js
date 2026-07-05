@@ -28,8 +28,8 @@ export class AIController {
     if (!p.alive) return;
 
     const my = this.collect();
-    this.workerTarget = 7 + p.era * 3 + Math.round(this.style.economy * 3);
-    this.armyTarget = 3 + Math.round(this.style.aggression * 4) + p.era * 2 + (this.underThreat ? 3 : 0)
+    this.workerTarget = 8 + p.era * 3 + Math.round(this.style.economy * 4);
+    this.armyTarget = 4 + Math.round(this.style.aggression * 6) + p.era * 2 + (this.underThreat ? 3 : 0)
       + (w.time > 900 ? 2 : 0);
 
     this.defend(my);
@@ -131,7 +131,7 @@ export class AIController {
       if (!wants.length) wants.push('wood');
       const pick = wants[Math.floor(Math.random() * wants.length)];
       if (pick === 'wood') {
-        const f = nearestForest(w, capTile.col, capTile.row, 16);
+        const f = nearestForest(w, capTile.col, capTile.row, 22);
         if (f) { w.orderGather(this.pid, [u.id], { type: 'forest', col: f.col, row: f.row }); continue; }
       }
       if (pick === 'farm' && farms.length) { w.orderGather(this.pid, [u.id], { type: 'slot', buildingId: farms[0].id }); continue; }
@@ -187,7 +187,7 @@ export class AIController {
     if (p.pop >= p.popCap - 1) return 'house';
     if (has('farm') < 2 + p.era) return 'farm';
     if (has('lumbercamp') < 1) return 'lumbercamp';
-    if (has('barracks') < 1) return 'barracks';
+    if (has('barracks') < 1 + (p.era >= 1 ? 1 : 0)) return 'barracks';
     if (has('mine') < 1 && this.mineSpotExists()) return 'mine';
     if (has('church') < 1 + this.style.convictionLove) return 'church';
     if (has('market') < (this.style.economy > 0.7 ? 2 : 1)) return 'market';
@@ -262,7 +262,7 @@ export class AIController {
     const busy = my.soldiers.filter(s => s.task && !s.task.auto).length;
     if (busy > my.soldiers.length * 0.4 && w.time - (this.lastWarOrder ?? 0) < 25) return;
     const army = my.soldiers.filter(s => s.state === 'idle' || s.task?.auto);
-    const assaultSize = Math.max(5, 8 - Math.floor(Math.max(0, w.time - 900) / 300));
+    const assaultSize = Math.max(6, 10 - Math.floor(Math.max(0, w.time - 900) / 300));
     if (army.length < Math.min(this.armyTarget, assaultSize)) return;
 
     let targetRegion = this.expandTarget ? w.regions[this.expandTarget] : null;

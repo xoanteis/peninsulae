@@ -117,8 +117,8 @@ export class World {
     const towerSpot = this.nearestFreeTile(c, r, 1);
     const tower = this.addBuilding(null, 'tower', ...towerSpot, { complete: true });
     region.villageIds = [village.id, tower.id];
-    const spots = this.freeSpotsAround(c, r, 2);
-    region.militiaIds = spots.slice(0, 2).map(([sc, sr]) => {
+    const spots = this.freeSpotsAround(c, r, 3);
+    region.militiaIds = spots.slice(0, 3).map(([sc, sr]) => {
       const m = this.addUnit(null, 'militia', sc, sr);
       m.guardPost = { col: c, row: r };
       return m.id;
