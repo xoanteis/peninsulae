@@ -5,27 +5,27 @@ export const TICK_MS = 100;
 
 export const UNITS = {
   worker: {
-    hp: 45, dmg: 3, armor: 0, speed: 2.7, range: 0.55, attackTime: 1.1,
+    hp: 45, dmg: 3, armor: 0, speed: 2.9, range: 0.55, attackTime: 1.1,
     cost: { food: 55 }, trainTime: 9, pop: 1,
     gatherRate: 0.85, buildRate: 0.10, // construction progress /s
   },
   soldier: {
-    hp: 95, dmg: 12, armor: 1, speed: 2.45, range: 0.62, attackTime: 1.05,
+    hp: 95, dmg: 12, armor: 1, speed: 2.65, range: 0.62, attackTime: 1.05,
     cost: { food: 60, gold: 20 }, trainTime: 11, pop: 1, aggroRange: 5.5,
   },
   crossbow: {
-    hp: 58, dmg: 9, armor: 0, speed: 2.45, range: 5.6, attackTime: 1.7,
+    hp: 58, dmg: 9, armor: 0, speed: 2.65, range: 5.6, attackTime: 1.7,
     cost: { food: 45, wood: 30, gold: 10 }, trainTime: 13, pop: 1, aggroRange: 6.5,
   },
   militia: { // neutral village guards — stiff enough that conquest isn't free
-    hp: 100, dmg: 9, armor: 0, speed: 2.3, range: 0.62, attackTime: 1.15, pop: 0, aggroRange: 4.5,
+    hp: 100, dmg: 9, armor: 0, speed: 2.5, range: 0.62, attackTime: 1.15, pop: 0, aggroRange: 4.5,
   },
 };
 
 export const BUILDINGS = {
   capital: {
     name: 'Capital', hp: 2400, cost: {}, buildTime: 0, model: 'castle',
-    trains: ['worker'], popCap: 10, rates: { identity: 0.35 },
+    trains: ['worker'], popCap: 14, rates: { identity: 0.35 },
     desc: 'Trains workers and advances Eras. Lose it and the nation falls.',
   },
   house: {
@@ -107,7 +107,7 @@ export const CONVICTION = {
 
 export const START = {
   resources: { food: 180, wood: 140, gold: 80, identity: 0 },
-  workers: 4, soldiers: 1,
+  workers: 5, soldiers: 2,
 };
 
 // gathering

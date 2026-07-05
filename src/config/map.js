@@ -3,75 +3,95 @@
 // Terrain: . sea   g grass   f forest   h hills   m mountain
 // Regions: letters, one historical comarca each; '.' must align with sea.
 
-export const MAP_W = 28;
-export const MAP_H = 21;
+export const MAP_W = 42;
+export const MAP_H = 31;
 
 export const TERRAIN_ROWS = [
-  '............................', // 0
-  '.fgfggfggggggggf............', // 1  Galicia · Asturias · Cantabria · Euskadi
-  '.fgffmgmgmgmggfgmmmmmmmmgg..', // 2  Picos de Europa · Pyrenees · Empordà
-  '.gfgggmghghghghghhgghmmggfg.', // 3
-  '.gggfghggggggghggghggghggg..', // 4  Douro · Rioja · Ebro · Costa Brava
-  '.fggggggggggghgggghgfgghgg..', // 5
-  '.ggggghggggggggghggggghgg...', // 6  Ebro delta
-  '.ggfggggggggghgfggghggggg...', // 7  Valencia coast begins
-  '.ggggggggmmmmhggggggghgg....', // 8  Serra da Estrela · Gredos · Guadarrama
-  '.gggggggggmhggggfghgggg.....', // 9  Tajo
-  '.ggghghggggggggggggghgg.....', // 10 Lisboa · La Mancha
-  '.ggggggggggghgggggggg.......', // 11
-  '.ggggggfghggggghgfggg.......', // 12
-  '.ggggghggggfggggghg.........', // 13 La Mancha · Murcia
-  '.gggggggmmghggggghg.........', // 14 Sierra Morena
-  '.gggggggggghgfgggg..........', // 15 Guadalquivir
-  '.ggggghgfgggggmmh...........', // 16 Sierra Nevada
-  '.gggghggggggghgg............', // 17
-  '.ggggggggggggg..............', // 18 Algarve · Cádiz · Málaga
-  '...gggggggg.................', // 19 the Strait
-  '............................', // 20
+  '..........................................',
+  '..........................................',
+  '..fggfgggffggggggggggggf..................',
+  '..fggfffmggmggmggmgggffgmmmmmmmmmmmmggg...',
+  '..fggfffmggmggmggmgggffgmmmmmmmmmmmmggg...',
+  '..gffggggmmghhghhghhghhghhhggghhmmmgggfgg.',
+  '..ggggffghhgggggggggghhgggghhgggghhgggg...',
+  '..ggggffghhgggggggggghhgggghhgggghhgggg...',
+  '..fggggggggggggggggghgggggghhgffggghggg...',
+  '..ggggggghhggggggggggggghhggggggghhggg....',
+  '..ggggggghhggggggggggggghhggggggghhggg....',
+  '..gggfgggggggggggggghggfggggghgggggggg....',
+  '..ggggggggggggmmmmmmhggggggggggghggg......',
+  '..ggggggggggggmmmmmmhggggggggggghggg......',
+  '..gggggggggggggmmhggggggffghhgggggg.......',
+  '..gggghhghhggggggggggggggggggghhggg.......',
+  '..gggghhghhggggggggggggggggggghhggg.......',
+  '..gggggggggggggggghhgggggggggggg..........',
+  '..gggggggggfgghgggggggghggfggggg..........',
+  '..gggggggggfgghgggggggghggfggggg..........',
+  '..ggggggghhggggggfgggggggghgg.............',
+  '..ggggggggggmmmgghgggggggghgg.............',
+  '..ggggggggggmmmgghgggggggghgg.............',
+  '..ggggggggggggggghggfgggggg...............',
+  '..ggggggghhgffgggggggmmmhh................',
+  '..ggggggghhgffgggggggmmmhh................',
+  '..gggggghggggggggggghggg..................',
+  '..ggggggggggggggggggg.....................',
+  '..ggggggggggggggggggg.....................',
+  '.....gggggggggggg.........................',
+  '..........................................',
 ];
 
 export const REGION_ROWS = [
-  '............................', // 0
-  '.GGGGGSSSSSSSSEE............', // 1
-  '.GGGGSSSSSSSSEEEENNRRRRRCC..', // 2
-  '.GGGGGSSSSSSEEEENNNRRRRCCCC.', // 3
-  '.OOOOGLLLLLLLKKNNNRRRRRCCC..', // 4
-  '.OOOOLLLLLLLLKKKKRRRRRRRCC..', // 5
-  '.OOOOOLLLLLLKKKKKRRRRRRCC...', // 6
-  '.OOOOOLLLLLKKKKKKKRRVVVVV...', // 7
-  '.OOOOOOXKKKKKKKKKKKKVVVV....', // 8
-  '.IIIIIXXXXKKKKKKKKVVVVV.....', // 9
-  '.IIIIIXXXXKKKKKKKKKVVVV.....', // 10
-  '.IIIIXXXXXKKKKKKKKKVV.......', // 11
-  '.IIIIXXXXXKKKKKKKKVVV.......', // 12
-  '.TTTTXXXXXKKKKKKKDV.........', // 13
-  '.TTTTXXXDDDDDDDDDDV.........', // 14
-  '.TTTTTDDDDDDDDDDDD..........', // 15
-  '.TTTTTDDDDDDDDDDD...........', // 16
-  '.TTTTDDDDDDDDDDD............', // 17
-  '.TTTTTDDDDDDDD..............', // 18
-  '...TTDDDDDD.................', // 19
-  '............................', // 20
+  '..........................................',
+  '..........................................',
+  '..GGGGGGGSSSSSSSSSSSSEEE..................',
+  '..GGGGGGSSSSSSSSSSSSEEEEEENNNRRRRRRRCCC...',
+  '..GGGGGGSSSSSSSSSSSSEEEEEENNNRRRRRRRCCC...',
+  '..GGGGGGGSSSSSSSSSEEEEEENNNNNRRRRRRCCCCCC.',
+  '..OOOOOOGLLLLLLLLLLLKKKNNNNRRRRRRRRCCCC...',
+  '..OOOOOOGLLLLLLLLLLLKKKNNNNRRRRRRRRCCCC...',
+  '..OOOOOOLLLLLLLLLLLLKKKKKKRRRRRRRRRRCCC...',
+  '..OOOOOOOLLLLLLLLLKKKKKKKKRRRRRRRRRCCC....',
+  '..OOOOOOOLLLLLLLLLKKKKKKKKRRRRRRRRRCCC....',
+  '..OOOOOOOLLLLLLLLKKKKKKKKKKRRRVVVVVVVV....',
+  '..OOOOOOOOOXKKKKKKKKKKKKKKKKKKVVVVVV......',
+  '..OOOOOOOOOXKKKKKKKKKKKKKKKKKKVVVVVV......',
+  '..IIIIIIIXXXXXXKKKKKKKKKKKKVVVVVVVV.......',
+  '..IIIIIIIXXXXXXKKKKKKKKKKKKKKVVVVVV.......',
+  '..IIIIIIIXXXXXXKKKKKKKKKKKKKKVVVVVV.......',
+  '..IIIIIIXXXXXXXKKKKKKKKKKKKKKVVV..........',
+  '..IIIIIIXXXXXXXKKKKKKKKKKKKVVVVV..........',
+  '..IIIIIIXXXXXXXKKKKKKKKKKKKVVVVV..........',
+  '..TTTTTTXXXXXXXKKKKKKKKKKKDVV.............',
+  '..TTTTTTXXXXDDDDDDDDDDDDDDDVV.............',
+  '..TTTTTTXXXXDDDDDDDDDDDDDDDVV.............',
+  '..TTTTTTTDDDDDDDDDDDDDDDDDD...............',
+  '..TTTTTTTDDDDDDDDDDDDDDDDD................',
+  '..TTTTTTTDDDDDDDDDDDDDDDDD................',
+  '..TTTTTTDDDDDDDDDDDDDDDD..................',
+  '..TTTTTTTDDDDDDDDDDDD.....................',
+  '..TTTTTTTDDDDDDDDDDDD.....................',
+  '.....TTTDDDDDDDDD.........................',
+  '..........................................',
 ];
 
 // Region metadata. capitalOf: faction id that starts here (its capital city).
 // village: offset [col,row] for the region's town; must be a buildable land tile.
 // tribute: what owning this region pays per second (its historical specialty).
 export const REGIONS = {
-  G: { name: 'Galiza',       city: 'Santiago',    village: [2, 2],   capitalOf: 'galicia',  tribute: { food: 1.0, identity: 0.4 } },
-  S: { name: 'Asturias',     city: 'Uviéu',       village: [8, 2],   tribute: { food: 0.8, wood: 0.4 } },
-  E: { name: 'Euskal Herria',city: 'Bilbo',       village: [14, 2],  capitalOf: 'basque',   tribute: { gold: 1.0 } },
-  N: { name: 'Nafarroa',     city: 'Iruñea',      village: [17, 3],  tribute: { food: 0.8, identity: 0.2 } },
-  R: { name: 'Aragón',       city: 'Zaragoza',    village: [20, 5],  tribute: { food: 0.6, wood: 0.6 } },
-  C: { name: 'Catalunya',    city: 'Barcelona',   village: [24, 3],  capitalOf: 'catalonia', tribute: { gold: 1.2 } },
-  V: { name: 'València',     city: 'València',    village: [21, 9],  tribute: { food: 1.0, gold: 0.4 } },
-  K: { name: 'Castela',      city: 'Toledo',      village: [13, 10], capitalOf: 'castile',  tribute: { food: 1.4 } },
-  L: { name: 'León',         city: 'León',        village: [7, 5],   tribute: { food: 1.0 } },
-  X: { name: 'Estremadura',  city: 'Mérida',      village: [7, 11],  tribute: { food: 0.7, wood: 0.3 } },
-  D: { name: 'Andalucía',    city: 'Sevilla',     village: [9, 16],  tribute: { gold: 1.2, food: 0.4 } },
-  O: { name: 'Norte',        city: 'Porto',       village: [2, 6],   tribute: { wood: 0.8, food: 0.4 } },
-  I: { name: 'Lisboa',       city: 'Lisboa',      village: [2, 10],  capitalOf: 'portugal', tribute: { gold: 0.8, food: 0.6 } },
-  T: { name: 'Alentejo',     city: 'Évora',       village: [3, 15],  tribute: { food: 1.0 } },
+  G: { name: 'Galiza',       city: 'Santiago',    village: [3, 3],   capitalOf: 'galicia',  tribute: { food: 1.0, identity: 0.4 } },
+  S: { name: 'Asturias',     city: 'Uviéu',       village: [12, 3],   tribute: { food: 0.8, wood: 0.4 } },
+  E: { name: 'Euskal Herria',city: 'Bilbo',       village: [21, 3],  capitalOf: 'basque',   tribute: { gold: 1.0 } },
+  N: { name: 'Nafarroa',     city: 'Iruñea',      village: [26, 5],  tribute: { food: 0.8, identity: 0.2 } },
+  R: { name: 'Aragón',       city: 'Zaragoza',    village: [30, 8],  tribute: { food: 0.6, wood: 0.6 } },
+  C: { name: 'Catalunya',    city: 'Barcelona',   village: [36, 5],  capitalOf: 'catalonia', tribute: { gold: 1.2 } },
+  V: { name: 'València',     city: 'València',    village: [32, 14],  tribute: { food: 1.0, gold: 0.4 } },
+  K: { name: 'Castela',      city: 'Toledo',      village: [20, 15], capitalOf: 'castile',  tribute: { food: 1.4 } },
+  L: { name: 'León',         city: 'León',        village: [11, 8],   tribute: { food: 1.0 } },
+  X: { name: 'Estremadura',  city: 'Mérida',      village: [11, 17],  tribute: { food: 0.7, wood: 0.3 } },
+  D: { name: 'Andalucía',    city: 'Sevilla',     village: [14, 24],  tribute: { gold: 1.2, food: 0.4 } },
+  O: { name: 'Norte',        city: 'Porto',       village: [3, 9],   tribute: { wood: 0.8, food: 0.4 } },
+  I: { name: 'Lisboa',       city: 'Lisboa',      village: [3, 15],  capitalOf: 'portugal', tribute: { gold: 0.8, food: 0.6 } },
+  T: { name: 'Alentejo',     city: 'Évora',       village: [5, 23],  tribute: { food: 1.0 } },
 };
 
 // Castile's hegemon head start (see GAME_DESIGN.md): it also begins owning these.

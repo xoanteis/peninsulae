@@ -6,7 +6,7 @@ import * as THREE from 'three';
 //  Q / E -> rotate       middle-drag -> pan
 // Camera sits south of its target looking north, pitch flattens as you zoom in.
 
-const MIN_DIST = 9, MAX_DIST = 62;
+const MIN_DIST = 9, MAX_DIST = 82;
 
 export class CameraRig {
   constructor(camera, bounds) {

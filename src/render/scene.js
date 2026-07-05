@@ -16,7 +16,7 @@ export function createRenderer(canvas) {
 
 export function createScene() {
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xe8cfa8, 70, 190);
+  scene.fog = new THREE.Fog(0xe8cfa8, 85, 240);
 
   // sky dome: warm horizon to steel-blue zenith
   const skyGeo = new THREE.SphereGeometry(420, 24, 12);
@@ -59,8 +59,8 @@ export function createLights(scene) {
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.near = 4;
-  sun.shadow.camera.far = 120;
-  const S = 42;
+  sun.shadow.camera.far = 150;
+  const S = 56;
   sun.shadow.camera.left = -S; sun.shadow.camera.right = S;
   sun.shadow.camera.top = S; sun.shadow.camera.bottom = -S;
   sun.shadow.bias = -0.0004;
