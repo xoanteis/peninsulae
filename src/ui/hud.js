@@ -68,6 +68,15 @@ export class HUD {
     this.el.minimap.addEventListener('pointermove', e => { if (e.buttons & 1) this.minimapJump(e); });
 
     this.alertsData = [];
+
+    // opening tips for the first minutes of a match
+    const wname = FACTIONS[humanId ?? this.humanId]?.unitNames?.worker ?? 'worker';
+    this.tips = [
+      { at: 3, text: `🏰 Select your Capital and train ${wname}s — send them to forests 🪵 and fishing ripples 🐟 (long-press / right-click)` },
+      { at: 28, text: '🛡 Neutral villages defend themselves — their towers fire at anyone who comes close. Keep clear until you bring soldiers, or convert the region peacefully with 📜' },
+      { at: 55, text: '🌾 Build Farms and Houses (bottom-right menu). Click any region to see its tribute and the 🕊 Convert action' },
+      { at: 95, text: '⚔️ Castile is coming. Raise a Barracks and watchtowers before the Kingdom era — or out-convert everyone first' },
+    ];
   }
 
   // ---------- build menu ----------
@@ -470,6 +479,10 @@ export class HUD {
     this.refresh -= dt;
     if (this.refresh > 0) return;
     this.refresh = 0.25;
+
+    while (this.tips.length && this.world.time >= this.tips[0].at) {
+      this.alert(this.tips.shift().text, { ttl: 16 });
+    }
 
     const p = this.world.players[this.humanId];
     // resources
