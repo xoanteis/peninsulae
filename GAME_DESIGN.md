@@ -17,7 +17,8 @@ culture kept it.
 That thesis becomes the game's central rule:
 
 ### 1. Allegiance, not tiles
-The peninsula is divided into ~14 historical **regions** (Galiza, Asturias, Euskal Herria,
+The peninsula — a 42×31 hex board, ~840 land tiles — is divided into 14 historical
+**regions** (Galiza, Asturias, Euskal Herria,
 Navarra, Aragón, Catalunya, València, Castela, León, Estremadura, Andalucía, Norte, Lisboa,
 Alentejo…). Each has a **village** and an allegiance. You gain a region by:
 
