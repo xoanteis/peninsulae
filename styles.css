@@ -59,6 +59,14 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   will-change: transform, opacity;
 }
+.region-label {
+  position: fixed; left: 0; top: 0; display: none;
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  white-space: nowrap; color: #cfc7b8;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
+  will-change: transform, opacity;
+}
+.region-label.owned { font-weight: 700; }
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-edge);
@@ -136,6 +144,7 @@ button:hover { background: rgba(255, 226, 168, 0.22); }
 .bm-item.active { outline: 2px solid var(--accent); background: rgba(255, 215, 106, 0.18); }
 .bm-item.locked { opacity: 0.38; }
 .bm-item.poor .bm-cost { color: var(--danger); }
+.bm-item.needsworker { opacity: 0.45; cursor: help; }
 #place-hint {
   position: fixed; bottom: 128px; left: 50%; transform: translateX(-50%);
   background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 8px;

@@ -34,6 +34,15 @@ export class Overlays {
       this.floats.push({ el, t: 0, ttl: 0 });
     }
     this._v = { x: 0, y: 0 };
+
+    // one quiet name-plate per region, anchored at its village, tinted by owner
+    this.regionLabels = Object.values(world.regions).map(region => {
+      const el = document.createElement('div');
+      el.className = 'region-label';
+      el.textContent = region.meta.name;
+      this.root.appendChild(el);
+      return { el, region, owner: undefined };
+    });
   }
 
   project(x, y, z) {
@@ -90,6 +99,28 @@ export class Overlays {
   }
 
   update(dt, selection) {
+    // region name-plates: readable from the air, ghosts up close
+    const cp = this.camera.position;
+    for (const L of this.regionLabels) {
+      const { x, z } = L.region.center;
+      const s = this.project(x, 1.2, z);
+      if (!s || s.x < -40 || s.y < -20 || s.x > window.innerWidth + 40 || s.y > window.innerHeight + 20) {
+        L.el.style.display = 'none';
+        continue;
+      }
+      const d = Math.hypot(cp.x - x, cp.y, cp.z - z);
+      const alpha = Math.min(0.85, Math.max(0.12, (d - 14) / 26));
+      L.el.style.display = 'block';
+      L.el.style.transform = `translate(${s.x}px, ${s.y}px) translate(-50%,-50%)`;
+      L.el.style.opacity = alpha;
+      if (L.owner !== L.region.owner) { // repaint only on flips
+        L.owner = L.region.owner;
+        const f = L.owner ? FACTIONS[L.owner] : null;
+        L.el.style.color = f ? `#${f.color.toString(16).padStart(6, '0')}` : '#cfc7b8';
+        L.el.classList.toggle('owned', !!f);
+      }
+    }
+
     // floats
     for (const f of this.floats) {
       if (f.ttl <= 0) continue;

@@ -344,6 +344,12 @@ export class Controls {
       this.onOrder({ type: 'gather', ids, target: { type: 'fish', col, row } });
       return;
     }
+    // workers sent at the sierra: it can't be gathered — teach the mine instead
+    if (tile && tile.terrain === 'mountain'
+      && ids.some(id => this.world.entities.get(id)?.kind === 'worker')) {
+      this.onOrder({ type: 'hint', message: 'The sierra can\'t be gathered — build a ⛏ Mine on a tile beside a mountain to dig its gold' });
+      return;
+    }
     this.onOrder({ type: 'move', ids, x: p.x, z: p.z });
   }
 }

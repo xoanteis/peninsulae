@@ -87,18 +87,33 @@ async function boot() {
           if (err) world.pushEvent({ type: 'ui_error', message: err });
           else {
             const t = world.tileAt(o.col, o.row);
-            const ids = [...selection].filter(id => world.entities.get(id)?.kind === 'worker');
+            let ids = [...selection].filter(id => world.entities.get(id)?.kind === 'worker');
+            if (!ids.length && t.building) {
+              // no builder in the selection: draft the nearest worker, idle first
+              const site = world.entities.get(t.building);
+              const workers = [...world.entities.values()].filter(e =>
+                e.type === 'unit' && e.kind === 'worker' && e.owner === humanFaction && e.state !== 'dying');
+              const pool = workers.filter(w => w.state === 'idle');
+              let best = null, bestD = Infinity;
+              for (const w of (pool.length ? pool : workers)) {
+                const d = Math.hypot(w.x - site.x, w.z - site.z);
+                if (d < bestD) { bestD = d; best = w; }
+              }
+              if (best) ids = [best.id];
+            }
             if (ids.length && t.building) world.orderBuild(humanFaction, ids, t.building);
           }
           break;
         }
+        case 'hint': world.pushEvent({ type: 'ui_error', message: o.message }); break;
       }
     },
   });
 
   const touch = new TouchControls({ canvas, rig, controls });
-  const overlays = new Overlays(hudRoot, camera, canvas, world, humanFaction);
+  // HUD first: it resets #hud's innerHTML, which would orphan the overlay layer
   const hud = new HUD({ root: hudRoot, world, humanId: humanFaction, controls, rig, audio });
+  const overlays = new Overlays(hudRoot, camera, canvas, world, humanFaction);
   hud.updatePlaceHint = hud.updatePlaceHint.bind(hud);
   audio.setListener(rig.target.x, rig.target.z, rig.dist);
 
