@@ -14,6 +14,7 @@ export class AIController {
     this.world = world;
     this.pid = pid;
     this.style = FACTIONS[pid].aiStyle;
+    this.bonus = FACTIONS[pid].bonus;
     this.cooldown = Math.random() * 2; // stagger
     this.attackWave = null;
     this.workerTarget = 7;
@@ -193,6 +194,10 @@ export class AIController {
     if (has('mine') < 1 && this.mineSpotExists()) return 'mine';
     if (has('church') < 1 + this.style.convictionLove) return 'church';
     if (has('market') < (this.style.economy > 0.7 ? 2 : 1)) return 'market';
+    // fortify nations (cheap towers) wall their core — one per region held — as
+    // soon as they can pay, so their expansion doesn't outrun their defense
+    if (this.bonus.towerCostMul && has('tower') < 1 + my.regions.length
+      && this.affordable('tower')) return 'tower';
     if (p.era >= 1) {
       if (has('archery') < 1) return 'archery';
       if (has('blacksmith') < 1) return 'blacksmith';
@@ -201,6 +206,10 @@ export class AIController {
     }
     if (has('house') < 6 && p.pop >= p.popCap - 2) return 'house';
     return null;
+  }
+
+  affordable(kind) {
+    return this.world.canAfford(this.pid, this.world.buildingCost(this.pid, kind));
   }
 
   mineSpotExists() {

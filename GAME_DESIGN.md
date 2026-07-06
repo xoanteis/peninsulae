@@ -56,7 +56,7 @@ nation pays far less than out-believing it. Lose your own capital and your game 
 
 | Nation | Color | Theme | Bonuses |
 |---|---|---|---|
-| **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; every **converted** region joins the Camino: +Identity trickle each, and its village militia takes up the Galician banner (the *Irmandades*) |
+| **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; **watchtowers 35% cheaper and a fortress-cathedral capital** (×1.5 HP) — the sanctuary that holds what conviction wins; every **converted** region joins the Camino: +Identity trickle each, and its village militia takes up the Galician banner (the *Irmandades*) |
 | **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +22% tougher (fueros are hard to break) |
 | **Catalans** | Yellow | *Seny i Comerç* — pragmatism & trade | Buildings cost −25%; markets add a gold trickle per owned region (Mediterranean network) |
 | **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at a discount and pay extra tribute |
