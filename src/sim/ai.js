@@ -228,8 +228,18 @@ export class AIController {
 
   expand(my) {
     const w = this.world, p = w.players[this.pid];
+    // regicide is an endgame move (or the hegemon's), not an early land grab —
+    // until then a living nation's home region is off the expansion list
+    const endgame = w.time > 1080
+      || (w.time > 600 && Object.values(w.regions).every(r => r.owner))
+      || (this.style.aggression > 0.7 && p.era >= 1 && w.time > 660);
     // pick a target region
-    const targets = Object.values(w.regions).filter(r => r.owner !== this.pid);
+    const targets = Object.values(w.regions).filter(r => {
+      if (r.owner === this.pid) return false;
+      const capOf = r.meta.capitalOf;
+      if (!endgame && capOf && capOf !== this.pid && r.owner === capOf && w.players[capOf].alive) return false;
+      return true;
+    });
     if (!targets.length) return;
     const score = r => {
       let s = 0;

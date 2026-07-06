@@ -59,7 +59,7 @@ nation pays far less than out-believing it. Lose your own capital and your game 
 | **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; every **converted** region joins the Camino: +Identity trickle each, and its village militia takes up the Galician banner (the *Irmandades*) |
 | **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +22% tougher (fueros are hard to break) |
 | **Catalans** | Yellow | *Seny i Comerç* — pragmatism & trade | Buildings cost −25%; markets add a gold trickle per owned region (Mediterranean network) |
-| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at −40% Identity |
+| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at a discount and pay extra tribute |
 | **Castilians** | Red | *Plus Ultra* — the war machine | Start with 2 extra regions; soldiers cost −25% and train faster |
 
 Unit flavor names per faction (same three roles everywhere: Worker, Soldier, Crossbowman):

@@ -53,9 +53,9 @@ export const FACTIONS = {
     unitNames: { worker: 'Camponês', soldier: 'Cavaleiro', crossbow: 'Besteiro' },
     eraTech: 'Escola de Sagres',
     blurb: 'The first nation of fixed borders turned its back to Castile and its face to the ocean. The coast is theirs by vocation.',
-    bonusText: 'Workers 20% faster · Coastal regions convert at half cost and pay +25% tribute',
+    bonusText: 'Workers 20% faster · Coastal regions convert at a discount and pay extra tribute',
     bonus: {
-      workerSpeedMul: 1.2, coastalConvertMul: 0.6, coastalTributeMul: 1.25,
+      workerSpeedMul: 1.2, coastalConvertMul: 0.7, coastalTributeMul: 1.15,
     },
     aiStyle: { aggression: 0.35, convictionLove: 0.6, expandCoastal: 1.0, economy: 0.75 },
   },
