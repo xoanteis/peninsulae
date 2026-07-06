@@ -85,7 +85,7 @@ staff-bearing pilgrim…), workers share the hooded-peasant model with faction b
 unlocks buildings/units, and grants the faction's signature tech:
 
 - Galicia **Camiño de Santiago**: the Camino Identity trickle doubles.
-- Basques **Foruak**: towers and walls free repair; +armor again.
+- Basques **Foruak**: +1 armor to every unit — the old law hardens.
 - Catalans **Consolat de Mar**: market trickle doubled, conversions −25%.
 - Portugal **Escola de Sagres**: full coast revealed; coastal tribute +50%.
 - Castile **Tercios**: soldiers +damage, barracks train two at once.
