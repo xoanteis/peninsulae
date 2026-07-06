@@ -18,9 +18,9 @@ export const FACTIONS = {
       // As Minas — Gallaecia was the Roman gold province; wolfram, tin and slate.
       // Rich mine veins plus a passive trickle of scattered diggings fund the army
       // Galicia's Identity-based economy could never afford. Irmandiños are hardy.
-      // (Trimmed from 1.8/0.35/1.2 after that overshot Galicia to 35% — enough gold
-      // to field an army without over-supplying it.)
-      mineRate: 1.5, mineralTrickle: 0.18, unitHpMul: 1.15,
+      // (0.35 trickle overshot to 35%; 0.18 left Galicia trailing Portugal in the
+      // Atlantic war once the Basques began marching — 0.25 levels the two rivals.)
+      mineRate: 1.5, mineralTrickle: 0.25, unitHpMul: 1.15,
     },
     aiStyle: { aggression: 0.4, convictionLove: 0.95, expandCoastal: 0.6, economy: 0.7, turtle: 0.7 },
   },
