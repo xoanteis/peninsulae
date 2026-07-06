@@ -323,6 +323,9 @@ function doWork(world, u, dt) {
       if (k === 'gold' && f?.bonus.mineRate) rate *= f.bonus.mineRate;
       p.res[k] += rate * dt;
     }
+    // the oak and the iron: for some nations the mine is also a moot — law and
+    // identity flow from the working of their own land
+    if (b.kind === 'mine' && f?.bonus.mineIdentity) p.res.identity += f.bonus.mineIdentity * dt;
   }
   // periodic feedback for the renderer
   if ((u.workT | 0) !== ((u.workT - dt) | 0)) {

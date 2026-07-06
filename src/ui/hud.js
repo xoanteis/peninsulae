@@ -243,7 +243,10 @@ export class HUD {
           this.lastPing = { x: r.center.x, z: r.center.z };
           break;
         }
-        const how = ev.how === 'conviction' ? 'embraces' : ev.how === 'defection' ? 'defects to' : 'falls to';
+        const foru = ev.how === 'conquest' && FACTIONS[ev.owner]?.bonus.foruPact;
+        const how = ev.how === 'conviction' ? 'embraces'
+          : ev.how === 'defection' ? 'defects to'
+          : foru ? 'signs the foru with' : 'falls to';
         this.alert(`🏳️ ${r.meta.name} ${how} ${fname(ev.owner)}`, { x: r.center.x, z: r.center.z, color: fcolor(ev.owner) });
         this.lastPing = { x: r.center.x, z: r.center.z };
         break;

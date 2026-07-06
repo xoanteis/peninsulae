@@ -33,6 +33,7 @@ const patchPath = flag('patch');
 const games = Number(flag('games') ?? (flag('full') ? 60 : 20));
 const cap = Number(flag('cap') ?? 75);
 const dry = !!flag('dry');
+const rawPath = typeof flag('raw') === 'string' ? flag('raw') : null; // save per-game JSONL
 
 // ---- run batches in parallel ----
 const workers = Math.max(2, Math.min(6, cpus().length - 2));
@@ -50,6 +51,7 @@ const results = await Promise.all(batchArgs.map(n => new Promise((resolve, rejec
   child.on('close', code => code === 0 ? resolve(out) : reject(new Error(`batch exited ${code}`)));
 })));
 const rows = results.join('').split('\n').filter(Boolean).map(l => JSON.parse(l));
+if (rawPath) writeFileSync(rawPath, rows.map(r => JSON.stringify(r)).join('\n') + '\n');
 
 // ---- aggregate ----
 function wilson(k, n, z = 1.96) {

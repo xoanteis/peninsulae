@@ -62,7 +62,7 @@ for all bonus numbers) by `node tools/gendocs.mjs` — edit the config, not the 
 | Nation | Color | Theme | Bonuses |
 |---|---|---|---|
 | **Galicians** | Blue | *O Camiño e o Mar* | Fishing +50% · The mines of Gallaecia: rich veins + a steady gold trickle · Irmandiños +15% HP · Fortress-cathedral capital, cheap watchtowers, churches 30% off · Converted regions feed the Camino & arm their militias (Irmandades) |
-| **Basques** | White | *Burdina eta Foruak* | Mines +50% · Buildings & units 22% tougher (the fueros endure) |
+| **Basques** | White | *Burdina eta Foruak* | Mines +50% · Buildings & units 22% tougher · Conquered regions sign the foru: full tribute, no resentment (the fueros endure) |
 | **Catalans** | Yellow | *Seny i Comerç* | Buildings 25% cheaper · Markets add gold for every region you hold |
 | **Portuguese** | Green | *Descobrimentos* | Workers 20% faster · Coastal regions convert at a discount and pay extra tribute |
 | **Castilians** | Red | *Plus Ultra* | Starts with 2 extra regions · Soldiers 25% cheaper and train 30% faster |
