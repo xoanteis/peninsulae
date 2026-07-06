@@ -108,7 +108,9 @@ function updateConquest(world, region, dt) {
     world.pushEvent({ type: 'conquest_started', region: region.key, owner: pid });
   }
   region.conquest.t += dt;
-  if (region.conquest.t >= CONVICTION.conquerHoldTime) {
+  // loyal (converted) regions resist the sword twice as long — conviction sticks
+  const hold = CONVICTION.conquerHoldTime * (region.converted ? 2 : 1);
+  if (region.conquest.t >= hold) {
     flipRegion(world, region, pid, 'conquest');
   }
 }
@@ -120,8 +122,20 @@ export function flipRegion(world, region, pid, how) {
   region.conquest = null;
   region.converted = how === 'conviction';
   region.resent = how !== 'conviction';
-  // village structures change hands; militia disband
-  for (const id of region.militiaIds) world.removeEntity(id);
+  // village structures change hands; militia disband — unless the region was
+  // won by conviction and the new nation arms its brotherhoods (Irmandades)
+  const joins = how === 'conviction' && FACTIONS[pid].bonus.militiaJoin;
+  for (const id of region.militiaIds) {
+    const m = world.entities.get(id);
+    if (m && joins) {
+      const { col, row } = worldToTile(m.x, m.z);
+      world.removeEntity(id);
+      const u = world.addUnit(pid, 'militia', col, row);
+      u.guardPost = m.guardPost ?? null;
+    } else {
+      world.removeEntity(id);
+    }
+  }
   region.militiaIds = [];
   for (const id of region.villageIds) {
     const b = world.entities.get(id);

@@ -24,7 +24,7 @@ export const UNITS = {
 
 export const BUILDINGS = {
   capital: {
-    name: 'Capital', hp: 2400, cost: {}, buildTime: 0, model: 'castle',
+    name: 'Capital', hp: 3000, cost: {}, buildTime: 0, model: 'castle',
     trains: ['worker'], popCap: 14, rates: { identity: 0.35 },
     desc: 'Trains workers and advances Eras. Lose it and the nation falls.',
   },

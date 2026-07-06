@@ -35,8 +35,10 @@ Fly your banner over **all 14 regions** — total domination. Two roads to a reg
 - **⚔️ Conquest** — kill the village militia and tower, hold the village with
   soldiers. Fast, but conquered regions pay half tribute and flip back cheaply.
 
-Raze a rival's **capital castle** and their whole nation defects to the
-conqueror. Lose yours and your war of independence is over.
+Raze a rival's **capital castle** and their nation falls: conquered borderlands
+defect to the conqueror, but regions won by conviction rise free again — faith
+does not transfer at swordpoint. Lose your own capital and your war of
+independence is over.
 
 Castile begins with three regions and a cheap, fast war machine — the peripheral
 nations must out-grow, out-believe or out-fight the hegemon.

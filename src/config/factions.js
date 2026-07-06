@@ -10,11 +10,12 @@ export const FACTIONS = {
     unitNames: { worker: 'Labrego', soldier: 'Irmandiño', crossbow: 'Besteiro' },
     eraTech: 'Camiño de Santiago',
     blurb: 'Patient people of the Atlantic mists. The sea feeds them, the Way of St James binds them, and every region they win by conviction strengthens the pilgrimage.',
-    bonusText: 'Fishing +50% · Churches 30% cheaper · Each converted region adds Identity (the Camino network)',
+    bonusText: 'Fishing +50% · Churches 30% cheaper · Converted regions add Identity (the Camino) and their militias join you (the Irmandades)',
     bonus: {
       fishRate: 1.5, churchCostMul: 0.7, caminoIdentity: 0.15, // per converted region /s
+      militiaJoin: true, // Irmandades: village guards of convinced regions take up your banner
     },
-    aiStyle: { aggression: 0.25, convictionLove: 0.95, expandCoastal: 0.6, economy: 0.7 },
+    aiStyle: { aggression: 0.4, convictionLove: 0.95, expandCoastal: 0.6, economy: 0.7, turtle: 0.7 },
   },
   basque: {
     name: 'Basques', adj: 'Basque', motto: 'Burdina eta Foruak',
@@ -24,9 +25,9 @@ export const FACTIONS = {
     unitNames: { worker: 'Baserritarra', soldier: 'Aizkolari', crossbow: 'Balestari' },
     eraTech: 'Foruak',
     blurb: 'The oldest people of Iberia, unmoved since before Rome. Their mountains hold iron, their law is ancient, and what they build does not break.',
-    bonusText: 'Mines +50% · Buildings & units 25% tougher (the fueros endure)',
+    bonusText: 'Mines +50% · Buildings & units 18% tougher (the fueros endure)',
     bonus: {
-      mineRate: 1.5, buildingHpMul: 1.25, unitHpMul: 1.25,
+      mineRate: 1.5, buildingHpMul: 1.18, unitHpMul: 1.18,
     },
     aiStyle: { aggression: 0.45, convictionLove: 0.4, expandCoastal: 0.3, economy: 0.6, turtle: 0.9 },
   },
@@ -54,7 +55,7 @@ export const FACTIONS = {
     blurb: 'The first nation of fixed borders turned its back to Castile and its face to the ocean. The coast is theirs by vocation.',
     bonusText: 'Workers 20% faster · Coastal regions convert at half cost and pay +25% tribute',
     bonus: {
-      workerSpeedMul: 1.2, coastalConvertMul: 0.5, coastalTributeMul: 1.25,
+      workerSpeedMul: 1.2, coastalConvertMul: 0.6, coastalTributeMul: 1.25,
     },
     aiStyle: { aggression: 0.35, convictionLove: 0.6, expandCoastal: 1.0, economy: 0.75 },
   },
