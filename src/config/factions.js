@@ -25,9 +25,9 @@ export const FACTIONS = {
     unitNames: { worker: 'Baserritarra', soldier: 'Aizkolari', crossbow: 'Balestari' },
     eraTech: 'Foruak',
     blurb: 'The oldest people of Iberia, unmoved since before Rome. Their mountains hold iron, their law is ancient, and what they build does not break.',
-    bonusText: 'Mines +50% · Buildings & units 18% tougher (the fueros endure)',
+    bonusText: 'Mines +50% · Buildings & units 22% tougher (the fueros endure)',
     bonus: {
-      mineRate: 1.5, buildingHpMul: 1.18, unitHpMul: 1.18,
+      mineRate: 1.5, buildingHpMul: 1.22, unitHpMul: 1.22,
     },
     aiStyle: { aggression: 0.45, convictionLove: 0.4, expandCoastal: 0.3, economy: 0.6, turtle: 0.9 },
   },

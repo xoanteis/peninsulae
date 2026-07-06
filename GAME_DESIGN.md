@@ -17,7 +17,7 @@ culture kept it.
 That thesis becomes the game's central rule:
 
 ### 1. Allegiance, not tiles
-The peninsula — a 42×31 hex board, ~840 land tiles — is divided into 14 historical
+The peninsula — a 63×46 hex board — is divided into 17 historical
 **regions** (Galiza, Asturias, Euskal Herria,
 Navarra, Aragón, Catalunya, València, Castela, León, Estremadura, Andalucía, Norte, Lisboa,
 Alentejo…). Each has a **village** and an allegiance. You gain a region by:
@@ -27,7 +27,7 @@ Alentejo…). Each has a **village** and an allegiance. You gain a region by:
   suppressed while enemy soldiers garrison the region ("the garrison forbids the language") —
   but a converted region is loyal: it pays full tribute and resists conquest twice as long.
 - **Conquest** (war): destroy the village's guard, hold the village with soldiers until the
-  banner falls. Fast — but a conquered region **resents**: it pays only half tribute and
+  banner falls. Fast — but a conquered region **resents**: it pays only two-thirds tribute and
   enemies can convert it back at a discount. The reconquista cuts both ways.
 
 Owning a region yields its **tribute** (its historical specialty: coastal fish, meseta grain,
@@ -57,9 +57,9 @@ nation pays far less than out-believing it. Lose your own capital and your game 
 | Nation | Color | Theme | Bonuses |
 |---|---|---|---|
 | **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; every **converted** region joins the Camino: +Identity trickle each, and its village militia takes up the Galician banner (the *Irmandades*) |
-| **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +18% tougher (fueros are hard to break) |
+| **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +22% tougher (fueros are hard to break) |
 | **Catalans** | Yellow | *Seny i Comerç* — pragmatism & trade | Buildings cost −25%; markets add a gold trickle per owned region (Mediterranean network) |
-| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at −50% Identity |
+| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at −40% Identity |
 | **Castilians** | Red | *Plus Ultra* — the war machine | Start with 2 extra regions; soldiers cost −25% and train faster |
 
 Unit flavor names per faction (same three roles everywhere: Worker, Soldier, Crossbowman):

@@ -38,6 +38,10 @@ export function regionConvertCost(world, pid, key) {
   if (region.owner && region.resent) cost *= CONVICTION.resentDiscount;
   if (region.coastal && f.bonus.coastalConvertMul) cost *= f.bonus.coastalConvertMul;
   if (f.bonus.convictionCostMul) cost *= f.bonus.convictionCostMul; // Consolat de Mar
+  // empire fatigue: every region past the second makes the next sermon pricier —
+  // a message that spread like fire in three valleys strains across a peninsula
+  const owned = Object.values(world.regions).filter(r => r.owner === pid).length;
+  cost *= 1 + 0.12 * Math.max(0, owned - 2);
   return Math.round(cost);
 }
 

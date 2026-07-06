@@ -132,9 +132,9 @@ export class HUD {
           <p>Fly your banner over <b>every region of Iberia</b>. Win regions two ways:</p>
           <p><b>🕊 Conviction</b> — select any region (click its land) and spend <b>📜 Identity</b> to convert it.
           Slow, suppressed while enemy soldiers camp there… but converted folk stay loyal, extend your culture,
-          and <b>resist conquest twice as long</b>.</p>
+          and <b>resist conquest twice as long</b>. The wider your realm already is, the costlier each new conversion.</p>
           <p><b>⚔️ Conquest</b> — kill a village's militia and tower, then hold the village with soldiers.
-          Fast — but conquered regions pay <b>half tribute</b> and rivals can re-convert them cheaply.</p>
+          Fast — but conquered regions pay <b>reduced tribute</b> and rivals can re-convert them cheaply.</p>
           <p>Raze a rival's <b>capital castle</b> and their nation falls: conquered borderlands defect
           to the conqueror, but regions won by conviction <b>rise free again</b> — faith does not
           transfer at swordpoint. Guard your own capital with your life.</p>

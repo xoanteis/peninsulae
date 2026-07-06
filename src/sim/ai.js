@@ -302,7 +302,8 @@ export class AIController {
     const capOf = targetRegion.meta.capitalOf;
     if (capOf && targetRegion.owner === capOf && w.players[capOf].alive) {
       const cap = w.entities.get(w.players[capOf].capitalId);
-      const needed = assaultSize;
+      // storming a castle early takes a real siege army, not a raiding party
+      const needed = assaultSize + (w.time < 900 ? 4 : 0);
       if (cap && army.length >= needed) {
         w.orderAttack(this.pid, army.map(u => u.id), cap.id);
         this.attackWave = { target: cap.id };

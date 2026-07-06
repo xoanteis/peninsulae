@@ -28,12 +28,12 @@ Pick your nation, press **H** in game for the full manual.
 
 ## How you win
 
-Fly your banner over **all 14 regions** — total domination. Two roads to a region:
+Fly your banner over **all 17 regions** — total domination. Two roads to a region:
 
 - **🕊 Conviction** — click a region, spend **📜 Identity** to convert it. Slow,
   suppressed by enemy garrisons, but converted regions stay loyal.
 - **⚔️ Conquest** — kill the village militia and tower, hold the village with
-  soldiers. Fast, but conquered regions pay half tribute and flip back cheaply.
+  soldiers. Fast, but conquered regions pay reduced tribute and flip back cheaply.
 
 Raze a rival's **capital castle** and their nation falls: conquered borderlands
 defect to the conqueror, but regions won by conviction rise free again — faith

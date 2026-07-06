@@ -102,7 +102,7 @@ export const CONVICTION = {
   resentDiscount: 0.6,    // flipping a region its holder conquered by force
   time: 40,               // seconds of undisturbed conversion
   conquerHoldTime: 10,    // seconds of armed presence after guards fall
-  resentTributeMul: 0.5,  // conquered regions pay half
+  resentTributeMul: 0.65, // conquered regions pay reduced tribute
 };
 
 export const START = {
