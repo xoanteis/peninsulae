@@ -83,7 +83,8 @@ export class HUD {
     this.tips = [
       { at: 3, text: `🏰 Select your Capital and train ${wname}s — send them to forests 🪵 and fishing ripples 🐟 (long-press / right-click)` },
       { at: 28, text: '🛡 Neutral villages defend themselves — their towers fire at anyone who comes close. Keep clear until you bring soldiers, or convert the region peacefully with 📜' },
-      { at: 55, text: '🌾 Build Farms and Houses (bottom-right menu). Click any region to see its tribute and the 🕊 Convert action' },
+      { at: 42, text: '⛏ Rocks and mountains can\'t be gathered — build a Mine beside a mountain to dig gold. Forests, shoals and farms cover the rest' },
+      { at: 60, text: '🌾 Build Farms and Houses (bottom-right menu) — a worker starts raising it at once. Click any region to see its tribute and the 🕊 Convert action' },
       { at: 95, text: '⚔️ Castile is coming. Raise a Barracks and watchtowers before the Kingdom era — or out-convert everyone first' },
     ];
   }
@@ -101,6 +102,12 @@ export class HUD {
       b.innerHTML = `<span class="bm-icon">${BUILD_ICONS[kind]}</span><span class="bm-name">${def.name}</span><span class="bm-cost"></span>`;
       b.title = def.desc;
       b.onclick = () => {
+        if (!this.ownsWorker()) {
+          const wname = FACTIONS[this.humanId]?.unitNames?.worker ?? 'worker';
+          this.audio.play('ui_error', { volume: 0.5 });
+          this.alert(`🔨 Only ${wname}s build — train one at your Capital first`, { ttl: 3.5 });
+          return;
+        }
         this.audio.play('ui_click');
         this.controls.setPlacing(this.controls.placing === kind ? null : kind);
         this.updatePlaceHint();
@@ -109,10 +116,30 @@ export class HUD {
     }
   }
 
+  // building needs hands. A worker in the selection builds it directly; if none
+  // is selected, placement drafts the nearest one — so the gate is "own a worker".
+  hasBuilder() {
+    return [...this.controls.selection].some(id => {
+      const e = this.world.entities.get(id);
+      return e && e.kind === 'worker' && e.owner === this.humanId && e.state !== 'dying';
+    });
+  }
+
+  ownsWorker() {
+    for (const e of this.world.entities.values()) {
+      if (e.type === 'unit' && e.kind === 'worker' && e.owner === this.humanId && e.state !== 'dying') return true;
+    }
+    return false;
+  }
+
   updatePlaceHint() {
     const k = this.controls.placing;
     this.el.placeHint.classList.toggle('hidden', !k);
-    if (k) this.el.placeHint.textContent = `Placing ${BUILDINGS[k].name} — click a tile in your regions · Shift-click for more · Esc to cancel`;
+    if (k) {
+      const wname = FACTIONS[this.humanId]?.unitNames?.worker ?? 'worker';
+      const who = this.hasBuilder() ? 'your selected ' + wname + 's build it' : 'the nearest ' + wname + ' will build it';
+      this.el.placeHint.textContent = `Placing ${BUILDINGS[k].name} — click a tile in your regions · ${who} · Shift-click for more · Esc to cancel`;
+    }
     for (const b of this.el.buildMenu.querySelectorAll('.bm-item')) {
       b.classList.toggle('active', b.dataset.kind === k);
     }
@@ -152,6 +179,9 @@ export class HUD {
           <p>Workers chop <b>🪵 forests</b>, tend <b>🌾 farms</b>, dig <b>🪙 mines</b> by mountains, and cast nets at
           <b>fish shoals</b> (ripples on the coast). <b>📜 Identity</b> flows from your capital, churches and festival halls
           — it is the currency of nationhood. Owning regions pays their historical tribute; houses raise your population cap.</p>
+          <p>There is <b>no stone</b>: rocks and the sierra itself can't be gathered — but a <b>⛏ Mine built beside a
+          mountain</b> turns it into gold. Only workers build: place a building and a worker starts raising it at once
+          (whichever you've selected, or the nearest one otherwise). Soldiers can't build.</p>
           <h3>Eras</h3>
           <p>County → Kingdom → Golden Age. Advance at your capital: unlocks buildings and your nation's
           signature power. Blacksmith forges attack & armor upgrades.</p>
@@ -528,7 +558,13 @@ export class HUD {
     const mine = regions.filter(r => r.owner === this.humanId).length;
     this.el.domLabel.textContent = `${mine}/${total} regions — total domination wins`;
 
-    // build menu affordability
+    // build menu affordability (and whether the nation has a worker to build at all)
+    const canBuild = this.ownsWorker();
+    const bmTitle = this.el.buildMenu.querySelector('.bm-title');
+    if (bmTitle) {
+      const wname = FACTIONS[this.humanId]?.unitNames?.worker ?? 'worker';
+      bmTitle.textContent = canBuild ? 'Build' : `Build — need a ${wname}`;
+    }
     for (const btn of this.el.buildMenu.querySelectorAll('.bm-item')) {
       const kind = btn.dataset.kind;
       const def = BUILDINGS[kind];
@@ -537,6 +573,7 @@ export class HUD {
       const eraLocked = def.era && p.era < def.era;
       btn.classList.toggle('locked', !!eraLocked);
       btn.classList.toggle('poor', !eraLocked && !this.world.canAfford(this.humanId, cost));
+      btn.classList.toggle('needsworker', !canBuild);
       if (eraLocked) btn.querySelector('.bm-cost').textContent = `${ERAS[def.era].name} era`;
     }
 
