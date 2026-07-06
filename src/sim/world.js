@@ -196,7 +196,8 @@ export class World {
     const { x, z } = tileToWorld(col, row);
     const own = ownerOverride ?? owner;
     const f = own ? FACTIONS[own] : null;
-    const hpMul = f?.bonus.buildingHpMul ?? 1;
+    let hpMul = f?.bonus.buildingHpMul ?? 1;
+    if (kind === 'capital' && f?.bonus.capitalHpMul) hpMul *= f.bonus.capitalHpMul; // fortress-cathedral
     const maxHp = Math.round(def.hp * hpMul);
     const b = {
       id: nextId++, type: 'building', kind, owner: own, col, row, x, z,
@@ -283,6 +284,7 @@ export class World {
     for (const [k, v] of Object.entries(def.cost)) {
       let m = f.bonus.buildCostMul ?? 1;
       if (kind === 'church' && f.bonus.churchCostMul) m *= f.bonus.churchCostMul;
+      if (kind === 'tower' && f.bonus.towerCostMul) m *= f.bonus.towerCostMul; // pilgrim watchposts
       cost[k] = Math.round(v * m);
     }
     return cost;

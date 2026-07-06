@@ -10,11 +10,11 @@ export const FACTIONS = {
     unitNames: { worker: 'Labrego', soldier: 'Irmandiño', crossbow: 'Besteiro' },
     eraTech: 'Camiño de Santiago',
     blurb: 'Patient people of the Atlantic mists. The sea feeds them, the Way of St James binds them, and every region they win by conviction strengthens the pilgrimage.',
-    bonusText: 'Fishing +50% · Coastal regions convert cheaper & pay more · Churches 30% cheaper · Converted regions feed the Camino and arm their militias (Irmandades)',
+    bonusText: 'Fishing +50% · Churches 30% cheaper · Watchtowers 35% cheaper & a fortress-cathedral capital · Converted regions feed the Camino and arm their militias (Irmandades)',
     bonus: {
       fishRate: 1.5, churchCostMul: 0.7, caminoIdentity: 0.15, // per converted region /s
       militiaJoin: true, // Irmandades: village guards of convinced regions take up your banner
-      coastalConvertMul: 0.7, coastalTributeMul: 1.15, // the Atlantic Camino — the sea road, shared with Portugal
+      towerCostMul: 0.65, capitalHpMul: 1.5, // the sanctuary: hold what conviction wins
     },
     aiStyle: { aggression: 0.4, convictionLove: 0.95, expandCoastal: 0.6, economy: 0.7, turtle: 0.7 },
   },
