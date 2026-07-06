@@ -19,6 +19,7 @@ for (let g = 0; g < games; g++) {
   world.ai.push(new AIController(world, 'galicia')); // nobody idles
   const flips = {};
   const eras = {};
+  const fell = {}; // nation -> its killer and the minute it died
   let firstFall = null;
 
   let t = 0;
@@ -29,7 +30,10 @@ for (let g = 0; g < games; g++) {
         flips[ev.owner] ??= { conviction: 0, conquest: 0, defection: 0 };
         flips[ev.owner][ev.how] = (flips[ev.owner][ev.how] ?? 0) + 1;
       }
-      if (ev.type === 'nation_fell' && !firstFall) firstFall = ev.owner;
+      if (ev.type === 'nation_fell') {
+        if (!firstFall) firstFall = ev.owner;
+        fell[ev.owner] = { by: ev.conqueror ?? null, min: +(t * TICK_MS / 60000).toFixed(1) };
+      }
       if (ev.type === 'era_advanced') eras[ev.owner] = ev.era;
     }
     world.events.length = 0;
@@ -46,6 +50,7 @@ for (let g = 0; g < games; g++) {
     winner: world.winner ?? null,
     minutes: +(t * TICK_MS / 60000).toFixed(1),
     firstFall,
+    fell,
     finalRegions,
     flips,
     eras,
