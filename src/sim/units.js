@@ -36,6 +36,20 @@ export function updateUnit(world, u, dt) {
 
     case 'moving': {
       u.anim = 'walk';
+      // attack-move: fighters engage anything hostile they pass
+      if (u.task?.type === 'amove' && u.kind !== 'worker') {
+        u.scanCd = (u.scanCd ?? 0) - dt;
+        if (u.scanCd <= 0) {
+          u.scanCd = 0.4;
+          const enemy = acquireTarget(world, u);
+          if (enemy) {
+            u.task = { type: 'attack', targetId: enemy.id, auto: true, resume: { x: u.task.x, z: u.task.z } };
+            u.state = 'toFight';
+            u.path = null; u.chaseGoal = null;
+            break;
+          }
+        }
+      }
       if (!followPath(world, u, dt)) {
         u.state = 'idle';
         u.anim = 'idle';
@@ -142,7 +156,7 @@ function followPath(world, u, dt, goalOverride = null) {
       return false;
     }
     // final approach to exact click point
-    if (u.task?.type === 'move') {
+    if (u.task?.type === 'move' || u.task?.type === 'amove') {
       const d = dist(u.x, u.z, u.task.x, u.task.z);
       if (d > ARRIVE) return moveToward(world, u, u.task.x, u.task.z, dt);
     }
