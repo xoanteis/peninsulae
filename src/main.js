@@ -65,7 +65,7 @@ async function boot() {
   const selection = new Set();
 
   const controls = new Controls({
-    canvas, camera, world, humanId: humanFaction, selection,
+    canvas, camera, world, humanId: humanFaction, selection, rig,
     onSelect(hit, regionKey) {
       hud.setRegion(regionKey ?? null);
       hud.renderSelPanel(selection);
@@ -74,6 +74,9 @@ async function boot() {
     onOrder(o) {
       switch (o.type) {
         case 'move': world.orderMove(humanFaction, o.ids, o.x, o.z); break;
+        case 'amove': world.orderAttackMove(humanFaction, o.ids, o.x, o.z); audio.play('blip', { volume: 0.5 }); break;
+        case 'stop': world.orderStop(humanFaction, o.ids); audio.play('ui_click', { volume: 0.4 }); break;
+        case 'ui': audio.play(o.sound ?? 'ui_click', { volume: 0.4 }); break;
         case 'attack': world.orderAttack(humanFaction, o.ids, o.targetId); audio.play('blip', { volume: 0.4 }); break;
         case 'gather': world.orderGather(humanFaction, o.ids, o.target); audio.play('ui_click', { volume: 0.4 }); break;
         case 'build': world.orderBuild(humanFaction, o.ids, o.buildingId); break;

@@ -47,6 +47,27 @@ export class CameraRig {
       }
     });
     dom.addEventListener('pointerup', e => { if (e.button === 1) this._middleDrag = null; });
+
+    // C&C-style screen-edge scrolling (mouse only)
+    this._mouse = { x: -1, y: -1, active: false };
+    window.addEventListener('pointermove', e => {
+      if (e.pointerType === 'touch') { this._mouse.active = false; return; }
+      this._mouse.x = e.clientX; this._mouse.y = e.clientY; this._mouse.active = true;
+    });
+    document.addEventListener('mouseleave', () => { this._mouse.active = false; });
+    window.addEventListener('blur', () => { this._mouse.active = false; });
+  }
+
+  edgeScroll(dt) {
+    if (!this._mouse?.active || !document.hasFocus()) return;
+    const M = 12; // px from the edge
+    const w = window.innerWidth, h = window.innerHeight;
+    const { x, y } = this._mouse;
+    const sp = this.dist * 1.0 * dt;
+    let dx = 0, dy = 0;
+    if (x <= M) dx -= sp; else if (x >= w - M) dx += sp;
+    if (y <= M) dy -= sp; else if (y >= h - M) dy += sp;
+    if (dx || dy) this.panScreen(dx, dy);
   }
 
   onWheel(e) {
@@ -99,8 +120,9 @@ export class CameraRig {
     if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) dx -= sp;
     if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) dx += sp;
     if (dx || dy) this.panScreen(dx, dy);
+    this.edgeScroll(dt);
     if (this.keys.has('KeyQ')) this.goalYaw += 1.4 * dt;
-    if (this.keys.has('KeyE')) this.goalYaw -= 1.4 * dt;
+    if (this.keys.has('KeyR')) this.goalYaw -= 1.4 * dt;
 
     // smooth follow
     const k = 1 - Math.exp(-9 * dt);

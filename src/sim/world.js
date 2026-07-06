@@ -400,6 +400,31 @@ export class World {
     return null;
   }
 
+  // C&C-style attack-move: walk to the point, engaging enemies met on the way
+  orderAttackMove(pid, ids, x, z) {
+    const { col, row } = worldToTile(x, z);
+    for (const id of ids) {
+      const u = this.entities.get(id);
+      if (!u || u.owner !== pid || u.state === 'dying') continue;
+      u.task = { type: 'amove', x, z };
+      u.workSlot = null;
+      u.path = this.findPathTo(u, col, row) ?? this.findPathLoose(u, col, row)
+        ?? this.pathToNearestReachable(u, col, row);
+      u.pathIdx = 1;
+      u.state = 'moving';
+    }
+    this.pushEvent({ type: 'order_attack', x, z, owner: pid });
+  }
+
+  orderStop(pid, ids) {
+    for (const id of ids) {
+      const u = this.entities.get(id);
+      if (!u || u.owner !== pid || u.state === 'dying') continue;
+      u.task = null; u.path = null; u.workSlot = null;
+      u.state = 'idle'; u.anim = 'idle';
+    }
+  }
+
   orderGather(pid, ids, target) {
     for (const id of ids) {
       const u = this.entities.get(id);

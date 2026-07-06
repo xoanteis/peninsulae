@@ -41,16 +41,22 @@ conqueror. Lose yours and your war of independence is over.
 Castile begins with three regions and a cheap, fast war machine — the peripheral
 nations must out-grow, out-believe or out-fight the hegemon.
 
-## Controls (trackpad-first)
+## Controls
+
+PC scheme in the Command & Conquer tradition, plus trackpad and touch:
 
 | Input | Action |
 |---|---|
-| two-finger scroll | pan camera |
-| pinch / mouse wheel | zoom |
-| click / drag | select / box-select |
-| two-finger tap (right-click) | contextual order: move · attack · gather · build · rally |
-| WASD / arrows · Q/E · +/− | pan · rotate · zoom |
-| H · M · Esc | help · mute · cancel |
+| click / double-click / drag | select · select all of type · box-select (Shift adds) |
+| right-click | contextual order: move · attack · gather · build · rally |
+| right-drag / screen edges / WASD | pan camera |
+| mouse wheel / trackpad pinch | zoom |
+| Ctrl+1–9 / 1–9 | assign / recall control group (double-tap centers) |
+| F + click | attack-move (engage everything on the way) |
+| S · E · H · Space | stop · all soldiers on screen · home · last alert |
+| Q/R · +/− · F1 · M · Esc | rotate · zoom · help · mute · cancel |
+| trackpad | two-finger scroll pans · pinch zooms · two-finger tap orders |
+| touch | drag pans · pinch zooms · tap selects · long-press orders |
 
 ## Engineering
 

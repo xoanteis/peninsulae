@@ -21,9 +21,11 @@ export function acquireTarget(world, u) {
 export function tryAttack(world, u, dt) {
   const t = world.entities.get(u.task?.targetId);
   if (!t || t.hp <= 0 || t.state === 'dying') {
-    u.state = u.task?.auto ? 'idle' : 'idle';
+    const resume = u.task?.resume;
     u.task = null;
     u.anim = 'idle';
+    u.state = 'idle';
+    if (resume && u.owner) world.orderAttackMove(u.owner, [u.id], resume.x, resume.z);
     return;
   }
   const stats = UNITS[u.kind];

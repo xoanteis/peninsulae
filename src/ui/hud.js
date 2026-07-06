@@ -52,6 +52,7 @@ export class HUD {
 
     this.buildBuildMenu();
     this.buildHelp();
+    this.el.btnHelp.title = 'How to play (F1)';
     this.el.btnHelp.onclick = () => this.toggleHelp();
     this.el.btnMute.onclick = () => {
       const muted = this.audio.toggleMute();
@@ -59,8 +60,16 @@ export class HUD {
     };
     window.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT') return;
-      if (e.code === 'KeyH') this.toggleHelp();
+      if (e.code === 'F1') { e.preventDefault(); this.toggleHelp(); }
       if (e.code === 'KeyM') this.el.btnMute.click();
+      if (e.code === 'KeyH') { // home: jump to capital (C&C style)
+        const cap = this.world.entities.get(this.world.players[this.humanId].capitalId);
+        if (cap) this.rig.jumpTo(cap.x, cap.z);
+      }
+      if (e.code === 'Space') { // jump to the last alert
+        e.preventDefault();
+        if (this.lastPing) this.rig.jumpTo(this.lastPing.x, this.lastPing.z);
+      }
     });
 
     this.minimapBase = this.renderMinimapBase();
@@ -129,10 +138,13 @@ export class HUD {
           Guard your own capital with your life.</p>
         </section>
         <section>
-          <h3>Trackpad controls</h3>
-          <p>🖐 <b>Two-finger scroll</b> pan · <b>pinch</b> zoom · <b>two-finger tap</b> (right-click) order<br>
-          🖱 <b>Click</b> select · <b>drag</b> box-select · <b>Shift</b> add<br>
-          ⌨️ <b>WASD/arrows</b> pan · <b>Q/E</b> rotate · <b>+/−</b> zoom · <b>H</b> help · <b>M</b> mute · <b>Esc</b> cancel<br>
+          <h3>Controls</h3>
+          <p>🖱 <b>Click</b> select · <b>double-click</b> all of that type · <b>drag</b> box-select · <b>Shift</b> add<br>
+          <b>Right-click</b> order (move · attack · gather · build · rally) · <b>right-drag</b> or <b>screen edge</b> pan · <b>wheel</b> zoom<br>
+          ⌨️ <b>Ctrl+1–9</b> assign group · <b>1–9</b> recall (double-tap centers) · <b>F</b>+click attack-move ·
+          <b>S</b> stop · <b>E</b> all soldiers on screen · <b>H</b> home · <b>Space</b> last alert<br>
+          <b>WASD/arrows</b> pan · <b>Q/R</b> rotate · <b>+/−</b> zoom · <b>F1</b> help · <b>M</b> mute · <b>Esc</b> cancel<br>
+          🖐 <b>Trackpad:</b> two-finger scroll pans · pinch zooms · two-finger tap orders<br>
           📱 <b>Touch:</b> drag pan · pinch zoom · tap select · <b>long-press</b> order (landscape recommended)</p>
           <h3>Economy</h3>
           <p>Workers chop <b>🪵 forests</b>, tend <b>🌾 farms</b>, dig <b>🪙 mines</b> by mountains, and cast nets at
@@ -145,7 +157,7 @@ export class HUD {
         </div>
         <h3>The five nations</h3>
         <table class="help-factions">${factionRows}</table>
-        <button id="help-close" class="big-btn">To arms! (H)</button>
+        <button id="help-close" class="big-btn">To arms! (F1)</button>
       </div>`;
     this.el.helpOverlay.querySelector('#help-close').onclick = () => this.toggleHelp();
   }
@@ -182,6 +194,7 @@ export class HUD {
           this.alert('⚠️ We are under attack!', { x: ev.x, z: ev.z, color: '#ff6b57' });
           this.flashVignette();
           this.rig.addShake(0.25);
+          this.lastPing = { x: ev.x, z: ev.z };
         }
         this.pingMinimap(ev.x, ev.z);
         break;
@@ -195,6 +208,7 @@ export class HUD {
         const r = world.regions[ev.region];
         const how = ev.how === 'conviction' ? 'embraces' : ev.how === 'defection' ? 'defects to' : 'falls to';
         this.alert(`🏳️ ${r.meta.name} ${how} ${fname(ev.owner)}`, { x: r.center.x, z: r.center.z, color: fcolor(ev.owner) });
+        this.lastPing = { x: r.center.x, z: r.center.z };
         break;
       }
       case 'conversion_started': {
@@ -277,11 +291,12 @@ export class HUD {
     ctx.fillStyle = '#27506e';
     ctx.fillRect(0, 0, c.width, c.height);
     const { sx, sy } = this.minimapScale();
+    const px = Math.max(2.4, sx * 2.3);
     for (const t of this.world.tiles) {
       if (t.terrain === 'sea') continue;
       const { x, z } = tileToWorld(t.col, t.row);
       ctx.fillStyle = { grass: '#8ea44c', forest: '#4e7a34', hills: '#a3a465', mountain: '#8d8d88' }[t.terrain];
-      ctx.fillRect(x * sx - 2.2, z * sy - 2.2, 4.4, 4.4);
+      ctx.fillRect(x * sx - px / 2, z * sy - px / 2, px, px);
     }
     return c;
   }
@@ -307,12 +322,13 @@ export class HUD {
     ctx.drawImage(this.minimapBase, 0, 0);
     const { sx, sy } = this.minimapScale();
     // region ownership tint
+    const px = Math.max(2.4, sx * 2.3);
     for (const region of Object.values(this.world.regions)) {
       if (!region.owner) continue;
       ctx.fillStyle = `#${FACTIONS[region.owner].color.toString(16).padStart(6, '0')}55`;
       for (const t of region.tiles) {
         const { x, z } = tileToWorld(t.col, t.row);
-        ctx.fillRect(x * sx - 2.2, z * sy - 2.2, 4.4, 4.4);
+        ctx.fillRect(x * sx - px / 2, z * sy - px / 2, px, px);
       }
     }
     // units
