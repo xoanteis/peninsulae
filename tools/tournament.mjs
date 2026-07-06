@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 // Balance tournament: N fully-AI games (all five nations played by their AI),
 // one JSON line per game with winner, duration, flip methods, and final state.
-//   node tools/tournament.mjs [games=20] [maxMinutes=60]
+//   node tools/tournament.mjs [games=20] [maxMinutes=60] [--patch=exp.json]
 
 import { World } from '../src/sim/world.js';
 import { AIController } from '../src/sim/ai.js';
 import { TICK_MS } from '../src/config/rules.js';
+import { applyPatchArg } from './patch.mjs';
 
-const games = Number(process.argv[2] || 20);
-const maxMinutes = Number(process.argv[3] || 60);
+applyPatchArg(process.argv);
+const pos = process.argv.slice(2).filter(a => !a.startsWith('--'));
+const games = Number(pos[0] || 20);
+const maxMinutes = Number(pos[1] || 60);
 const ticksPerGame = maxMinutes * 60000 / TICK_MS;
 
 for (let g = 0; g < games; g++) {

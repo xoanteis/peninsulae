@@ -27,8 +27,9 @@ Alentejo…). Each has a **village** and an allegiance. You gain a region by:
   suppressed while enemy soldiers garrison the region ("the garrison forbids the language") —
   but a converted region is loyal: it pays full tribute and resists conquest twice as long.
 - **Conquest** (war): destroy the village's guard, hold the village with soldiers until the
-  banner falls. Fast — but a conquered region **resents**: it pays only two-thirds tribute and
+  banner falls. Fast — but a conquered region **resents**: it pays reduced tribute and
   enemies can convert it back at a discount. The reconquista cuts both ways.
+  (Exact rates live in `src/config/rules.js` — docs stay qualitative so they never drift.)
 
 Owning a region yields its **tribute** (its historical specialty: coastal fish, meseta grain,
 mountain ore, trading coasts) and moves your **domination bar**.
@@ -54,13 +55,18 @@ nation pays far less than out-believing it. Lose your own capital and your game 
 
 ## Factions
 
+The table below is **generated** from `src/config/factions.js` (the single source of truth
+for all bonus numbers) by `node tools/gendocs.mjs` — edit the config, not the table.
+
+<!-- factions:generated:begin (edit src/config/factions.js, then run node tools/gendocs.mjs) -->
 | Nation | Color | Theme | Bonuses |
 |---|---|---|---|
-| **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; **As Minas de Gallaecia** — rich gold mines (+50%) and a passive mineral trickle (Roman gold, wolfram, tin) that funds an army an Identity economy never could; **Irmandiños +15% HP**; watchtowers cheaper and a fortress-cathedral capital (the sanctuary); every **converted** region joins the Camino: +Identity trickle each, and its village militia takes up the Galician banner (the *Irmandades*) |
-| **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +22% tougher (fueros are hard to break) |
-| **Catalans** | Yellow | *Seny i Comerç* — pragmatism & trade | Buildings cost −25%; markets add a gold trickle per owned region (Mediterranean network) |
-| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Workers 20% faster; **coastal** regions convert at a discount and pay extra tribute |
-| **Castilians** | Red | *Plus Ultra* — the war machine | Start with 2 extra regions; soldiers cost −25% and train faster |
+| **Galicians** | Blue | *O Camiño e o Mar* | Fishing +50% · The mines of Gallaecia: rich veins + a steady gold trickle · Irmandiños +15% HP · Fortress-cathedral capital, cheap watchtowers, churches 30% off · Converted regions feed the Camino & arm their militias (Irmandades) |
+| **Basques** | White | *Burdina eta Foruak* | Mines +50% · Buildings & units 22% tougher (the fueros endure) |
+| **Catalans** | Yellow | *Seny i Comerç* | Buildings 25% cheaper · Markets add gold for every region you hold |
+| **Portuguese** | Green | *Descobrimentos* | Workers 20% faster · Coastal regions convert at a discount and pay extra tribute |
+| **Castilians** | Red | *Plus Ultra* | Starts with 2 extra regions · Soldiers 25% cheaper and train 30% faster |
+<!-- factions:generated:end -->
 
 Unit flavor names per faction (same three roles everywhere: Worker, Soldier, Crossbowman):
 Galicia *Labrego / Irmandiño / Besteiro* · Basque *Baserritarra / Aizkolari / Balestari* ·
@@ -85,10 +91,10 @@ staff-bearing pilgrim…), workers share the hooded-peasant model with faction b
 unlocks buildings/units, and grants the faction's signature tech:
 
 - Galicia **Camiño de Santiago**: the Camino Identity trickle doubles.
-- Basques **Foruak**: +1 armor to every unit — the old law hardens.
-- Catalans **Consolat de Mar**: market trickle doubled, conversions −25%.
-- Portugal **Escola de Sagres**: full coast revealed; coastal tribute +50%.
-- Castile **Tercios**: soldiers +damage, barracks train two at once.
+- Basques **Foruak**: every unit hardens (bonus armor) — the old law endures.
+- Catalans **Consolat de Mar**: the market trickle doubles and conversions get cheaper.
+- Portugal **Escola de Sagres**: coastal tribute rises — the ocean pays its captain.
+- Castile **Tercios**: soldiers hit harder.
 
 ## Combat
 

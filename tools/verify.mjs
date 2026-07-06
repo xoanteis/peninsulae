@@ -30,7 +30,10 @@ const report = { consoleErrors: [], pageErrors: [], failedRequests: [], gameErro
 let browser;
 try {
   browser = await chromium.launch({ executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium' });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1.5 });
+  // VIEWPORT=960x600 DSF=1 makes screenshots ~5x cheaper to read into an LLM
+  // context — use for routine checks; the full-size default is for ship shots.
+  const [vw, vh] = (process.env.VIEWPORT ?? '1440x900').split('x').map(Number);
+  const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: Number(process.env.DSF ?? 1.5) });
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') report.consoleErrors.push(`[${m.type()}] ${m.text()}`); });
   page.on('pageerror', e => report.pageErrors.push(String(e)));
   page.on('requestfailed', r => report.failedRequests.push(`${r.url()} :: ${r.failure()?.errorText}`));
