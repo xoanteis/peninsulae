@@ -59,7 +59,7 @@ nation pays far less than out-believing it. Lose your own capital and your game 
 | **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; **As Minas de Gallaecia** — rich gold mines (+50%) and a passive mineral trickle (Roman gold, wolfram, tin) that funds an army an Identity economy never could; **Irmandiños +15% HP**; watchtowers cheaper and a fortress-cathedral capital (the sanctuary); every **converted** region joins the Camino: +Identity trickle each, and its village militia takes up the Galician banner (the *Irmandades*) |
 | **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +22% tougher (fueros are hard to break) |
 | **Catalans** | Yellow | *Seny i Comerç* — pragmatism & trade | Buildings cost −25%; markets add a gold trickle per owned region (Mediterranean network) |
-| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at a discount and pay extra tribute |
+| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Workers 20% faster; **coastal** regions convert at a discount and pay extra tribute |
 | **Castilians** | Red | *Plus Ultra* — the war machine | Start with 2 extra regions; soldiers cost −25% and train faster |
 
 Unit flavor names per faction (same three roles everywhere: Worker, Soldier, Crossbowman):
@@ -84,7 +84,7 @@ staff-bearing pilgrim…), workers share the hooded-peasant model with faction b
 **County → Kingdom → Golden Age.** Advancing costs Food+Gold+Identity at the Capital,
 unlocks buildings/units, and grants the faction's signature tech:
 
-- Galicia **Camiño de Santiago**: conversion range +, Camino trickle doubled.
+- Galicia **Camiño de Santiago**: the Camino Identity trickle doubles.
 - Basques **Foruak**: towers and walls free repair; +armor again.
 - Catalans **Consolat de Mar**: market trickle doubled, conversions −25%.
 - Portugal **Escola de Sagres**: full coast revealed; coastal tribute +50%.
