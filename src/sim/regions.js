@@ -125,7 +125,10 @@ export function flipRegion(world, region, pid, how) {
   region.conversion = null;
   region.conquest = null;
   region.converted = how === 'conviction';
-  region.resent = how !== 'conviction';
+  // Foruak: a nation of pacts conquers without breeding resentment — the region
+  // keeps its law and pays full tribute, and missionaries get no grievance to
+  // exploit. (It is still not *loyal*: no 2x conquest-hold protection.)
+  region.resent = how !== 'conviction' && !FACTIONS[pid].bonus.foruPact;
   // village structures change hands; militia disband — unless the region was
   // won by conviction and the new nation arms its brotherhoods (Irmandades)
   const joins = how === 'conviction' && FACTIONS[pid].bonus.militiaJoin;
