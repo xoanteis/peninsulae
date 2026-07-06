@@ -32,11 +32,12 @@ export const FACTIONS = {
     unitNames: { worker: 'Baserritarra', soldier: 'Aizkolari', crossbow: 'Balestari' },
     eraTech: 'Foruak',
     blurb: 'The oldest people of Iberia, unmoved since before Rome. Their mountains hold iron, their law is ancient, and what they build does not break.',
-    bonusText: 'Mines +50% · Buildings & units 22% tougher (the fueros endure)',
+    bonusText: 'Mines +50% · Buildings & units 22% tougher · Conquered regions sign the foru: full tribute, no resentment (the fueros endure)',
     bonus: {
       mineRate: 1.5, buildingHpMul: 1.22, unitHpMul: 1.22,
+      foruPact: true, // conquest by pact, not subjugation ('loyal' = stronger variant, untested at scale)
     },
-    aiStyle: { aggression: 0.45, convictionLove: 0.4, expandCoastal: 0.3, economy: 0.6, turtle: 0.9 },
+    aiStyle: { aggression: 0.65, convictionLove: 0.4, expandCoastal: 0.3, economy: 0.6, turtle: 0.6 },
   },
   catalonia: {
     name: 'Catalans', adj: 'Catalan', motto: 'Seny i Comerç',
