@@ -29,7 +29,7 @@ export const FACTIONS = {
     bonus: {
       mineRate: 1.5, buildingHpMul: 1.22, unitHpMul: 1.22,
     },
-    aiStyle: { aggression: 0.45, convictionLove: 0.55, expandCoastal: 0.3, economy: 0.7, turtle: 0.9 },
+    aiStyle: { aggression: 0.45, convictionLove: 0.4, expandCoastal: 0.3, economy: 0.6, turtle: 0.9 },
   },
   catalonia: {
     name: 'Catalans', adj: 'Catalan', motto: 'Seny i Comerç',
@@ -55,7 +55,7 @@ export const FACTIONS = {
     blurb: 'The first nation of fixed borders turned its back to Castile and its face to the ocean. The coast is theirs by vocation.',
     bonusText: 'Workers 20% faster · Coastal regions convert at a discount and pay extra tribute',
     bonus: {
-      workerSpeedMul: 1.2, coastalConvertMul: 0.8, coastalTributeMul: 1.15,
+      workerSpeedMul: 1.2, coastalConvertMul: 0.7, coastalTributeMul: 1.15,
     },
     aiStyle: { aggression: 0.35, convictionLove: 0.6, expandCoastal: 1.0, economy: 0.75 },
   },
