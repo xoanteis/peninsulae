@@ -24,7 +24,7 @@ export const UNITS = {
 
 export const BUILDINGS = {
   capital: {
-    name: 'Capital', hp: 2400, cost: {}, buildTime: 0, model: 'castle',
+    name: 'Capital', hp: 3000, cost: {}, buildTime: 0, model: 'castle',
     trains: ['worker'], popCap: 14, rates: { identity: 0.35 },
     desc: 'Trains workers and advances Eras. Lose it and the nation falls.',
   },
@@ -102,7 +102,7 @@ export const CONVICTION = {
   resentDiscount: 0.6,    // flipping a region its holder conquered by force
   time: 40,               // seconds of undisturbed conversion
   conquerHoldTime: 10,    // seconds of armed presence after guards fall
-  resentTributeMul: 0.5,  // conquered regions pay half
+  resentTributeMul: 0.65, // conquered regions pay reduced tribute
 };
 
 export const START = {

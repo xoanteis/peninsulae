@@ -131,11 +131,13 @@ export class HUD {
           <h3>The goal — Total Domination</h3>
           <p>Fly your banner over <b>every region of Iberia</b>. Win regions two ways:</p>
           <p><b>🕊 Conviction</b> — select any region (click its land) and spend <b>📜 Identity</b> to convert it.
-          Slow, suppressed while enemy soldiers camp there… but converted folk stay loyal and extend your culture.</p>
+          Slow, suppressed while enemy soldiers camp there… but converted folk stay loyal, extend your culture,
+          and <b>resist conquest twice as long</b>. The wider your realm already is, the costlier each new conversion.</p>
           <p><b>⚔️ Conquest</b> — kill a village's militia and tower, then hold the village with soldiers.
-          Fast — but conquered regions pay <b>half tribute</b> and rivals can re-convert them cheaply.</p>
-          <p>Raze a rival's <b>capital castle</b> and their whole nation defects to the conqueror.
-          Guard your own capital with your life.</p>
+          Fast — but conquered regions pay <b>reduced tribute</b> and rivals can re-convert them cheaply.</p>
+          <p>Raze a rival's <b>capital castle</b> and their nation falls: conquered borderlands defect
+          to the conqueror, but regions won by conviction <b>rise free again</b> — faith does not
+          transfer at swordpoint. Guard your own capital with your life.</p>
         </section>
         <section>
           <h3>Controls</h3>
@@ -206,6 +208,11 @@ export class HUD {
         break;
       case 'region_flipped': {
         const r = world.regions[ev.region];
+        if (ev.how === 'shattered') {
+          this.alert(`🏳️ ${r.meta.name} rises free — its villagers reclaim it`, { x: r.center.x, z: r.center.z, color: '#999' });
+          this.lastPing = { x: r.center.x, z: r.center.z };
+          break;
+        }
         const how = ev.how === 'conviction' ? 'embraces' : ev.how === 'defection' ? 'defects to' : 'falls to';
         this.alert(`🏳️ ${r.meta.name} ${how} ${fname(ev.owner)}`, { x: r.center.x, z: r.center.z, color: fcolor(ev.owner) });
         this.lastPing = { x: r.center.x, z: r.center.z };

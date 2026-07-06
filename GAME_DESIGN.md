@@ -17,7 +17,7 @@ culture kept it.
 That thesis becomes the game's central rule:
 
 ### 1. Allegiance, not tiles
-The peninsula — a 42×31 hex board, ~840 land tiles — is divided into 14 historical
+The peninsula — a 63×46 hex board — is divided into 17 historical
 **regions** (Galiza, Asturias, Euskal Herria,
 Navarra, Aragón, Catalunya, València, Castela, León, Estremadura, Andalucía, Norte, Lisboa,
 Alentejo…). Each has a **village** and an allegiance. You gain a region by:
@@ -25,9 +25,9 @@ Alentejo…). Each has a **village** and an allegiance. You gain a region by:
 - **Conviction** (culture): spend **Identity** to start a conversion; a pilgrim-circle of
   influence grows over the village until it raises your banner. Slow, costs Identity, is
   suppressed while enemy soldiers garrison the region ("the garrison forbids the language") —
-  but a converted region is loyal: it pays full tribute and resists re-flipping.
+  but a converted region is loyal: it pays full tribute and resists conquest twice as long.
 - **Conquest** (war): destroy the village's guard, hold the village with soldiers until the
-  banner falls. Fast — but a conquered region **resents**: it pays only half tribute and
+  banner falls. Fast — but a conquered region **resents**: it pays only two-thirds tribute and
   enemies can convert it back at a discount. The reconquista cuts both ways.
 
 Owning a region yields its **tribute** (its historical specialty: coastal fish, meseta grain,
@@ -47,17 +47,19 @@ along the coasts; Catalans race economy; Basques turtle and counter; Galicians c
 
 ### 4. Total domination
 The game ends when one nation's banner flies over **every region of the peninsula**. Capturing
-a rival's **capital** makes that nation capitulate — all its remaining regions defect to the
-captor (empires fall at the head). Lose your own capital and your game is over.
+a rival's **capital** makes that nation capitulate — its conquered borderlands defect to the
+captor (empires fall at the head), but regions it won by conviction shatter back to independence
+with fresh village guards: faith does not transfer at swordpoint, so murdering a missionary
+nation pays far less than out-believing it. Lose your own capital and your game is over.
 
 ## Factions
 
 | Nation | Color | Theme | Bonuses |
 |---|---|---|---|
-| **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; every **converted** region joins the Camino: +Identity trickle each |
-| **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +25% tougher (fueros are hard to break) |
+| **Galicians** | Blue | *O Camiño e o Mar* — pilgrimage & Atlantic | Coastal food +50%; churches cheaper; every **converted** region joins the Camino: +Identity trickle each, and its village militia takes up the Galician banner (the *Irmandades*) |
+| **Basques** | White | *Burdina eta Foruak* — iron & old law | Mines +50% gold; buildings and units +22% tougher (fueros are hard to break) |
 | **Catalans** | Yellow | *Seny i Comerç* — pragmatism & trade | Buildings cost −25%; markets add a gold trickle per owned region (Mediterranean network) |
-| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at −50% Identity |
+| **Portuguese** | Green | *Descobrimentos* — the ocean vocation | Unit vision +40% and faster workers; **coastal** regions convert at a discount and pay extra tribute |
 | **Castilians** | Red | *Plus Ultra* — the war machine | Start with 2 extra regions; soldiers cost −25% and train faster |
 
 Unit flavor names per faction (same three roles everywhere: Worker, Soldier, Crossbowman):

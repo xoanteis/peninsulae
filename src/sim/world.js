@@ -92,6 +92,7 @@ export class World {
         for (let i = 0; i < START.workers; i++) this.addUnit(p.id, 'worker', ...spots[i % spots.length]);
         for (let i = 0; i < START.soldiers; i++) this.addUnit(p.id, 'soldier', ...spots[(START.workers + i) % spots.length]);
         this.addBuilding(null, 'tower', ...this.nearestFreeTile(c, r, 1), { complete: true, owner: p.id });
+        this.addBuilding(null, 'tower', ...this.nearestFreeTile(c, r, 2), { complete: true, owner: p.id });
       } else {
         this.spawnNeutralVillage(key);
       }
@@ -107,6 +108,23 @@ export class World {
       }
       for (const id of region.militiaIds) this.removeEntity(id, true);
       region.militiaIds = [];
+    }
+  }
+
+  respawnMilitia(region) {
+    // a shattered region raises a fresh (smaller) guard around its village
+    region.militiaIds = region.militiaIds.filter(id => this.entities.get(id));
+    for (const id of region.villageIds) {
+      const b = this.entities.get(id);
+      if (b) b.owner = null;
+    }
+    const [c, r] = region.meta.village;
+    const spots = this.freeSpotsAround(c, r, 2);
+    while (region.militiaIds.length < 2 && spots.length) {
+      const [sc, sr] = spots.shift();
+      const m = this.addUnit(null, 'militia', sc, sr);
+      m.guardPost = { col: c, row: r };
+      region.militiaIds.push(m.id);
     }
   }
 
@@ -500,12 +518,25 @@ export class World {
         p.alive = false;
         const conqueror = p.lastAttacker && this.players[p.lastAttacker]?.alive ? p.lastAttacker : null;
         for (const region of Object.values(this.regions)) {
-          if (region.owner === p.id) {
+          if (region.owner !== p.id) continue;
+          const wasConverted = region.converted;
+          region.conversion = null;
+          region.conquest = null;
+          region.converted = false;
+          // only garrisoned borderlands defect; regions won by conviction
+          // shatter back to the villagers — faith does not transfer at swordpoint
+          const bordersConqueror = conqueror && [...region.neighborKeys]
+            .some(k => this.regions[k].owner === conqueror);
+          const isCapitalRegion = region.meta.capitalOf === p.id;
+          if (conqueror && (isCapitalRegion || (bordersConqueror && !wasConverted))) {
             region.owner = conqueror;
             region.resent = true;
-            region.converted = false;
-            region.conversion = null;
-            this.pushEvent({ type: 'region_flipped', region: region.key, owner: conqueror, how: 'defection' });
+            this.pushEvent({ type: 'region_flipped', region: region.key, owner: conqueror, how: 'defection', x: region.center.x, z: region.center.z });
+          } else {
+            region.owner = null;
+            region.resent = false;
+            this.respawnMilitia(region);
+            this.pushEvent({ type: 'region_flipped', region: region.key, owner: null, how: 'shattered', x: region.center.x, z: region.center.z });
           }
         }
         this.pushEvent({ type: 'nation_fell', owner: p.id, conqueror });

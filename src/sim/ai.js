@@ -29,8 +29,9 @@ export class AIController {
 
     const my = this.collect();
     this.workerTarget = 8 + p.era * 3 + Math.round(this.style.economy * 4);
+    const owned = Object.values(w.regions).filter(r => r.owner === this.pid).length;
     this.armyTarget = 4 + Math.round(this.style.aggression * 6) + p.era * 2 + (this.underThreat ? 3 : 0)
-      + (w.time > 900 ? 2 : 0);
+      + (w.time > 900 ? 2 : 0) + Math.floor(owned * 0.7); // an empire garrisons its wealth
 
     this.defend(my);
     this.economy(my);
@@ -49,7 +50,7 @@ export class AIController {
         if (e.kind === 'worker') {
           my.workers.push(e);
           if (e.state === 'idle') my.idleWorkers.push(e);
-        } else {
+        } else if (e.kind !== 'militia') { // joined militias hold their posts
           my.soldiers.push(e);
           if (e.state === 'idle') my.idleSoldiers.push(e);
         }
@@ -188,6 +189,7 @@ export class AIController {
     if (has('farm') < 2 + p.era) return 'farm';
     if (has('lumbercamp') < 1) return 'lumbercamp';
     if (has('barracks') < 1 + (p.era >= 1 ? 1 : 0)) return 'barracks';
+    if (p.res.gold < 60 && has('market') < 1) return 'market'; // soldiers cost gold
     if (has('mine') < 1 && this.mineSpotExists()) return 'mine';
     if (has('church') < 1 + this.style.convictionLove) return 'church';
     if (has('market') < (this.style.economy > 0.7 ? 2 : 1)) return 'market';
@@ -226,8 +228,18 @@ export class AIController {
 
   expand(my) {
     const w = this.world, p = w.players[this.pid];
+    // regicide is an endgame move (or the hegemon's), not an early land grab —
+    // until then a living nation's home region is off the expansion list
+    const endgame = w.time > 1080
+      || (w.time > 600 && Object.values(w.regions).every(r => r.owner))
+      || (this.style.aggression > 0.7 && p.era >= 1 && w.time > 660);
     // pick a target region
-    const targets = Object.values(w.regions).filter(r => r.owner !== this.pid);
+    const targets = Object.values(w.regions).filter(r => {
+      if (r.owner === this.pid) return false;
+      const capOf = r.meta.capitalOf;
+      if (!endgame && capOf && capOf !== this.pid && r.owner === capOf && w.players[capOf].alive) return false;
+      return true;
+    });
     if (!targets.length) return;
     const score = r => {
       let s = 0;
@@ -261,7 +273,10 @@ export class AIController {
     // don't spam re-orders while a wave is en route
     const busy = my.soldiers.filter(s => s.task && !s.task.auto).length;
     if (busy > my.soldiers.length * 0.4 && w.time - (this.lastWarOrder ?? 0) < 25) return;
-    const army = my.soldiers.filter(s => s.state === 'idle' || s.task?.auto);
+    // a share of the army stays home to guard the castle
+    const idleArmy = my.soldiers.filter(s => s.state === 'idle' || s.task?.auto);
+    const guard = Math.min(Math.ceil(this.armyTarget * 0.3), 5);
+    const army = idleArmy.slice(guard);
     const assaultSize = Math.max(6, 10 - Math.floor(Math.max(0, w.time - 900) / 300));
     if (army.length < Math.min(this.armyTarget, assaultSize)) return;
 
@@ -270,8 +285,18 @@ export class AIController {
     const lateGame = w.time > 600 && Object.values(w.regions).every(r => r.owner);
     const isHegemon = this.style.aggression > 0.7 && p.era >= 1 && w.time > 660;
     if ((isHegemon || lateGame || w.time > 1080) && army.length >= assaultSize) {
+      // march on the NEAREST rival capital, not the leader's — focus-firing
+      // whoever leads the race executed quiet converters every game
+      const myCap = w.entities.get(p.capitalId);
       const rivals = Object.values(w.players).filter(o => o.alive && o.id !== this.pid);
-      rivals.sort((a, b) => w.dominationShare(b.id) - w.dominationShare(a.id));
+      const armyOf = o => [...w.entities.values()]
+        .filter(e => e.type === 'unit' && e.owner === o.id && e.kind !== 'worker').length;
+      const score = o => {
+        const c = w.entities.get(o.capitalId);
+        const d = c && myCap ? Math.hypot(c.x - myCap.x, c.z - myCap.z) : 1e9;
+        return d + armyOf(o) * 5 + Math.random() * 45;
+      };
+      rivals.sort((a, b) => score(a) - score(b));
       const rival = rivals[0];
       const cap = rival && w.entities.get(rival.capitalId);
       if (cap && Math.random() < 0.45) {
@@ -287,7 +312,8 @@ export class AIController {
     const capOf = targetRegion.meta.capitalOf;
     if (capOf && targetRegion.owner === capOf && w.players[capOf].alive) {
       const cap = w.entities.get(w.players[capOf].capitalId);
-      const needed = assaultSize;
+      // storming a castle early takes a real siege army, not a raiding party
+      const needed = assaultSize + (w.time < 900 ? 4 : 0);
       if (cap && army.length >= needed) {
         w.orderAttack(this.pid, army.map(u => u.id), cap.id);
         this.attackWave = { target: cap.id };
