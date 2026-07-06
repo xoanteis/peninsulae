@@ -10,11 +10,17 @@ export const FACTIONS = {
     unitNames: { worker: 'Labrego', soldier: 'Irmandiño', crossbow: 'Besteiro' },
     eraTech: 'Camiño de Santiago',
     blurb: 'Patient people of the Atlantic mists. The sea feeds them, the Way of St James binds them, and every region they win by conviction strengthens the pilgrimage.',
-    bonusText: 'Fishing +50% · Churches 30% cheaper · Watchtowers 35% cheaper & a fortress-cathedral capital · Converted regions feed the Camino and arm their militias (Irmandades)',
+    bonusText: 'Fishing +50% · The mines of Gallaecia: rich veins + a steady gold trickle · Irmandiños +15% HP · Fortress-cathedral capital, cheap watchtowers, churches 30% off · Converted regions feed the Camino & arm their militias (Irmandades)',
     bonus: {
       fishRate: 1.5, churchCostMul: 0.7, caminoIdentity: 0.15, // per converted region /s
       militiaJoin: true, // Irmandades: village guards of convinced regions take up your banner
       towerCostMul: 0.65, capitalHpMul: 1.5, // the sanctuary: hold what conviction wins
+      // As Minas — Gallaecia was the Roman gold province; wolfram, tin and slate.
+      // Rich mine veins plus a passive trickle of scattered diggings fund the army
+      // Galicia's Identity-based economy could never afford. Irmandiños are hardy.
+      // (Trimmed from 1.8/0.35/1.2 after that overshot Galicia to 35% — enough gold
+      // to field an army without over-supplying it.)
+      mineRate: 1.5, mineralTrickle: 0.18, unitHpMul: 1.15,
     },
     aiStyle: { aggression: 0.4, convictionLove: 0.95, expandCoastal: 0.6, economy: 0.7, turtle: 0.7 },
   },

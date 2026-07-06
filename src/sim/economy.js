@@ -61,6 +61,9 @@ export function updateEconomy(world, dt) {
         .filter(r => r.owner === p.id && r.converted && !r.meta.capitalOf).length;
       p.res.identity += converted * f.bonus.caminoIdentity * (p.techs?.camino ? 2 : 1) * dt;
     }
+    // As Minas de Gallaecia: the land's scattered gold, tin and wolfram workings
+    // pay a steady trickle — the war-chest an Identity economy can't otherwise raise
+    if (f.bonus.mineralTrickle) p.res.gold += f.bonus.mineralTrickle * dt;
     // Catalan trade network: markets pay per region held
     if (f.bonus.marketPerRegion && marketOwners.has(p.id)) {
       const owned = perPlayerRegions[p.id] ?? 0;

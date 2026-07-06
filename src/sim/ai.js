@@ -191,13 +191,14 @@ export class AIController {
     if (has('lumbercamp') < 1) return 'lumbercamp';
     if (has('barracks') < 1 + (p.era >= 1 ? 1 : 0)) return 'barracks';
     if (p.res.gold < 60 && has('market') < 1) return 'market'; // soldiers cost gold
-    if (has('mine') < 1 && this.mineSpotExists()) return 'mine';
+    if (has('mine') < (this.bonus.mineRate ? 2 : 1) && this.mineSpotExists()) return 'mine';
     if (has('church') < 1 + this.style.convictionLove) return 'church';
     if (has('market') < (this.style.economy > 0.7 ? 2 : 1)) return 'market';
-    // fortify nations (cheap towers) wall their core — one per region held — as
-    // soon as they can pay, so their expansion doesn't outrun their defense
-    if (this.bonus.towerCostMul && has('tower') < 1 + my.regions.length
-      && this.affordable('tower')) return 'tower';
+    // fortify nations (cheap towers) wall their core with a FEW towers — capped so
+    // they don't sink their whole treasury into static defense and starve the army
+    // (a human wouldn't; the tournament shouldn't model it either)
+    if (this.bonus.towerCostMul && has('tower') < 3 && this.affordable('tower')
+      && my.soldiers.length >= 2) return 'tower';
     if (p.era >= 1) {
       if (has('archery') < 1) return 'archery';
       if (has('blacksmith') < 1) return 'blacksmith';
