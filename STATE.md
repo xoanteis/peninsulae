@@ -18,7 +18,17 @@ raw tournament JSONL, or old conversations.
   (army x2 deterrence, dominator heat x90) · lateGame gate 900s, hegemon 660s · early sieges +4 ·
   capital siege recalls whole army · turtle/convictionLove live knobs · zombie nations dissolve
 
-## forest-regrow-full standings (60 games, SHIPPED — the new reference round)
+## portugal-terrain-full standings (60 games, SHIPPED — the new reference round)
+galicia 38.3 [27.1-51] · catalonia 28.3 [18.5-40.8] · castile 15 · portugal 10 [4.7-20.1] ·
+basque 8.3 — FLATTEST TABLE EVER. Map fix (R19): Pinhal de Leiria (5 forest, Lisboa) +
+Serra do Alentejo (2 mtn → 8 mine sites). Portugal 3.3→10% (6 real wins, first-fall
+36→26/60) AND galicia 63→38 organically — a solvent southern neighbor unsafes the corner
+(galicia's first 4 first-falls of the clean era). Lesson: the MAP was Portugal's kit all
+along; multipliers on a starved base do nothing (5 failed buffs proved it). Watch:
+catalonia 28.3 rising, basque 8.3 floor. n=4 smoke said portugal 2/4 — variance; trust
+only CI bands (relearned AGAIN).
+
+## forest-regrow-full standings (60 games — superseded by portugal-terrain-full)
 galicia 63.3 [50.7-74.4] · castile 13.3 [6.9-24.2] · catalonia 11.7 · basque 8.3 ·
 portugal 3.3 [0.9-11.4] — portugal's FIRST wins in the clean harness (2). All bands
 overlap R17: mechanic passed. Directional watch: castile softened (regrow blunts
@@ -29,13 +39,12 @@ galicia 56.7 [44-68] · castile 23.3 · catalonia 18.3 · basque 1.7 · portugal
 Kill graph: castile executes portugal (32x, ~min 11-13); galicia now dies 26x/60 (heat works).
 
 ## OPEN PROBLEMS (next balance round — start here)
-1. Portugal 0%: castile's hegemon window always finds Lisboa (nearest weak). Tried & failed:
-   turtle 0.4, aggression 0.5, capitalHpMul 1.25, +6 siege premium, tribute 1.25. Untried:
-   rework its kit toward defense/navy identity; or hegemon target diversity.
-2. Galicia 57%: corner fortress-convertor. Tried & failed to tame fully: economy cuts, kit
-   slimming (helped 63->57), fatigue 0.25, heat 90. Untried: fatigue on CONVERSION TIME not
-   just cost; win condition rework (dominance threshold); map (corner safety).
-3. Basque 1.7% in clean world.
+1. LARGELY SOLVED by R19 map fix: Portugal 10% [4.7-20.1] with real wins (was 0). Remaining
+   headroom: fishGold kit rework ("Descobrimentos: shoals yield gold for Portugal") — designed,
+   not yet built; hegemon target diversity still untried. workerSpeedMul is still a dead bonus.
+2. IMPROVED organically by R19: Galicia 38.3 [27.1-51] (was 57-63). The corner unsafed itself
+   once Portugal could fight. Anti-turtle AI pressure (human-play issue) still untried.
+3. Basque 8.3% floor (unchanged through R18/R19). Catalonia 28.3 and rising — watch.
 4. Golden Age (era 2) is content-thin by design (P3 backlog): only +1 dmg.
 NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harness
 (FACTIONS mutation leak) — compare only against post-R16 rounds.
