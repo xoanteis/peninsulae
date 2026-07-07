@@ -36,7 +36,9 @@ const dry = !!flag('dry');
 const rawPath = typeof flag('raw') === 'string' ? flag('raw') : null; // save per-game JSONL
 
 // ---- run batches in parallel ----
-const workers = Math.max(2, Math.min(6, cpus().length - 2));
+// each batch is a single-threaded CPU-bound child; the parent only waits, so
+// use every core (the old cpus-2 formula idled half a 4-core box). --jobs=N overrides.
+const workers = Number(flag('jobs')) || Math.max(2, cpus().length);
 const per = Math.ceil(games / workers);
 const batchArgs = [];
 for (let left = games; left > 0; left -= per) batchArgs.push(Math.min(per, left));
