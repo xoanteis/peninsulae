@@ -1,0 +1,63 @@
+# Session state — Peninsulae (update + commit with every shipped change)
+
+New session? Read this file first — it replaces re-deriving anything from git history,
+raw tournament JSONL, or old conversations.
+
+## Current shipped truth (R17-clean-retune + match recorder)
+- galicia.bonus: fishRate 1.5 · churchCostMul 0.7 · caminoIdentity 0.1 · capitalHpMul 1.3 (3900) ·
+  mineralTrickle 0.15 · unitHpMul 1.15  (REMOVED in R17: militiaJoin, towerCostMul, mineRate)
+- basque: mineRate 1.5 · hp muls 1.22 · foruPact · aggression 0.65 / turtle 0.6
+- catalonia: buildCostMul 0.75 · marketPerRegion 0.12
+- portugal: workerSpeedMul 1.2 · coastalConvertMul 0.7 · coastalTributeMul 1.25 ·
+  aiStyle aggression 0.5 / turtle 0.4
+- castile: soldierCostMul 0.75 · trainTimeMul 0.7 · +2 regions (map hardcode, no flag)
+- rules: capital 3000 · resent tribute 0.65 · loyal 2x hold · empire fatigue +25%/region>2 ·
+  REPAIR 30hp/s @35% wood
+- AI meta: era techs are PER-PLAYER (p.techs — never mutate FACTIONS!) · nearest-rival targeting
+  (army x2 deterrence, dominator heat x90) · lateGame gate 900s, hegemon 660s · early sieges +4 ·
+  capital siege recalls whole army · turtle/convictionLove live knobs · zombie nations dissolve
+
+## R17 standings (60 games, honest harness)
+galicia 56.7 [44-68] · castile 23.3 · catalonia 18.3 · basque 1.7 · portugal 0 [0-6]
+Kill graph: castile executes portugal (32x, ~min 11-13); galicia now dies 26x/60 (heat works).
+
+## OPEN PROBLEMS (next balance round — start here)
+1. Portugal 0%: castile's hegemon window always finds Lisboa (nearest weak). Tried & failed:
+   turtle 0.4, aggression 0.5, capitalHpMul 1.25, +6 siege premium, tribute 1.25. Untried:
+   rework its kit toward defense/navy identity; or hegemon target diversity.
+2. Galicia 57%: corner fortress-convertor. Tried & failed to tame fully: economy cuts, kit
+   slimming (helped 63->57), fatigue 0.25, heat 90. Untried: fatigue on CONVERSION TIME not
+   just cost; win condition rework (dominance threshold); map (corner safety).
+3. Basque 1.7% in clean world.
+4. Golden Age (era 2) is content-thin by design (P3 backlog): only +1 dmg.
+NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harness
+(FACTIONS mutation leak) — compare only against post-R16 rounds.
+
+## Lessons that must not be relearned the hard way
+- AI tournaments measure bonuses THROUGH AI temperaments, not human play. Human match logs
+  (matches/, tools/analyze-match.mjs) outrank tournament conclusions when they disagree.
+  Example: cheap towers made the AI over-fortify and skip its army — a human wouldn't.
+- Between-run variance is ±10pp at n=60: judge Wilson-CI bands, never orderings. n=20 screens
+  only detect collapses/overshoots.
+- Expansion accelerants on a survival-constrained faction backfire (coastal bonus made
+  Galicia die FIRST 53/60). Diagnose with a probe snapshot (min-12 army/econ/regions) first.
+- Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
+  across games in one process and silently biases every harness (cost us months of data).
+
+## Awaiting
+- A human match log from the player (told to play at the live site and share the JSON —
+  via matches/ upload or paste). Analyze with tools/analyze-match.mjs, then (a) coach,
+  (b) cross-check R17 conclusions against human reality.
+
+## Deployed / published
+- Game: https://xoanteis.github.io/peninsulae/ (Pages from main; PR merge = deploy)
+- Balance report artifact: https://claude.ai/code/artifact/787124ec-debb-4119-bdcf-305262aa255a
+  (source: docs/balance-report.html — edit it and republish with the Artifact tool `url`
+  param to the SAME address; update only when a change ships)
+- docs/AUDIT.md: full audit ledger (all items fixed as of the audit fix pack PR #18)
+
+## Tool map (details in CLAUDE.md)
+- Balance round: node tools/round.mjs --name=x [--patch=exp.json] [--full] [--raw=f.jsonl]
+- Probes: tools/probes/ (N=1 env for smoke) · headless recorder test: recorder-headless.mjs
+- Browser checks: tools/checks/*.mjs via tools/verify.mjs (all green as of the persistence PR)
+- Docs regen: node tools/gendocs.mjs after any bonus change
