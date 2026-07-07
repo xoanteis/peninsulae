@@ -16,12 +16,14 @@ run `node tools/gendocs.mjs`. Never hand-edit numbers into .md files.
 `node tools/round.mjs --name=exp --patch=exp.json` (patch shape documented in
 `tools/patch.mjs`). Only a validated winner gets a real config edit + commit.
 
-**One command per balance round.** `tools/round.mjs` runs parallel batches, prints a
-Wilson-CI table vs named rounds from `tools/balance-history.jsonl`, and appends the
-result there (mark `"shipped": true` by hand when it ships). Default is a 20-game
-screen — collapses and overshoots are obvious at 20; only run `--full` (60 games) to
-validate something you intend to ship. History file = durable memory; don't re-derive
-old results from raw JSONL or conversation.
+**One command per balance round.** `tools/round.mjs` runs parallel batches (all cores;
+`--jobs=N` overrides), prints a Wilson-CI table vs named rounds from
+`tools/balance-history.jsonl`, and appends the result there (mark `"shipped": true` by
+hand when it ships). 20-game screens are for EXPLORING (ladders, rejects); a change you
+already intend to ship goes STRAIGHT to `--full` (60 games, ~3 min) — screening first
+just serializes extra minutes, and small-n will fool you (R19's smoke said Portugal 2/4;
+the truth was 10%). History file = durable memory; don't re-derive old results from raw
+JSONL or conversation.
 
 **Screenshots are the most expensive reads.** Trust the JSON checks from
 `tools/verify.mjs` (PWTOOLS env → playwright dir, QUERY='?faction=x'); only read a PNG

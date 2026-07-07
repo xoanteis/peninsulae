@@ -13,6 +13,10 @@ import { AIController } from './ai.js';
 
 let nextId = 1;
 
+// spatial-hash key geometry: bucket key = (row+OFF)*STRIDE + col+OFF — integer
+// keys avoid the per-cell string allocations that dominated tournament CPU
+const SPATIAL_STRIDE = 512, SPATIAL_OFF = 64;
+
 export class World {
   constructor(humanFaction = 'galicia') {
     this.tick_ = 0;
@@ -225,23 +229,28 @@ export class World {
       this.players[e.owner].pop -= UNITS[e.kind].pop;
     }
     this.entities.delete(id);
+    e.removed = true; // spatial-hash buckets hold refs; queries must skip the dead
     if (!silent) this.pushEvent({ type: 'entity_removed', id });
   }
 
   pushEvent(ev) { this.events.push(ev); }
 
   // ---------- queries ----------
+  // unitsNear was 41% of tournament CPU: string bucket keys allocated per cell
+  // per call, plus an entities.get per candidate. Integer keys + unit refs keep
+  // results identical (same buckets, same order) at a fraction of the cost.
   unitsNear(x, z, radius) {
     const out = [];
     const { col, row } = worldToTile(x, z);
     const r2 = radius * radius;
-    for (let dr = -Math.ceil(radius / 1.7) - 1; dr <= Math.ceil(radius / 1.7) + 1; dr++) {
-      for (let dc = -Math.ceil(radius / 2) - 1; dc <= Math.ceil(radius / 2) + 1; dc++) {
-        const list = this.unitsByTile.get(`${col + dc},${row + dr}`);
+    const drMax = Math.ceil(radius / 1.7) + 1, dcMax = Math.ceil(radius / 2) + 1;
+    for (let dr = -drMax; dr <= drMax; dr++) {
+      const base = (row + dr + SPATIAL_OFF) * SPATIAL_STRIDE + col + SPATIAL_OFF;
+      for (let dc = -dcMax; dc <= dcMax; dc++) {
+        const list = this.unitsByTile.get(base + dc);
         if (!list) continue;
-        for (const id of list) {
-          const u = this.entities.get(id);
-          if (!u) continue;
+        for (const u of list) {
+          if (u.removed) continue;
           const dx = u.x - x, dz = u.z - z;
           if (dx * dx + dz * dz <= r2) out.push(u);
         }
@@ -505,16 +514,16 @@ export class World {
     this.tick_++;
     this.time += dt;
 
-    // spatial hash
+    // spatial hash (integer keys, unit refs — see unitsNear)
     this.unitsByTile.clear();
     for (const e of this.entities.values()) {
       if (e.type !== 'unit') continue;
       e.px = e.x; e.pz = e.z;
       const { col, row } = worldToTile(e.x, e.z);
-      const k = `${col},${row}`;
+      const k = (row + SPATIAL_OFF) * SPATIAL_STRIDE + col + SPATIAL_OFF;
       let list = this.unitsByTile.get(k);
       if (!list) this.unitsByTile.set(k, list = []);
-      list.push(e.id);
+      list.push(e);
     }
 
     updateEconomy(this, dt);
