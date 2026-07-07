@@ -94,16 +94,7 @@ export class Controls {
         break;
       }
       case 'Period': { // cycle idle workers, RTS-style
-        const idle = [...this.world.entities.values()].filter(u =>
-          u.type === 'unit' && u.owner === this.humanId && u.kind === 'worker'
-          && u.state === 'idle');
-        if (!idle.length) break;
-        this._idleCycle = ((this._idleCycle ?? -1) + 1) % idle.length;
-        const u = idle[this._idleCycle];
-        this.selection.clear();
-        this.selection.add(u.id);
-        this.rig.jumpTo(u.x, u.z);
-        this.onSelect(u);
+        this.cycleIdleWorker();
         break;
       }
       case 'KeyP': {
@@ -317,6 +308,20 @@ export class Controls {
   }
 
   // contextual order for the current selection (right-click / long-press)
+  // shared by the Period key and the HUD's 💤 badge
+  cycleIdleWorker() {
+    const idle = [...this.world.entities.values()].filter(u =>
+      u.type === 'unit' && u.owner === this.humanId && u.kind === 'worker'
+      && u.state === 'idle');
+    if (!idle.length) return;
+    this._idleCycle = ((this._idleCycle ?? -1) + 1) % idle.length;
+    const u = idle[this._idleCycle];
+    this.selection.clear();
+    this.selection.add(u.id);
+    this.rig.jumpTo(u.x, u.z);
+    this.onSelect(u);
+  }
+
   contextOrder(clientX, clientY) {
     const e = { clientX, clientY };
     const ids = [...this.selection].filter(id => {
@@ -325,9 +330,12 @@ export class Controls {
     });
     const p = this.screenToGround(e.clientX, e.clientY);
     if (!p) return;
-    const hit = this.pickEntity(e.clientX, e.clientY, { maxPx: 22 });
+    let hit = this.pickEntity(e.clientX, e.clientY, { maxPx: 22 });
     const { col, row } = worldToTile(p.x, p.z);
     const tile = this.world.tileAt(col, row);
+    // a click anywhere on a building's tile counts as the building — pixel-picking
+    // small models (mines especially) silently turned work orders into plain moves
+    if (!hit && tile?.building) hit = this.world.entities.get(tile.building);
 
     if (!ids.length) {
       // no units: maybe set rally for selected building

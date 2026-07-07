@@ -33,6 +33,17 @@ export class Overlays {
       this.root.appendChild(el);
       this.floats.push({ el, t: 0, ttl: 0 });
     }
+    // 💤 pinned over own idle workers — in a crowd an idle Labrego is otherwise
+    // indistinguishable from a busy one
+    this.idleMarks = [];
+    for (let i = 0; i < 24; i++) {
+      const el = document.createElement('div');
+      el.className = 'idle-marker';
+      el.textContent = '💤';
+      el.style.display = 'none';
+      this.root.appendChild(el);
+      this.idleMarks.push(el);
+    }
     this._v = { x: 0, y: 0 };
 
     // one quiet name-plate per region, anchored at its village, tinted by owner
@@ -87,9 +98,12 @@ export class Overlays {
       case 'work_pulse': {
         const u = world.entities.get(ev.id);
         if (!u || u.owner !== this.humanId) break;
-        const labels = { forest: '+wood', fish: '+food', slot: '+', construct: '🔨', repair: '🔧' };
-        if (ev.task === 'slot') break; // building bar shows it
-        if (Math.random() < 0.4) this.float(labels[ev.task] ?? '+', ev.x, 1.4, ev.z, '#d9f2b8');
+        const label = ev.task === 'slot' ? (ev.kind === 'mine' ? '+gold' : '+food')
+          : ({ forest: '+wood', fish: '+food', construct: '🔨', repair: '🔧' }[ev.task] ?? '+');
+        // repair reads as a steady 🔧 tick; gathering stays a light sprinkle
+        if (ev.task === 'repair' || Math.random() < 0.4) {
+          this.float(label, ev.x, 1.4, ev.z, ev.kind === 'mine' ? '#ffd97a' : '#d9f2b8');
+        }
         break;
       }
       case 'damage':
@@ -187,5 +201,18 @@ export class Overlays {
       }
     }
     for (; i < this.bars.length; i++) this.bars[i].style.display = 'none';
+
+    // 💤 over own idle workers
+    let m = 0;
+    for (const e of world.entities.values()) {
+      if (m >= this.idleMarks.length) break;
+      if (e.type !== 'unit' || e.kind !== 'worker' || e.owner !== this.humanId || e.state !== 'idle') continue;
+      const s = this.project(e.x, 1.9, e.z);
+      if (!s) continue;
+      const el = this.idleMarks[m++];
+      el.style.display = 'block';
+      el.style.transform = `translate(${s.x}px, ${s.y}px) translate(-50%,-100%)`;
+    }
+    for (; m < this.idleMarks.length; m++) this.idleMarks[m].style.display = 'none';
   }
 }

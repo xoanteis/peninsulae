@@ -100,9 +100,12 @@ export function buildTerrain(scene, tiles, fishNodes = []) {
     } else if (terrain === 'forest') {
       forestSlots.set(`${col},${row}`, t.forests.length);
       t.forests.push({ x, z, rot: hexRot(col, row, 3) });
-    } else if (rnd < 0.055) {
-      const pick = rnd < 0.02 ? 'A' : rnd < 0.04 ? 'B' : 'D';
-      t.rocks[pick].push({ x: x + (tileRand(col, row, 4) - 0.5) * 0.9, z: z + (tileRand(col, row, 5) - 0.5) * 0.9, rot: tileRand(col, row, 6) * Math.PI * 2, scale: 0.8 + rnd * 8 });
+    } else if (rnd < 0.55 && neighbors(col, row).some(([c, r]) => landAt(c, r) && tiles[r * MAP_W + c].terrain === 'mountain')) {
+      // rocks are a signpost, not clutter: they only dress ground beside the sierra,
+      // marking the tiles where a Mine can dig (the needsMountain placement rule) —
+      // random rocks elsewhere read as mineral deposits and mislead mine placement
+      const pick = rnd < 0.2 ? 'A' : rnd < 0.4 ? 'B' : 'D';
+      t.rocks[pick].push({ x: x + (tileRand(col, row, 4) - 0.5) * 0.9, z: z + (tileRand(col, row, 5) - 0.5) * 0.9, rot: tileRand(col, row, 6) * Math.PI * 2, scale: 0.8 + tileRand(col, row, 10) * 0.5 });
     }
   }
 
