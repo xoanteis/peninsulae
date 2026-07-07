@@ -333,6 +333,10 @@ export class Controls {
     if (hit && hit.owner === this.humanId && hit.type === 'building') {
       const b = hit;
       if (b.progress < 1) { this.onOrder({ type: 'build', ids, buildingId: b.id }); return; }
+      if (b.hp < b.maxHp && ids.some(id => this.world.entities.get(id)?.kind === 'worker')) {
+        this.onOrder({ type: 'repair', ids, buildingId: b.id });
+        return;
+      }
       if (b.slots) { this.onOrder({ type: 'workslot', ids, buildingId: b.id }); return; }
     }
     if (tile && tile.terrain === 'forest' && tile.wood > 0) {

@@ -467,6 +467,19 @@ export class World {
     }
   }
 
+  orderRepair(pid, ids, buildingId) {
+    const b = this.entities.get(buildingId);
+    if (!b || b.type !== 'building' || b.owner !== pid || b.progress < 1) return;
+    for (const id of ids) {
+      const u = this.entities.get(id);
+      if (!u || u.owner !== pid || u.kind !== 'worker' || u.state === 'dying') continue;
+      u.task = { type: 'repair', buildingId };
+      u.workSlot = null;
+      u.state = 'toWork';
+      u.path = null;
+    }
+  }
+
   orderAttack(pid, ids, targetId) {
     const t = this.entities.get(targetId);
     if (!t) return;
