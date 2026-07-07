@@ -37,11 +37,11 @@ export function regionConvertCost(world, pid, key) {
   let cost = ownsNeighbor ? CONVICTION.adjacentCost : CONVICTION.baseCost;
   if (region.owner && region.resent) cost *= CONVICTION.resentDiscount;
   if (region.coastal && f.bonus.coastalConvertMul) cost *= f.bonus.coastalConvertMul;
-  if (f.bonus.convictionCostMul) cost *= f.bonus.convictionCostMul; // Consolat de Mar
+  if (world.players[pid].techs?.consolat) cost *= 0.75; // Consolat de Mar (era tech)
   // empire fatigue: every region past the second makes the next sermon pricier —
   // a message that spread like fire in three valleys strains across a peninsula
   const owned = Object.values(world.regions).filter(r => r.owner === pid).length;
-  cost *= 1 + 0.12 * Math.max(0, owned - 2);
+  cost *= 1 + 0.25 * Math.max(0, owned - 2);
   return Math.round(cost);
 }
 
@@ -93,8 +93,9 @@ function updateConquest(world, region, dt) {
       });
     if (guardsAlive) { region.conquest = null; return; }
   }
+  // militia are guards, not conquerors — they hold posts but cannot seize banners
   const holders = world.unitsNear(region.center.x, region.center.z, 3.2)
-    .filter(u => u.owner && u.owner !== '__dead__' && u.kind !== 'worker' && u.owner !== region.owner);
+    .filter(u => u.owner && u.owner !== '__dead__' && u.kind !== 'worker' && u.kind !== 'militia' && u.owner !== region.owner);
   const owners = new Set(holders.map(u => u.owner));
   if (owners.size !== 1) { region.conquest = null; return; }
   const pid = [...owners][0];
@@ -160,9 +161,14 @@ export function flipRegion(world, region, pid, how) {
 export function regionTribute(world, region) {
   if (!region.owner) return null;
   const f = FACTIONS[region.owner];
+  const p = world.players[region.owner];
   const out = {};
   let mul = region.resent ? CONVICTION.resentTributeMul : 1;
-  if (region.coastal && f.bonus.coastalTributeMul) mul *= f.bonus.coastalTributeMul;
+  if (region.coastal) {
+    // Escola de Sagres (era tech) supersedes the base coastal bonus
+    const coastMul = p?.techs?.sagres ? 1.5 : f.bonus.coastalTributeMul;
+    if (coastMul) mul *= coastMul;
+  }
   for (const [k, v] of Object.entries(region.meta.tribute)) out[k] = v * mul;
   return out;
 }

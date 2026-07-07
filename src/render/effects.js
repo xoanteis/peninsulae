@@ -106,6 +106,14 @@ export class EffectsRenderer {
       case 'order_move':
         if (ev.owner === this.humanId) this.ping(ev.x, ev.z);
         break;
+      case 'order_attack': {
+        // attack orders deserve a ping too — red, at the victim
+        if (ev.owner !== this.humanId) break;
+        const t = ev.targetId != null ? world.entities.get(ev.targetId) : null;
+        const x = ev.x ?? t?.x, z = ev.z ?? t?.z;
+        if (x != null) this.ping(x, z, 0xff5f4a);
+        break;
+      }
       case 'region_flipped': {
         if (ev.x != null) {
           const f = ev.owner ? FACTIONS[ev.owner] : null;

@@ -43,6 +43,13 @@ export class Overlays {
       this.root.appendChild(el);
       return { el, region, owner: undefined };
     });
+
+    // a rally flag, shown while a building with a rally point is selected
+    this.rallyEl = document.createElement('div');
+    this.rallyEl.className = 'rally-flag';
+    this.rallyEl.textContent = '🚩';
+    this.rallyEl.style.display = 'none';
+    this.root.appendChild(this.rallyEl);
   }
 
   project(x, y, z) {
@@ -99,6 +106,22 @@ export class Overlays {
   }
 
   update(dt, selection) {
+    // rally flag for the selected building
+    let rallyShown = false;
+    for (const id of selection) {
+      const b = this.world.entities.get(id);
+      if (b?.type === 'building' && b.owner === this.humanId && b.rally) {
+        const s = this.project(b.rally.x, 0.4, b.rally.z);
+        if (s) {
+          this.rallyEl.style.display = 'block';
+          this.rallyEl.style.transform = `translate(${s.x}px, ${s.y}px) translate(-50%,-90%)`;
+          rallyShown = true;
+        }
+        break;
+      }
+    }
+    if (!rallyShown) this.rallyEl.style.display = 'none';
+
     // region name-plates: readable from the air, ghosts up close
     const cp = this.camera.position;
     for (const L of this.regionLabels) {

@@ -61,7 +61,7 @@ for all bonus numbers) by `node tools/gendocs.mjs` — edit the config, not the 
 <!-- factions:generated:begin (edit src/config/factions.js, then run node tools/gendocs.mjs) -->
 | Nation | Color | Theme | Bonuses |
 |---|---|---|---|
-| **Galicians** | Blue | *O Camiño e o Mar* | Fishing +50% · The mines of Gallaecia: rich veins + a steady gold trickle · Irmandiños +15% HP · Fortress-cathedral capital, cheap watchtowers, churches 30% off · Converted regions feed the Camino & arm their militias (Irmandades) |
+| **Galicians** | Blue | *O Camiño e o Mar* | Fishing +50% · The gold of Gallaecia: a steady mineral trickle · Irmandiños +15% HP · Fortress-cathedral capital · Churches 30% off · Converted regions feed the Camino |
 | **Basques** | White | *Burdina eta Foruak* | Mines +50% · Buildings & units 22% tougher · Conquered regions sign the foru: full tribute, no resentment (the fueros endure) |
 | **Catalans** | Yellow | *Seny i Comerç* | Buildings 25% cheaper · Markets add gold for every region you hold |
 | **Portuguese** | Green | *Descobrimentos* | Workers 20% faster · Coastal regions convert at a discount and pay extra tribute |
@@ -89,14 +89,19 @@ staff-bearing pilgrim…), workers share the hooded-peasant model with faction b
 
 ## Eras (tech progression)
 
-**County → Kingdom → Golden Age.** Advancing costs Food+Gold+Identity at the Capital,
-unlocks buildings/units, and grants the faction's signature tech:
+**County → Kingdom → Golden Age.** Advancing costs Food+Gold+Identity at the Capital.
+The **Kingdom** era unlocks buildings (Archery Range, Blacksmith, Festival Hall) and grants
+the faction's signature tech:
 
 - Galicia **Camiño de Santiago**: the Camino Identity trickle doubles.
 - Basques **Foruak**: every unit hardens (bonus armor) — the old law endures.
 - Catalans **Consolat de Mar**: the market trickle doubles and conversions get cheaper.
 - Portugal **Escola de Sagres**: coastal tribute rises — the ocean pays its captain.
 - Castile **Tercios**: soldiers hit harder.
+
+The **Golden Age** unlocks nothing new — it is the summit: every unit in the nation
+strikes harder, and the era's huge Identity price is itself the victory lap of a
+culture that has already won its argument.
 
 ## Combat
 
@@ -115,7 +120,7 @@ die with death animations and dust. Buildings burn, crumble to a ruin model. Vil
 - Trackpad-first: two-finger scroll pans, pinch zooms, two-finger tap issues orders; WASD
   pans too. Clean HUD: resources+era top-left, **domination race bar** top-center, minimap
   bottom-left, selection panel bottom-center, build menu bottom-right, alerts feed, and an
-  in-game **How to play** overlay (H).
+  in-game **How to play** overlay (F1).
 
 ## Engineering
 

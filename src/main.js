@@ -107,6 +107,12 @@ async function boot() {
           break;
         }
         case 'hint': world.pushEvent({ type: 'ui_error', message: o.message }); break;
+        case 'pause': {
+          dbg.paused = !dbg.paused;
+          hud.setPaused(dbg.paused);
+          audio.play('ui_click', { volume: 0.4 });
+          break;
+        }
       }
     },
   });
@@ -148,11 +154,11 @@ async function boot() {
     acc += dt * 1000;
     let safety = 0;
     while (acc >= TICK_MS && safety++ < 10) {
-      if (!world.winner) world.step();
+      if (!world.winner && !dbg.paused) world.step();
       acc -= TICK_MS;
     }
     // freeze interpolation once the war is decided, or units vibrate on stale ticks
-    const alpha = world.winner ? 1 : Math.min(acc / TICK_MS, 1);
+    const alpha = (world.winner || dbg.paused) ? 1 : Math.min(acc / TICK_MS, 1);
 
     const events = world.events.splice(0);
     for (const ev of events) {

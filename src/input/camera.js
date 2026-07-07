@@ -3,7 +3,7 @@ import * as THREE from 'three';
 // Trackpad-first RTS camera rig.
 //  two-finger scroll -> pan          pinch (ctrlKey wheel) -> zoom
 //  mouse wheel (coarse deltas) -> zoom          WASD / arrows -> pan
-//  Q / E -> rotate       middle-drag -> pan
+//  Q / R -> rotate       middle-drag -> pan
 // Camera sits south of its target looking north, pitch flattens as you zoom in.
 
 const MIN_DIST = 9, MAX_DIST = 82;

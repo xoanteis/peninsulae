@@ -72,6 +72,30 @@ export class HUD {
       }
     });
 
+    // touch micro bar: the few army commands a phone can't reach by keyboard
+    if (window.matchMedia?.('(pointer: coarse)').matches || 'ontouchstart' in window) {
+      const bar = document.createElement('div');
+      bar.id = 'touch-bar';
+      bar.className = 'panel';
+      bar.innerHTML = `
+        <button id="tb-army" title="select army on screen">👥</button>
+        <button id="tb-amove" title="attack-move: arm, then tap the map">⚔</button>
+        <button id="tb-stop" title="stop">⏹</button>`;
+      root.appendChild(bar);
+      bar.querySelector('#tb-army').onclick = () => { this.audio.play('ui_click', { volume: 0.4 }); this.controls.selectSoldiersOnScreen(); };
+      bar.querySelector('#tb-amove').onclick = () => {
+        const btn = bar.querySelector('#tb-amove');
+        this.controls.amove = !this.controls.amove;
+        btn.classList.toggle('active', this.controls.amove);
+        this.audio.play('ui_click', { volume: 0.4 });
+        if (this.controls.amove) this.alert('⚔ Attack-move armed — tap where the army should sweep', { ttl: 4 });
+      };
+      bar.querySelector('#tb-stop').onclick = () => {
+        const ids = this.controls.myUnitIds();
+        if (ids.length) this.controls.onOrder({ type: 'stop', ids });
+      };
+    }
+
     this.minimapBase = this.renderMinimapBase();
     this.el.minimap.addEventListener('pointerdown', e => this.minimapJump(e));
     this.el.minimap.addEventListener('pointermove', e => { if (e.buttons & 1) this.minimapJump(e); });
@@ -171,7 +195,8 @@ export class HUD {
           <p>🖱 <b>Click</b> select · <b>double-click</b> all of that type · <b>drag</b> box-select · <b>Shift</b> add<br>
           <b>Right-click</b> order (move · attack · gather · build · rally) · <b>right-drag</b> or <b>screen edge</b> pan · <b>wheel</b> zoom<br>
           ⌨️ <b>Ctrl+1–9</b> assign group · <b>1–9</b> recall (double-tap centers) · <b>F</b>+click attack-move ·
-          <b>S</b> stop · <b>E</b> all soldiers on screen · <b>H</b> home · <b>Space</b> last alert<br>
+          <b>X</b> stop · <b>E</b> all soldiers on screen · <b>.</b> idle worker · <b>P</b> pause ·
+          <b>H</b> home · <b>Space</b> last alert<br>
           <b>WASD/arrows</b> pan · <b>Q/R</b> rotate · <b>+/−</b> zoom · <b>F1</b> help · <b>M</b> mute · <b>Esc</b> cancel<br>
           🖐 <b>Trackpad:</b> two-finger scroll pans · pinch zooms · two-finger tap orders<br>
           📱 <b>Touch:</b> drag pan · pinch zoom · tap select · <b>long-press</b> order (landscape recommended)</p>
@@ -185,8 +210,9 @@ export class HUD {
           <p><b>🔧 Repair</b> — right-click a damaged building with workers selected and they mend it
           (masonry costs a little wood). A tower under siege can be kept standing by the workers behind it.</p>
           <h3>Eras</h3>
-          <p>County → Kingdom → Golden Age. Advance at your capital: unlocks buildings and your nation's
-          signature power. Blacksmith forges attack & armor upgrades.</p>
+          <p>County → Kingdom → Golden Age. Advance at your capital: the <b>Kingdom</b> era unlocks
+          buildings and your nation's signature power; the <b>Golden Age</b> sharpens every blade in the
+          nation. Blacksmith forges attack & armor upgrades.</p>
         </section>
         </div>
         <h3>The five nations</h3>
@@ -238,8 +264,16 @@ export class HUD {
           this.rig.addShake(0.6);
         }
         break;
+      case 'worker_idle': {
+        if (!my(ev.owner)) break;
+        if (this.lastIdleAlert && world.time - this.lastIdleAlert < 15) break;
+        this.lastIdleAlert = world.time;
+        this.alert(`🌲 A worker stands idle (press . to find idle workers)`, { x: ev.x, z: ev.z, ttl: 6 });
+        break;
+      }
       case 'region_flipped': {
         const r = world.regions[ev.region];
+        this.pingMinimap(r.center.x, r.center.z);
         if (ev.how === 'shattered') {
           this.alert(`🏳️ ${r.meta.name} rises free — its villagers reclaim it`, { x: r.center.x, z: r.center.z, color: '#999' });
           this.lastPing = { x: r.center.x, z: r.center.z };
@@ -284,6 +318,18 @@ export class HUD {
     }
   }
 
+  setPaused(paused) {
+    let chip = document.getElementById('pause-chip');
+    if (!chip) {
+      chip = document.createElement('div');
+      chip.id = 'pause-chip';
+      chip.className = 'panel';
+      chip.textContent = '⏸ PAUSED — press P to resume';
+      document.getElementById('hud').appendChild(chip);
+    }
+    chip.style.display = paused ? 'block' : 'none';
+  }
+
   flashVignette() {
     const v = document.getElementById('vignette');
     v.classList.remove('on');
@@ -296,15 +342,17 @@ export class HUD {
     if (this.ended) return;
     this.ended = true;
     const won = winner === this.humanId;
-    const f = FACTIONS[winner];
+    const draw = winner == null || winner === '__none__';
+    const f = draw ? null : FACTIONS[winner];
     const mins = Math.round(this.world.time / 60);
     this.el.endOverlay.classList.remove('hidden');
     this.el.endOverlay.innerHTML = `
       <div class="end-box panel">
-        <h1>${won ? '🏆 TOTAL DOMINATION' : '⛓️ IBERIA IS LOST'}</h1>
+        <h1>${won ? '🏆 TOTAL DOMINATION' : draw ? '💀 MUTUAL RUIN' : '⛓️ IBERIA IS LOST'}</h1>
         <p class="end-sub">${won
         ? `All of Iberia flies the ${f.name} banner. ${f.motto}.`
-        : `The peninsula belongs to the ${f?.name ?? 'rebels'}. Your story becomes a song of resistance.`}</p>
+        : draw ? 'The last two crowns fell in the same hour. No banner flies; the villages rebuild alone.'
+          : `The peninsula belongs to the ${f?.name ?? 'rebels'}. Your story becomes a song of resistance.`}</p>
         <p>${mins} minutes · ${Object.values(this.world.regions).filter(r => r.owner === this.humanId).length} regions held at the end</p>
         <button class="big-btn" onclick="location.reload()">Play again</button>
       </div>`;
@@ -322,7 +370,15 @@ export class HUD {
         <p class="end-sub">${f ? `The ${f.name} banner flies over your castle.` : 'Your nation is broken.'}
         The dream of independence waits for another century.</p>
         <button class="big-btn" onclick="location.reload()">Play again</button>
+        <button class="big-btn" id="btn-spectate">👁 Watch the war play out</button>
       </div>`;
+    // spectating: hide the verdict, keep the world running — a new end screen
+    // will rise when someone actually wins
+    this.el.endOverlay.querySelector('#btn-spectate').onclick = () => {
+      this.el.endOverlay.classList.add('hidden');
+      this.ended = false;       // allow the final victory screen
+      this.spectating = true;   // but never re-show the "you fell" screen
+    };
   }
 
   // ---------- minimap ----------
@@ -379,11 +435,18 @@ export class HUD {
       ctx.fillStyle = e.owner ? `#${FACTIONS[e.owner].color.toString(16).padStart(6, '0')}` : '#ddd';
       ctx.fillRect(e.x * sx - 1, e.z * sy - 1, 2.2, 2.2);
     }
-    // camera target
+    // camera viewport — real ground footprint, not a fixed rectangle
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
-    const t = this.rig.target;
-    ctx.strokeRect(t.x * sx - 9, t.z * sy - 7, 18, 14);
+    const tl = this.controls.screenToGround(0, 0);
+    const br = this.controls.screenToGround(window.innerWidth, window.innerHeight);
+    if (tl && br) {
+      ctx.strokeRect(Math.min(tl.x, br.x) * sx, Math.min(tl.z, br.z) * sy,
+        Math.abs(br.x - tl.x) * sx, Math.abs(br.z - tl.z) * sy);
+    } else {
+      const t = this.rig.target;
+      ctx.strokeRect(t.x * sx - 9, t.z * sy - 7, 18, 14);
+    }
     // ping
     if (this.mmPing && this.mmPing.t > 0) {
       this.mmPing.t -= dt;
@@ -414,9 +477,11 @@ export class HUD {
       const byKind = {};
       for (const e of ents) byKind[e.kind] = (byKind[e.kind] ?? 0) + 1;
       const f = FACTIONS[ents[0].owner] ?? null;
+      const yours = ents.some(e => e.owner === this.humanId);
       html = `<div class="sp-units">` + Object.entries(byKind).map(([k, n]) =>
-        `<span class="sp-unit">${UNIT_ICONS[k] ?? '👤'} ${f?.unitNames?.[k] ?? k} × ${n}</span>`).join('') + `</div>
-        <div class="sp-hint">two-finger tap: move · attack · gather · build</div>`;
+        `<span class="sp-unit">${UNIT_ICONS[k] ?? '👤'} ${f?.unitNames?.[k] ?? k} × ${n}</span>`).join('') + `</div>`
+        + (yours ? `<div class="sp-hint">two-finger tap: move · attack · gather · build</div>`
+          : `<div class="sp-hint">${f ? f.name : 'neutral'} — not under your command</div>`);
     }
     panel.classList.toggle('hidden', !html);
     if (html && panel.dataset.html !== html) {
@@ -443,7 +508,12 @@ export class HUD {
           }
           return `<button data-train="${kind}">${UNIT_ICONS[kind]} ${f.unitNames[kind] ?? kind}<small>${fmtCost(cost)}</small></button>`;
         }).join('') + `</div>`;
-        if (b.trainQueue.length) html += `<div class="sp-row">⏳ training ${b.trainQueue.length} (${Math.round(b.trainQueue[0].t / b.trainQueue[0].time * 100)}%)</div>`;
+        if (b.trainQueue.length) {
+          // clickable queue chips — a misclick can be refunded
+          html += `<div class="sp-row sp-queue">⏳ ` + b.trainQueue.map((job, i) =>
+            `<button class="sp-chip" data-cancel="${i}" title="cancel & refund">${UNIT_ICONS[job.kind] ?? '👤'}${i === 0 ? ` ${Math.round(job.t / job.time * 100)}%` : ''} ✕</button>`
+          ).join('') + `</div>`;
+        }
         html += `<div class="sp-hint">two-finger tap the map to set the rally point</div>`;
       }
       if (b.kind === 'capital') {
@@ -483,11 +553,21 @@ export class HUD {
       const f = FACTIONS[region.conversion.pid];
       html += `<div class="sp-row">🕊 ${f.name} converting… ${Math.round(region.conversion.t / 40 * 100)}%${region.conversion.suppressed ? ' (suppressed by garrison)' : ''}</div>`;
     }
+    if (region.conquest) {
+      const f = FACTIONS[region.conquest.pid];
+      html += `<div class="sp-row">⚔️ <span style="color:${hex(f.color)}">${f.name}</span> seizing the village…</div>`;
+    }
     if (region.owner !== this.humanId) {
       const cost = regionConvertCost(world, this.humanId, key);
       const blocked = meta.capitalOf && region.owner === meta.capitalOf && world.players[meta.capitalOf].alive;
       if (!blocked && !region.conversion) {
+        // warn BEFORE the identity is spent — a paid sermon stalls under a garrison
+        const foes = world.unitsNear(region.center.x, region.center.z, 5.5)
+          .filter(u => u.owner && u.owner !== this.humanId && u.owner !== '__dead__' && u.kind !== 'worker').length;
         html += `<div class="sp-actions"><button data-convert="${key}">🕊 Convert to our cause<small>📜${cost}</small></button></div>`;
+        if (foes) html += `<div class="sp-hint">⚠️ enemy soldiers camp here — conversion will stall until they leave</div>`;
+        const owned = Object.values(world.regions).filter(r => r.owner === this.humanId).length;
+        if (owned > 2) html += `<div class="sp-hint">a wide realm raises the price of each new conversion</div>`;
       } else if (blocked) {
         html += `<div class="sp-hint">a capital region — raze the castle to break it</div>`;
       }
@@ -503,6 +583,13 @@ export class HUD {
         const err = world.trainUnit(this.humanId, b.id, btn.dataset.train);
         this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
         if (err) this.alert(`✋ ${err}`, { ttl: 3 });
+        panel.dataset.html = '';
+      };
+    });
+    panel.querySelectorAll('[data-cancel]').forEach(btn => {
+      btn.onclick = () => {
+        const err = world.cancelTrain(this.humanId, b.id, Number(btn.dataset.cancel));
+        this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
         panel.dataset.html = '';
       };
     });

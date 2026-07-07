@@ -12,11 +12,7 @@ export const MODEL_MANIFEST = {
   hex_water: `${HEX}/tiles/base/hex_water.gltf`,
   // nature decoration
   trees_large_A: `${HEX}/decoration/nature/trees_A_large.gltf`,
-  trees_large_B: `${HEX}/decoration/nature/trees_B_large.gltf`,
-  trees_medium_A: `${HEX}/decoration/nature/trees_A_medium.gltf`,
   trees_cut_A: `${HEX}/decoration/nature/trees_A_cut.gltf`,
-  tree_single_A: `${HEX}/decoration/nature/tree_single_A.gltf`,
-  tree_single_B: `${HEX}/decoration/nature/tree_single_B.gltf`,
   mountain_A: `${HEX}/decoration/nature/mountain_A_grass.gltf`,
   mountain_B: `${HEX}/decoration/nature/mountain_B_grass.gltf`,
   mountain_C: `${HEX}/decoration/nature/mountain_C_grass_trees.gltf`,
@@ -36,8 +32,7 @@ export const MODEL_MANIFEST = {
 export const BUILDING_COLORS = ['blue', 'red', 'green', 'yellow'];
 const BUILDING_KINDS = [
   'castle', 'home_A', 'home_B', 'barracks', 'archeryrange', 'blacksmith',
-  'church', 'market', 'mine', 'lumbermill', 'tavern', 'windmill',
-  'tower_A', 'watermill', 'well',
+  'church', 'market', 'mine', 'lumbermill', 'tavern', 'tower_A',
 ];
 for (const color of BUILDING_COLORS) {
   for (const kind of BUILDING_KINDS) {
@@ -49,30 +44,17 @@ Object.assign(MODEL_MANIFEST, {
   building_grain: `${HEX}/buildings/neutral/building_grain.gltf`,
   building_scaffolding: `${HEX}/buildings/neutral/building_scaffolding.gltf`,
   building_destroyed: `${HEX}/buildings/neutral/building_destroyed.gltf`,
-  building_dirt: `${HEX}/buildings/neutral/building_dirt.gltf`,
-  projectile_catapult: `${HEX}/buildings/neutral/projectile_catapult.gltf`,
   flag_blue: `${HEX}/decoration/props/flag_blue.gltf`,
   flag_red: `${HEX}/decoration/props/flag_red.gltf`,
   flag_green: `${HEX}/decoration/props/flag_green.gltf`,
   flag_yellow: `${HEX}/decoration/props/flag_yellow.gltf`,
-  prop_lumber: `${HEX}/decoration/props/resource_lumber.gltf`,
-  prop_stone: `${HEX}/decoration/props/resource_stone.gltf`,
-  prop_tent: `${HEX}/decoration/props/tent.gltf`,
-  prop_barrel: `${HEX}/decoration/props/barrel.gltf`,
-  prop_sack: `${HEX}/decoration/props/sack.gltf`,
   // characters (rigged + 76 animations each)
   char_knight: `${CHAR}/Knight.glb`,
   char_barbarian: `${CHAR}/Barbarian.glb`,
   char_mage: `${CHAR}/Mage.glb`,
   char_rogue: `${CHAR}/Rogue.glb`,
   char_rogue_hooded: `${CHAR}/Rogue_Hooded.glb`,
-  // hand props
-  weapon_sword: `${WEAP}/sword_1handed.gltf`,
-  weapon_axe2h: `${WEAP}/axe_2handed.gltf`,
-  weapon_axe1h: `${WEAP}/axe_1handed.gltf`,
-  weapon_crossbow: `${WEAP}/crossbow_2handed.gltf`,
-  weapon_staff: `${WEAP}/staff.gltf`,
-  weapon_shield: `${WEAP}/shield_badge.gltf`,
+  // hand props (character weapons are baked into the rigs; only the arrow flies)
   weapon_arrow: `${WEAP}/arrow.gltf`,
 });
 

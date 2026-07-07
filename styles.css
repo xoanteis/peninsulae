@@ -63,10 +63,27 @@ body {
   position: fixed; left: 0; top: 0; display: none;
   font-size: 11.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
   white-space: nowrap; color: #cfc7b8;
+  background: rgba(10, 14, 18, 0.38); border-radius: 4px; padding: 1px 7px 1px 9px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
   will-change: transform, opacity;
 }
 .region-label.owned { font-weight: 700; }
+.rally-flag {
+  position: fixed; left: 0; top: 0; font-size: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  will-change: transform;
+}
+#pause-chip {
+  position: fixed; top: 64px; left: 50%; transform: translateX(-50%);
+  padding: 8px 18px; font-weight: 700; letter-spacing: 0.08em; display: none;
+}
+.sp-chip { padding: 2px 7px; margin-right: 4px; font-size: 0.72rem; }
+#touch-bar {
+  position: fixed; right: 10px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 8px; padding: 8px;
+}
+#touch-bar button { font-size: 1.3rem; padding: 8px 10px; }
+#touch-bar button.active { outline: 2px solid var(--accent); background: rgba(255, 215, 106, 0.25); }
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-edge);

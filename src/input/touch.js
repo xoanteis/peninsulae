@@ -66,6 +66,10 @@ export class TouchControls {
       clearTimeout(this.holdTimer);
       if (this.mode === 'tap' && p && performance.now() - p.t0 <= TAP_MS + HOLD_MS) {
         if (this.controls.placing) this.controls.placeAt(p.x, p.y, false);
+        else if (this.controls.amove) { // armed via touch bar
+          this.controls.issueAmove(p.x, p.y);
+          document.getElementById('tb-amove')?.classList.remove('active');
+        }
         else this.controls.tapSelect(p.x, p.y, false);
       }
       if (this.pointers.size === 1 && this.mode === 'pinch') {

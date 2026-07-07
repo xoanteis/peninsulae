@@ -67,7 +67,6 @@ export function updateEconomy(world, dt) {
     // Catalan trade network: markets pay per region held
     if (f.bonus.marketPerRegion && marketOwners.has(p.id)) {
       const owned = perPlayerRegions[p.id] ?? 0;
-      p.res.identity += 0; // (identity unaffected)
       p.res.gold += owned * f.bonus.marketPerRegion * (p.techs?.consolat ? 2 : 1) * dt;
     }
 
@@ -89,11 +88,15 @@ function applyEraTech(world, p) {
   p.techs ??= {};
   const f = FACTIONS[p.id];
   if (p.era === 1) {
+    // NEVER mutate FACTIONS here — it is a shared module object, and writing to
+    // it leaks era bonuses across games in one process (it biased the balance
+    // harness for months). Signature techs live on the player and are read by
+    // regionConvertCost / regionTribute.
     switch (p.id) {
       case 'galicia': p.techs.camino = true; break;              // Camino doubled
       case 'basque': p.techs.foruak = true; break;               // extra armor
-      case 'catalonia': p.techs.consolat = true; f.bonus.convictionCostMul = 0.75; break;
-      case 'portugal': p.techs.sagres = true; f.bonus.coastalTributeMul = 1.5; break;
+      case 'catalonia': p.techs.consolat = true; break;          // markets x2, conversions -25%
+      case 'portugal': p.techs.sagres = true; break;             // coastal tribute 1.5
       case 'castile': p.techs.tercios = true; p.upgrades.dmg += 2; break;
     }
     if (p.id === 'basque') p.upgrades.armor += 1;
