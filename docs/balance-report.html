@@ -1,0 +1,572 @@
+<title>Peninsulae — Balance of Power Report</title>
+<style>
+:root {
+  --bg: #191310; --surface: #221a13; --surface2: #2a2018;
+  --ink: #ece1c8; --dim: #a8926c; --faint: #74634a;
+  --accent: #d9a441; --rule: rgba(217,164,65,.20); --rule-soft: rgba(217,164,65,.10);
+  --g-galicia: #3f7fd4; --g-catalonia: #b98c1a; --g-basque: #8a6fc4; --g-castile: #c94434; --g-portugal: #3f9e4d;
+  --danger: #c94434;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f3ecdd; --surface: #faf5ea; --surface2: #efe6d2;
+    --ink: #2c2115; --dim: #7c6a4d; --faint: #a4906e;
+    --accent: #92671c; --rule: rgba(90,60,10,.22); --rule-soft: rgba(90,60,10,.10);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #191310; --surface: #221a13; --surface2: #2a2018;
+  --ink: #ece1c8; --dim: #a8926c; --faint: #74634a;
+  --accent: #d9a441; --rule: rgba(217,164,65,.20); --rule-soft: rgba(217,164,65,.10);
+}
+:root[data-theme="light"] {
+  --bg: #f3ecdd; --surface: #faf5ea; --surface2: #efe6d2;
+  --ink: #2c2115; --dim: #7c6a4d; --faint: #a4906e;
+  --accent: #92671c; --rule: rgba(90,60,10,.22); --rule-soft: rgba(90,60,10,.10);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  line-height: 1.55; font-size: 16.5px;
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 48px 24px 96px; }
+.eyebrow {
+  font-family: ui-sans-serif, system-ui, sans-serif; font-size: .72rem;
+  letter-spacing: .28em; text-transform: uppercase; color: var(--accent); margin: 0 0 10px;
+}
+h1 {
+  font-size: clamp(2rem, 5vw, 3.1rem); letter-spacing: .12em; line-height: 1.12;
+  margin: 0 0 10px; text-wrap: balance; font-weight: 600;
+}
+.standfirst { font-size: 1.12rem; color: var(--dim); max-width: 62ch; margin: 0 0 8px; font-style: italic; }
+.method-line { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem; color: var(--faint); margin: 0 0 40px; }
+h2 {
+  font-size: 1.45rem; margin: 56px 0 6px; letter-spacing: .04em; font-weight: 600; text-wrap: balance;
+  padding-top: 22px; border-top: 1px solid var(--rule);
+}
+h2 .no { color: var(--accent); font-size: .9rem; letter-spacing: .2em; margin-right: 10px; vertical-align: 2px; font-family: ui-sans-serif, system-ui, sans-serif;}
+h3 { font-size: 1.05rem; margin: 26px 0 6px; }
+p { max-width: 68ch; margin: 10px 0; }
+p.lede { color: var(--dim); margin-top: 0; }
+strong { color: var(--accent); font-weight: 600; }
+.chart-card { background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 8px; padding: 22px 22px 16px; margin: 22px 0; }
+.chart-title { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin: 0 0 14px; }
+.chart-scroll { overflow-x: auto; }
+svg text { font-family: ui-sans-serif, system-ui, sans-serif; fill: var(--ink); }
+svg .dimtext { fill: var(--dim); }
+svg .fainttext { fill: var(--faint); }
+svg .gridline { stroke: var(--rule-soft); stroke-width: 1; }
+svg .axisline { stroke: var(--rule); stroke-width: 1; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 26px 0; }
+.tile { background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 8px; padding: 16px 18px 14px; }
+.tile .n { font-size: 2rem; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile .l { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .74rem; letter-spacing: .06em; color: var(--dim); text-transform: uppercase; margin-top: 4px; }
+table { border-collapse: collapse; width: 100%; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .84rem; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+td { padding: 7px 10px; border-bottom: 1px solid var(--rule-soft); }
+td.num, th.num { text-align: right; }
+tr.shipped td { background: var(--surface2); }
+tr.shipped td:first-child { border-left: 3px solid var(--accent); }
+tr.reverted td { color: var(--faint); text-decoration: line-through; }
+tr.reverted td:first-child { text-decoration: none; }
+.chip { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 7px; vertical-align: -1px; }
+.knob-file { font-family: ui-monospace, monospace; font-size: .76rem; color: var(--accent); white-space: nowrap; }
+.dossier { border: 1px solid var(--rule-soft); border-left: 4px solid var(--fc); border-radius: 8px; background: var(--surface); padding: 20px 24px; margin: 18px 0; }
+.dossier h3 { margin: 0 0 2px; font-size: 1.25rem; }
+.dossier .motto { color: var(--fc); font-style: italic; filter: brightness(1.15); margin: 0 0 10px; }
+.dossier .verdict { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: 12px; }
+.dossier dl { margin: 0; }
+.dossier dt { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 14px 0 3px; }
+.dossier dd { margin: 0; max-width: 70ch; }
+.numbers { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .8rem; color: var(--dim); background: var(--surface2); border-radius: 6px; padding: 10px 14px; margin-top: 14px; font-variant-numeric: tabular-nums; }
+#tooltip {
+  position: fixed; pointer-events: none; z-index: 10; display: none;
+  background: var(--surface2); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 7px 11px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: .78rem;
+  color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,.35); max-width: 260px;
+}
+.footnote { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .76rem; color: var(--faint); border-top: 1px solid var(--rule); margin-top: 60px; padding-top: 16px; max-width: 75ch; }
+code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--accent); }
+.legend { font-family: ui-sans-serif, system-ui, sans-serif; font-size: .76rem; color: var(--dim); margin: 0 0 8px; }
+.legend .sw { display: inline-block; width: 18px; height: 10px; border-radius: 2px; vertical-align: -1px; margin: 0 5px 0 14px; background: var(--dim); }
+.legend .sw.before { opacity: .3; }
+@media (prefers-reduced-motion: no-preference) {
+  .bar-grow { transition: width .7s cubic-bezier(.2,.7,.3,1); }
+}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Peninsulae · Balance of Power · The Patch Report</p>
+  <h1>THE BUGS WERE THE BALANCE:<br>WHAT A CLEAN IBERIA REVEALED.</h1>
+  <p class="standfirst">A full audit found the tournament harness itself was biased — era techs leaked
+  across games, gifting Portugal and Catalonia their late-game powers from minute zero — and the AI's
+  personality knobs were partly dead code. With everything fixed, the first honest tournament rewrote
+  the standings overnight. This is the report of the clean world: fair rules, honest telemetry, and a
+  meta that still owes Portugal a future.</p>
+  <p class="method-line">31 tournament rounds · ~1,100 games · full log in <span class="knob-file">tools/balance-history.jsonl</span> ·
+  reproduce with <span class="knob-file">node tools/round.mjs --name=x --full</span></p>
+
+  <div class="chart-card">
+    <p class="chart-title">Probability of winning · before (baseline) vs shipped patch · whiskers are 95% Wilson intervals</p>
+    <p class="legend"><span class="sw before"></span>before<span class="sw"></span>shipped</p>
+    <div class="chart-scroll"><svg id="winchart" width="860" height="330" role="img" aria-label="Win probability by nation, before and after the patch"></svg></div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><div class="n">2</div><div class="l">systemic bugs silently shaping all prior data</div></div>
+    <div class="tile"><div class="n">63 → 57<span style="font-size:1.1rem">%</span></div><div class="l">Galicia in the clean world, pre → post retune</div></div>
+    <div class="tile"><div class="n">26</div><div class="l">times Galicia finally died in R17 — its invulnerability is broken</div></div>
+    <div class="tile"><div class="n">0<span style="font-size:1.1rem">%</span></div><div class="l">Portugal — the honest meta's open problem</div></div>
+  </div>
+
+  <h2><span class="no">I</span>Fifteen rounds of medicine — what each dose taught</h2>
+  <p class="lede">Every round below is a full 60-game tournament. The lesson of the table: in a
+  five-body system every cure overshoots, so you titrate.</p>
+  <div class="chart-scroll">
+  <table>
+    <tr><th>Round · change tested</th><th class="num">Galicia</th><th class="num">Basque</th><th class="num">Catalonia</th><th class="num">Portugal</th><th class="num">Castile</th></tr>
+    <tr><td>Baseline — fueros ×1.25, hunt-the-leader AI</td><td class="num">1.7%</td><td class="num">41.7%</td><td class="num">10.0%</td><td class="num">8.3%</td><td class="num">38.3%</td></tr>
+    <tr><td>R1 · fueros ×1.18 · nearest-rival targeting · loyal regions resist 2×</td><td class="num">0%</td><td class="num">1.7%</td><td class="num">26.7%</td><td class="num">66.7%</td><td class="num">5.0%</td></tr>
+    <tr><td>R2 · AI garrisons scale with empire · bolder Galicia</td><td class="num">0%</td><td class="num">1.7%</td><td class="num">13.3%</td><td class="num">71.7%</td><td class="num">5.0%</td></tr>
+    <tr><td>R3 · far regions shatter on capital fall · AI home guard</td><td class="num">0%</td><td class="num">8.3%</td><td class="num">21.7%</td><td class="num">60.0%</td><td class="num">10.0%</td></tr>
+    <tr><td>R4 · gold-aware AI build order · capitals 3,000 HP + 2nd tower</td><td class="num">0%</td><td class="num">13.3%</td><td class="num">28.3%</td><td class="num">53.3%</td><td class="num">5.0%</td></tr>
+    <tr><td>R5 · converted regions always shatter · Galician Irmandades</td><td class="num">1.7%</td><td class="num">0%</td><td class="num">38.3%</td><td class="num">51.7%</td><td class="num">8.3%</td></tr>
+    <tr><td>R6 · conquest tribute 65% · fueros ×1.22 · empire fatigue on conversion</td><td class="num">0%</td><td class="num">6.7%</td><td class="num">33.3%</td><td class="num">51.7%</td><td class="num">8.3%</td></tr>
+    <tr><td>R7 · early regicide gated to endgame · coastal engine trimmed</td><td class="num">5.0%</td><td class="num">3.3%</td><td class="num">23.3%</td><td class="num">46.7%</td><td class="num">21.7%</td></tr>
+    <tr class="reverted"><td>R8 · further Portugal/Basque nudges — tested worse, reverted</td><td class="num">0%</td><td class="num">5.0%</td><td class="num">18.3%</td><td class="num">61.7%</td><td class="num">15.0%</td></tr>
+    <tr class="reverted"><td>R9 · Galicia gains Portugal's coastal bonus — backfired, reverted</td><td class="num">1.7%</td><td class="num">6.7%</td><td class="num">20.0%</td><td class="num">51.7%</td><td class="num">20.0%</td></tr>
+    <tr><td>R10 · Galicia survival identity: fortress-cathedral + cheap towers</td><td class="num">11.7%</td><td class="num">5.0%</td><td class="num">26.7%</td><td class="num">40.0%</td><td class="num">16.7%</td></tr>
+    <tr class="reverted"><td>R11 · granite: all Galician buildings tougher, towers half-price — AI over-fortified, reverted</td><td class="num">1.7%</td><td class="num">8.3%</td><td class="num">26.7%</td><td class="num">45.0%</td><td class="num">18.3%</td></tr>
+    <tr class="reverted"><td>R12 · As Minas at full strength — Galicia overshot to the throne, trimmed</td><td class="num">35.0%</td><td class="num">3.3%</td><td class="num">20.0%</td><td class="num">16.7%</td><td class="num">25.0%</td></tr>
+    <tr><td>R13 · As Minas trimmed: gold trickle + rich mines + hardy Irmandiños</td><td class="num">20.0%</td><td class="num">5.0%</td><td class="num">23.3%</td><td class="num">25.0%</td><td class="num">26.7%</td></tr>
+    <tr><td>R14 · the Basques sign the foru: conquest by pact + the turtle marches</td><td class="num">16.7%</td><td class="num">10.0%</td><td class="num">23.3%</td><td class="num">38.3%</td><td class="num">11.7%</td></tr>
+    <tr><td>R15 · Galicia's mineral trickle 0.18 → 0.25: the Atlantic war levels</td><td class="num">23.3%</td><td class="num">5.0%</td><td class="num">25.0%</td><td class="num">18.3%</td><td class="num">28.3%</td></tr>
+    <tr><td>R16 · THE AUDIT: config leak + zombie armies + dead AI knobs fixed — first honest measurement</td><td class="num">63.3%</td><td class="num">1.7%</td><td class="num">10.0%</td><td class="num">0%</td><td class="num">25.0%</td></tr>
+    <tr class="shipped"><td><strong>R17 · clean-world retune: Galicia's kit slimmed, fatigue +25%, dominators draw heat — shipped</strong></td><td class="num"><strong>56.7%</strong></td><td class="num"><strong>1.7%</strong></td><td class="num"><strong>18.3%</strong></td><td class="num"><strong>0%</strong></td><td class="num"><strong>23.3%</strong></td></tr>
+  </table>
+  </div>
+
+  <p><strong>Lesson 1 — targeting is the whole game.</strong> The baseline's <em>hunt-the-leader</em> rule
+  executed whoever converted fastest (Galicia, dead first in 56/60). Switching to <em>nearest rival</em>
+  just handed the execution to geography: Lisboa and Santiago are the closest capital pair on the map,
+  so Portugal killed Galicia every game and inherited the west — 66.7% overnight. The durable fix (R7)
+  was temporal, not spatial: <strong>regicide is an endgame move</strong>. No AI now marches on a living
+  nation's castle before the map is carved up, and Galicia's first-fall rate finally moved: 56 → 40.</p>
+
+  <p><strong>Lesson 2 — murder must pay less than faith.</strong> At baseline, razing a capital transferred
+  the victim's <em>whole empire</em> (winners harvested ~7.5 defected regions per game). Now only conquered
+  borderlands defect; every region won by conviction <strong>shatters back to independence</strong> with
+  fresh village guards. Winners in the final tournament inherit 1.7 regions per game — capital-killing is
+  a strike, not a lottery.</p>
+
+  <p><strong>Lesson 3 — the meta see-saws before it settles.</strong> Nerfing the war factions (R1–R4)
+  flipped the game to a two-nation conviction race; R6–R7's war-side levers (conquest tribute 65%,
+  empire fatigue that makes each conversion past your second +12% dearer, tougher fueros) pulled
+  Castile back to 21.7% and spread first-falls across all five nations. R8's extra nudges tested
+  <em>worse</em> (Portugal 61.7%) and were reverted.</p>
+
+  <p><strong>Lesson 4 — buff the weakness, not the strength.</strong> With R7 shipped, Galicia was still
+  the runt at 5%. The intuitive fix — hand it the same coastal-conversion bonus Portugal enjoys, the two being
+  the peninsula's Atlantic nations — <em>backfired</em> in a full tournament (R9): Galicia already expands
+  fastest, so a coastal discount just made it lead the domination race even earlier and get executed first in
+  <strong>53 of 60 games</strong>, with no win-rate gain. Galicia's problem was never expansion; it was
+  <strong>survival</strong>. R10 gives it a defensive identity instead — a fortress-cathedral capital
+  (Santiago at 4,500&nbsp;HP, the hardest decapitation strike in the game) and pilgrim watchtowers 35% cheaper,
+  so it can wall the empire conviction wins. Galicia's win rate more than doubled to <strong>11.7%</strong>,
+  it now holds 1.3 regions at game's end (was 0.1 — wiped), and by refusing to die it stopped feeding Portugal
+  free meals: Portugal fell from 46.7% to <strong>40.0%</strong>. The two Atlantic nations are finally close.</p>
+
+  <p><strong>Lesson 5 — follow the gold, not the walls.</strong> Doubling down on defense (R11: all Galician
+  buildings +20% HP, towers at half price) made Galicia <em>worse</em> — 1.7%, its old grave. An instrumented
+  probe found why: at minute 12 the AI had raised <strong>3.5 towers and 2.4 soldiers, with 21 gold</strong>
+  (zero soldiers in six of eight games). The real bottleneck was never armor — Galicia's Identity economy
+  simply cannot buy soldiers, who cost gold. R12–R13 fix the root cause with <strong>As Minas de
+  Gallaecia</strong>: rich mine veins and a passive mineral trickle (the Roman gold province; wolfram, tin),
+  plus hardier Irmandiños (+15% HP) and an AI that builds at most three towers <em>after</em> it has an army.
+  Full strength overshot (35%, dethroning Portugal); trimmed, Galicia lands at <strong>20.0%</strong> —
+  statistically level with Portugal, Catalonia and Castile. Two caveats worth naming: the granite failure was
+  partly an <em>AI artifact</em> (the fortify rule sank its treasury into towers — a human wouldn't), which is
+  why the AI was fixed rather than the towers; and this tournament measures AI temperaments, not human hands —
+  for a human, cheap towers and a gold income are simply two good tools in the same kit.</p>
+
+  <div class="chart-card">
+    <p class="chart-title">Time to total domination · shipped build · one dot per victory</p>
+    <div class="chart-scroll"><svg id="timechart" width="860" height="230" role="img" aria-label="Win times by nation"></svg></div>
+  </div>
+
+  <div class="chart-card">
+    <p class="chart-title">How banners change hands · shipped build · average flips per game, by method</p>
+    <div class="chart-scroll"><svg id="flipchart" width="860" height="260" role="img" aria-label="Region flips by method and nation"></svg></div>
+    <p style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:.76rem;color:var(--faint);margin:10px 0 0">
+    Defections — regions inherited when a capital falls — used to reach 7–8 per game for the war factions.
+    The shatter rule caps the harvest; conviction is now the only way to keep what you never garrisoned.</p>
+  </div>
+
+  <p><strong>Lesson 6 — the pact, not the march (and know what your tournament measures).</strong> The
+  Basques were the last outlier at 5%: gold-rich, iron-tough, and inert — every anti-snowball rule taxed
+  the conquest-and-attrition style they win by. The screens decomposed the fix beautifully: making their AI
+  march <em>without</em> fixing conquest's economics was <strong>worse than turtling (0 wins in 20)</strong>;
+  giving conquest back its profit through the <strong>foru pact</strong> — regions they take keep their law,
+  pay full tribute, and offer missionaries no grievance to exploit — doubled them to 10%, validated in two
+  independent 60-game runs. Stronger variants (fully-loyal pacts, mines that produce Identity, a higher
+  conviction appetite) all plateaued at screens and were left as inert hooks. And the see-saw turned once
+  more: with the Basques marching in the northeast, Castile bleeds (26.7% → 11.7%) and Portugal breathes
+  (25% → 38.3%) — the watch item for a future round, not a blocker: every nation now wins at or near
+  double digits, and no one dominates like the old duopoly (41.7%) or peak Portugal (71.7%).</p>
+
+  <p><strong>Lesson 7 — the Atlantic war, and the limits of measurement.</strong> The new kill-graph
+  telemetry showed Galicia and Portugal are <em>each other's apex predators</em> — in the final round,
+  every single Galician victory ran through Lisboa's ashes. R14 left Galicia trailing (its first-falls
+  jumped when the marching Basques stopped busying Portugal), so R15 raised its mineral trickle one
+  notch on a known dose curve (0.18 → 0.25; 0.35 had overshot to 35% months of tuning ago). The rivals
+  now sit level. A caveat the whole series earned: between 60-game runs of near-identical configs,
+  per-faction rates swing as much as ±10 points (Castile measured 11.7% and 28.3% back-to-back) — so
+  the durable claim is the <em>band</em>, not the ordering within it.</p>
+
+  <p><strong>Lesson 8 — the bugs were the balance.</strong> A four-way code audit found that era techs
+  mutated the <em>shared faction config</em>: inside a tournament process, every game after the first
+  started with Catalonia's Consolat and Portugal's Sagres already active. Every number in this report's
+  earlier rounds was measured on that tilted table. A second silent hand: fallen nations left <em>zombie
+  armies</em> that suppressed conversions and squatted villages — invisible friction that mostly taxed
+  the conviction factions. With both fixed (plus the AI's dead turtle/convictionLove knobs revived), the
+  first honest tournament read <strong>Galicia 63.3%, never once killed; Portugal 0%, executed at median
+  minute 11</strong>. Ten diagnostic screens rebuilt the meta on the clean foundation: Galicia's
+  nine-bonus kit — over-fitted to a world where it was the eternal victim — was slimmed to five, empire
+  fatigue rose to +25% per region, targeting now sends heat at runaway dominators instead of making big
+  empires mathematically unattackable, the late-game free-for-all waits for minute 15, and Portugal got
+  back the tribute the leak had been paying it illegitimately. The shipped result is fair but not yet
+  flat: <strong>Galicia's corner-fortress-convertor remains the strongest AI hand (56.7%), and Portugal —
+  the hegemon's nearest soft target — has not yet won an honest game.</strong> Both are documented open
+  problems; the difference is that the next tuning round starts from truth.</p>
+
+  <p><strong>Where the table stands for a human player:</strong> the AI records now describe honest
+  temperaments, not bugs. Galicia is the comfortable pick, Castile and Catalonia the solid mains,
+  the Basques the connoisseur's pact-war — and Portugal, until its rework lands, is the true hard mode:
+  survive Castile's minute-eleven storm with your own hands and the coast is still the richest road in
+  Iberia.</p>
+
+  <h2><span class="no">II</span>What shipped — every change in the patch</h2>
+  <p class="lede">Fifteen changes, each validated (and several candidate levers rejected) by tournament.</p>
+  <div class="chart-scroll">
+  <table>
+    <tr><th>Change</th><th>Where</th><th>Before → after</th></tr>
+    <tr class="shipped"><td>Basques · the foru pact</td><td class="knob-file">config/factions.js · sim/regions.js</td><td>new: their conquests don't resent — full tribute, no re-conversion discount for enemies (not loyal: normal conquest-hold) · AI marches: aggression 0.45→0.65, turtle 0.9→0.6 — screening proved the two only work together</td></tr>
+    <tr class="shipped"><td>Galicia · As Minas de Gallaecia</td><td class="knob-file">config/factions.js · sim/economy.js</td><td>new gold economy: mines ×1.5 yield + 0.25 gold/s mineral trickle (0.18 → 0.25 in R15 to level the Atlantic war) · Irmandiños ×1.15 HP — funds the army an Identity economy never could</td></tr>
+    <tr><td>Galicia · the sanctuary</td><td class="knob-file">config/factions.js · sim/world.js · sim/ai.js</td><td>survival identity: capital ×1.5 HP (4,500) · watchtowers ×0.65 cost · AI walls its core with at most 3 towers, army first (after a coastal-bonus experiment backfired and was reverted)</td></tr>
+    <tr><td>Fueros toughness</td><td class="knob-file">config/factions.js</td><td>×1.25 → ×1.22 HP (via ×1.18 — overshot, restored)</td></tr>
+    <tr><td>War targeting</td><td class="knob-file">sim/ai.js · war()</td><td>hunt-the-leader → nearest rival, deterred by standing armies</td></tr>
+    <tr><td>Regicide timing</td><td class="knob-file">sim/ai.js · expand()/war()</td><td>any time → endgame only (or Kingdom-era hegemon); early castle storms need +4 soldiers</td></tr>
+    <tr><td>Capital fall</td><td class="knob-file">sim/world.js</td><td>whole empire defects → conquered borderlands defect; converted regions shatter free with new militia</td></tr>
+    <tr><td>Loyalty defense</td><td class="knob-file">sim/regions.js</td><td>converted regions resist conquest 2× as long</td></tr>
+    <tr><td>Empire fatigue</td><td class="knob-file">sim/regions.js</td><td>each region past your 2nd: next conversion +12% Identity</td></tr>
+    <tr><td>Conquest economics</td><td class="knob-file">config/rules.js</td><td>resented regions pay 50% → 65% tribute</td></tr>
+    <tr><td>Capitals</td><td class="knob-file">config/rules.js · sim/world.js</td><td>2,400 → 3,000 HP · second guard tower at spawn</td></tr>
+    <tr><td>AI economy</td><td class="knob-file">sim/ai.js</td><td>garrison scales with empire (+0.7 army/region) · home guard stays · gold-starved AIs build an early market</td></tr>
+    <tr><td>Galicia · Irmandades</td><td class="knob-file">config/factions.js · sim/regions.js</td><td>new bonus: village militias of converted regions join Galicia · AI bolder (aggression 0.4, turtle)</td></tr>
+    <tr><td>Portugal coastal engine</td><td class="knob-file">config/factions.js</td><td>conversion ×0.5 → ×0.7 · tribute ×1.25 → ×1.15</td></tr>
+  </table>
+  </div>
+
+  <h2><span class="no">III</span>Field manuals — how to win each nation now</h2>
+  <p class="lede">Updated for the patched rules. The AI record tells you the terrain; these are the lines through it.</p>
+
+  <div class="dossier" style="--fc: var(--g-galicia)">
+    <h3>Galicians</h3>
+    <p class="motto">O Camiño e o Mar</p>
+    <p class="verdict">AI record: 34 wins / 60 in the clean world — the strongest hand even after its kit was slimmed; expect a further trim</p>
+    <dl>
+      <dt>Opening (min 0–4)</dt>
+      <dd>Three Labregos to fish (your +50% makes the coast the best food in the game), two to a forest.
+      Queue workers to ~10. First buildings: Farm → Church (30% off) → House. Convert <strong>Norte</strong>
+      the moment you can — it's adjacent, its tower becomes yours, <strong>and its militia now take up your
+      banner</strong>.</dd>
+      <dt>As Minas — the gold that buys the war</dt>
+      <dd>Gallaecia was Rome's gold province, and it shows: your mines yield <strong>+50%</strong> and the
+      land itself pays a steady mineral trickle (~11 🪙/min from minute zero). This is the fix for the old
+      Galician disease — an Identity economy that could convert regions but never afford the 20-gold soldier.
+      Spend it: keep a Barracks producing from minute 4, and remember your Irmandiños carry
+      <strong>+15% HP</strong> — a smaller Galician line trades up against everyone but the Basques.</dd>
+      <dt>The sanctuary — your reason to live</dt>
+      <dd>Your capital is a fortress-cathedral: <strong>4,500&nbsp;HP</strong>, the hardest decapitation strike
+      in the game, so the focus-fire your early lead attracts breaks on the walls. And your watchtowers are
+      <strong>35% cheaper</strong> (39🪵16🪙) — ring your core and each border region with them. You are the
+      one nation that can lead the domination race and <em>survive</em> it. Turtle deliberately: hold, don't
+      chase.</dd>
+      <dt>The Irmandades</dt>
+      <dd>Every region you convert also hands you its village militia as free, pop-zero home guards — three
+      conversions ≈ a six-soldier garrison you never paid for. They hold their posts and block enemy conquest
+      timers. Behind cheap towers and loyal militia, your converted empire is genuinely hard to unravel.</dd>
+      <dt>Middle game</dt>
+      <dd>Era up early (Camino doubles: each converted region pays 0.3 📜/s). Chain conversions along the
+      coast. Watch the empire-fatigue tax: past your second region each conversion costs +12% — budget
+      Identity for the region that matters, not the nearest one.</dd>
+      <dt>Endgame</dt>
+      <dd>You out-last, not out-fight. Loyal regions pay full tribute and resist conquest twice as long, and
+      if a rival dies, their converted lands shatter free for you to re-convert at leisure. When the war
+      nations have bled each other, your crossbows-behind-towers army takes the weakened capital — regicide
+      is safe once the map is carved up, and everything they held by force defects to you.</dd>
+    </dl>
+    <div class="numbers">Mines 1.2 🪙/s per worker (+50%) · mineral trickle 0.25 🪙/s · Irmandiño 109 HP, Besteiro 67 HP (+15%) · fortress capital 4,500 HP · watchtower 39🪵16🪙 (−35%) · fish 1.65 food/s per worker · church 42🪵21🪙 · adjacent conversion 100📜 +12%/region past 2nd · Camino up to 0.3 📜/s per converted region · Irmandades: 2–3 militia (115 HP) per converted region</div>
+  </div>
+
+  <div class="dossier" style="--fc: var(--g-basque)">
+    <h3>Basques</h3>
+    <p class="motto">Burdina eta Foruak</p>
+    <p class="verdict">AI record: 1 win / 60 in the clean world — wedged between the hegemon and the fortress; the deepest challenge run</p>
+    <dl>
+      <dt>Opening</dt>
+      <dd>You sit on the best mining ground in Iberia. Mine on a mountain edge by minute 2, second mine by
+      minute 5 (+50% gold each, two workers per mine). Wood only for the essentials: Farm, House, Barracks.</dd>
+      <dt>The foru — your new engine</dt>
+      <dd>Every region you take by conquest <strong>signs the foru</strong>: no resentment, <strong>full
+      tribute</strong>, and enemy missionaries get no discount to flip it back. For everyone else conquest
+      is the leaky bucket; for you it holds. March early and often — your +22% HP line wins even trades,
+      and unlike the other war machine (Castile), what you take stays taken and pays in full.</dd>
+      <dt>Middle game</dt>
+      <dd>Your Aizkolaris carry 116 HP to everyone else's 95 — <strong>every equal-numbers melee is a win</strong>.
+      Take Nafarroa by conquest early, then <em>re-convert your own conquests</em>: resented lands now pay 65%
+      tribute, but they flip to enemy missionaries at a discount until you make them loyal. Blacksmith both
+      upgrades — toughness compounds with armor.</dd>
+      <dt>What changed for you</dt>
+      <dd>The old plan — turtle, then decapitate the leader and inherit their empire — is dead. Capital-kills
+      now shatter the victim's converted lands to neutral. So conquer <em>adjacent</em> lands (borderlands still
+      defect to you when a neighbor falls) and keep your army home until the true endgame: your 3,660&nbsp;HP
+      capital plus two towers makes you the safest late-game power in Iberia.</dd>
+      <dt>Endgame</dt>
+      <dd>March with 10+ mixed Aizkolaris/Balestaris only after minute 15. Decapitate the nearest weakened
+      rival, take the defecting borderlands, and grind — nobody out-attritions the fueros.</dd>
+    </dl>
+    <div class="numbers">Units ×1.22 HP · buildings ×1.22 HP (capital 3,660) · mines 1.2 🪙/s per worker · era tech: +1 armor</div>
+  </div>
+
+  <div class="dossier" style="--fc: var(--g-catalonia)">
+    <h3>Catalans</h3>
+    <p class="motto">Seny i Comerç</p>
+    <p class="verdict">AI record: 11 wins / 60 — steady in the pack across every era of the meta; the most consistent nation in Iberia</p>
+    <dl>
+      <dt>Opening</dt>
+      <dd>Everything you build costs 25% less — so build more of it, sooner. Farm, House, Market inside the
+      first three minutes (market = 53🪵23🪙 for you). Workers to 12 fast.</dd>
+      <dt>The core loop</dt>
+      <dd>Your market pays <strong>per region you hold</strong>. Every cheap conversion raises your gold income
+      permanently: take Aragón and València early (both adjacent, both rich). At the Kingdom era, Consolat de
+      Mar doubles the trickle and cuts conversions −25% — which also blunts the empire-fatigue tax that slows
+      everyone else's late conversions.</dd>
+      <dt>Defense on discount</dt>
+      <dd>Watchtowers at −25% are the cheapest defense in the game: ring your border with them and let
+      attackers bleed on 45🪵19🪙 towers while your economy runs.</dd>
+      <dt>Endgame</dt>
+      <dd>Out-bank everyone into a late Golden-Age army of Almogàvers, or convert the map: with Consolat,
+      adjacent conversions start at 75 📜. Your loyal empire resists conquest 2× and pays full tribute —
+      the ledger, not the sword, is still the win condition.</dd>
+    </dl>
+    <div class="numbers">All buildings ×0.75 cost · market +0.5 🪙/s +0.12/region (×2 with Consolat) · era tech: conversions −25%</div>
+  </div>
+
+  <div class="dossier" style="--fc: var(--g-portugal)">
+    <h3>Portuguese</h3>
+    <p class="motto">Descobrimentos</p>
+    <p class="verdict">AI record: 0 wins / 60 — the honest meta's open problem: Castile's minute-eleven storm finds Lisboa first. In human hands, hard mode with the richest coast in Iberia</p>
+    <dl>
+      <dt>Opening</dt>
+      <dd>Fast workers (+20%) mean your economy spins up quickest of all. Fish + farms, then a Church by
+      minute 4. Convert <strong>Norte immediately</strong> — coastal, adjacent, discounted: ~70 📜.</dd>
+      <dt>The strategy</dt>
+      <dd><strong>Own the ocean rim.</strong> Thirteen of seventeen regions touch the sea; every one converts
+      at −30% for you and pays +15% tribute. Chain along the coast, and remember the fatigue tax: each region
+      past your second raises the next sermon's price 12%, so convert the rich coasts first. At the Kingdom
+      era, Sagres adds +50% coastal tribute — the ring becomes the richest empire on the map without one
+      battle.</dd>
+      <dt>Military posture</dt>
+      <dd>A screening force of 4–6 Cavaleiros walking the coast road suffices (your speed makes one army
+      defend two fronts). Since regicide before the endgame now demands an oversized siege army, your
+      early-game safety is real — spend it on economy.</dd>
+      <dt>Endgame</dt>
+      <dd>When a weakened rival emerges from the meseta wars, strike their capital from the sea. Their
+      borderlands defect to you; their converted lands shatter — re-convert them at your coastal discount
+      before anyone else raises the Identity.</dd>
+    </dl>
+    <div class="numbers">Workers ×1.2 speed · coastal conversions ×0.7 · coastal tribute ×1.15 (Sagres: +50%) · era tech: coast revealed</div>
+  </div>
+
+  <div class="dossier" style="--fc: var(--g-castile)">
+    <h3>Castilians</h3>
+    <p class="motto">Plus Ultra</p>
+    <p class="verdict">AI record: 14 wins / 60 — the honest hegemon: 10 conquests a game, and almost never the first to fall</p>
+    <dl>
+      <dt>Opening</dt>
+      <dd>You start with three regions' tribute — spend it. Barracks by minute 3, Tercios flowing by minute 4
+      (45🌾15🪙 each, 30% faster). Farms on the meseta; your grain tribute carries the food line.</dd>
+      <dt>Middle game</dt>
+      <dd>Take the center by conquest before minute 10 — 6 Tercios clear a village cleanly, and resented
+      lands now pay you <strong>65% tribute</strong> (up from half): empire-building by sword finally cash-flows.
+      As the game's only high-aggression hegemon you may storm capitals from the Kingdom era onward — everyone
+      else must wait for the endgame.</dd>
+      <dt>The imperial disease, still</dt>
+      <dd>Conquests flip back to enemy missionaries at 40% off. Garrison two units per conquest or pause to
+      re-convert your own lands loyal. And loyal enemy regions resist your sword 2× as long — break nations
+      at the head (their armies and capitals), not region by region.</dd>
+      <dt>Endgame</dt>
+      <dd>Never duel the Basques on even numbers — their HP wins trades. Out-produce them two-to-one (you can),
+      snipe adjacent capitals for the borderland defections, and mop up the shattered interior with your
+      unmatched production.</dd>
+    </dl>
+    <div class="numbers">Soldiers ×0.75 cost, ×0.7 train time · +2 start regions · resented tribute 65% · era tech: +2 damage, barracks double-queue</div>
+  </div>
+
+  <h2><span class="no">IV</span>The data — shipped build, final tournament</h2>
+  <div class="chart-scroll">
+  <table id="datatable">
+    <tr><th>Nation</th><th class="num">Wins</th><th class="num">Win %</th><th class="num">95% CI</th><th class="num">Median win time</th><th class="num">First to fall</th><th class="num">Conv/game</th><th class="num">Conq/game</th><th class="num">Defect/game</th></tr>
+  </table>
+  </div>
+
+  <p class="footnote">Method: 31 tournament rounds (~1,100 games — twelve full 60-game tournaments plus
+  20-game diagnostic screens), every nation driven by its AI personality, 100&nbsp;ms ticks, 75-minute cap,
+  Wilson intervals at 95%. Rounds before R16 were measured with a biased harness (the era-tech config leak)
+  and survive here as history, not truth. The shipped build is R17 (the clean-world retune); the full round
+  log with kill-graphs lives in <code>tools/balance-history.jsonl</code>. A tournament of AIs measures
+  <em>bonuses + AI temperaments</em> together, not human play — the dossiers translate. Reproduce:
+  <code>node tools/round.mjs --name=x --full</code>.</p>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// shipped-build (final tournament, with the Galicia survival identity) ordered by
+// win rate; `pre` is the original baseline for the before/after bars
+const F = [
+  { id:'galicia',   name:'Galicians',  color:'var(--g-galicia)',   wins:34, pct:56.7, lo:44.1, hi:68.4, ff:1,  conv:11.5, conq:6.1, defect:3.0,
+    pre:{ pct:1.7,  lo:0.3,  hi:8.9 },
+    times:[21.1,21.7,21.9,22.1,22.2,22.3,22.5,22.7,23.1,23.3,23.5,23.7,24,24.5,24.5,24.6,24.6,25,25.3,25.7,25.8,26,26,27.1,27.3,27.5,28.9,28.9,30,30.5,30.7,30.8,30.9,32] },
+  { id:'castile',   name:'Castilians', color:'var(--g-castile)',   wins:14, pct:23.3, lo:14.4, hi:35.4, ff:2,  conv:3.2, conq:10.3, defect:2.4,
+    pre:{ pct:38.3, lo:27.1, hi:51.0 },
+    times:[20.4,20.6,22,22.4,22.9,24,28.1,28.1,29.3,31.3,31.7,31.8,31.9,34.5] },
+  { id:'catalonia', name:'Catalans',   color:'var(--g-catalonia)', wins:11, pct:18.3, lo:10.6, hi:29.9, ff:4,  conv:6.0, conq:5.1, defect:1.8,
+    pre:{ pct:10.0, lo:4.7,  hi:20.1 },
+    times:[18.4,21.4,21.9,22.5,22.8,24.1,27.3,28.8,29.4,30.6,36.2] },
+  { id:'basque',    name:'Basques',    color:'var(--g-basque)',    wins:1,  pct:1.7,  lo:0.3,  hi:8.9,  ff:18, conv:4.2, conq:3.6, defect:0.3,
+    pre:{ pct:41.7, lo:30.1, hi:54.3 },
+    times:[35.4] },
+  { id:'portugal',  name:'Portuguese', color:'var(--g-portugal)',  wins:0,  pct:0.0,  lo:0,    hi:6.0,  ff:35, conv:1.6, conq:0.3, defect:0.1,
+    pre:{ pct:8.3,  lo:3.6,  hi:18.1 },
+    times:[] },
+];
+const tip = document.getElementById('tooltip');
+function showTip(e, html) {
+  tip.innerHTML = html; tip.style.display = 'block';
+  const pad = 14, w = tip.offsetWidth;
+  tip.style.left = Math.min(e.clientX + pad, window.innerWidth - w - 10) + 'px';
+  tip.style.top = (e.clientY + pad) + 'px';
+}
+function hideTip() { tip.style.display = 'none'; }
+const NS = 'http://www.w3.org/2000/svg';
+function el(svg, tag, attrs, text) {
+  const n = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (text != null) n.textContent = text;
+  svg.appendChild(n); return n;
+}
+
+// ---- Chart 1: before/after win probability bars with CI whiskers on the shipped bar ----
+{
+  const svg = document.getElementById('winchart');
+  const L = 110, R = 130, T = 8, W = 860, rowH = 60, barH = 15, gap = 4;
+  const xmax = 60, X = p => L + p / xmax * (W - L - R);
+  for (let g = 0; g <= xmax; g += 10) {
+    el(svg, 'line', { x1: X(g), x2: X(g), y1: T, y2: T + F.length * rowH, class: 'gridline' });
+    el(svg, 'text', { x: X(g), y: T + F.length * rowH + 18, 'text-anchor': 'middle', 'font-size': 11, class: 'fainttext' }, g + '%');
+  }
+  F.forEach((f, i) => {
+    const y0 = T + i * rowH + (rowH - barH * 2 - gap) / 2;
+    const yPre = y0, yPost = y0 + barH + gap;
+    el(svg, 'text', { x: L - 12, y: y0 + barH + gap / 2 + 4, 'text-anchor': 'end', 'font-size': 13 }, f.name);
+    el(svg, 'rect', { x: X(0), y: yPre, width: Math.max(X(f.pre.pct) - X(0), 2), height: barH, rx: 4, fill: f.color, opacity: .3, class: 'bar-grow' });
+    el(svg, 'text', { x: X(f.pre.pct) + 8, y: yPre + barH / 2 + 4, 'font-size': 11, class: 'fainttext' }, f.pre.pct.toFixed(1) + '%');
+    el(svg, 'rect', { x: X(0), y: yPost, width: Math.max(X(f.pct) - X(0), 2), height: barH, rx: 4, fill: f.color, class: 'bar-grow' });
+    const cy = yPost + barH / 2;
+    el(svg, 'line', { x1: X(f.lo), x2: X(f.hi), y1: cy, y2: cy, stroke: 'var(--ink)', 'stroke-width': 1.5, opacity: .55 });
+    el(svg, 'line', { x1: X(f.lo), x2: X(f.lo), y1: yPost + 2, y2: yPost + barH - 2, stroke: 'var(--ink)', 'stroke-width': 1.5, opacity: .55 });
+    el(svg, 'line', { x1: X(f.hi), x2: X(f.hi), y1: yPost + 2, y2: yPost + barH - 2, stroke: 'var(--ink)', 'stroke-width': 1.5, opacity: .55 });
+    el(svg, 'text', { x: X(f.hi) + 8, y: cy + 4, 'font-size': 12.5, 'font-weight': 600 }, `${f.pct.toFixed(1)}% · ${f.wins} wins`);
+    const hit = el(svg, 'rect', { x: L, y: T + i * rowH, width: W - L - R, height: rowH, fill: 'transparent' });
+    hit.addEventListener('mousemove', e => showTip(e, `<b>${f.name}</b><br>Baseline: ${f.pre.pct.toFixed(1)}% (CI ${f.pre.lo}–${f.pre.hi})<br>Shipped: ${f.wins} wins of 60 (${f.pct.toFixed(1)}%, CI ${f.lo}–${f.hi})<br>First nation to fall in ${f.ff} of 60`));
+    hit.addEventListener('mouseleave', hideTip);
+  });
+  el(svg, 'line', { x1: X(0), x2: X(0), y1: T, y2: T + F.length * rowH, class: 'axisline' });
+}
+
+// ---- Chart 2: win-time dot strips ----
+{
+  const svg = document.getElementById('timechart');
+  const L = 110, R = 30, T = 8, W = 860, rowH = 40;
+  const x0 = 16, x1 = 38, X = m => L + (m - x0) / (x1 - x0) * (W - L - R);
+  for (let m = 16; m <= 38; m += 4) {
+    el(svg, 'line', { x1: X(m), x2: X(m), y1: T, y2: T + F.length * rowH, class: 'gridline' });
+    el(svg, 'text', { x: X(m), y: T + F.length * rowH + 18, 'text-anchor': 'middle', 'font-size': 11, class: 'fainttext' }, m + 'm');
+  }
+  F.forEach((f, i) => {
+    const cy = T + i * rowH + rowH / 2;
+    el(svg, 'text', { x: L - 12, y: cy + 4, 'text-anchor': 'end', 'font-size': 13 }, f.name);
+    const counts = {};
+    f.times.forEach(t => {
+      const key = Math.round(t * 10);
+      const k = counts[key] = (counts[key] ?? 0) + 1;
+      const jitter = (k - 1) * 7 * ((k % 2) ? 1 : -1); // stack duplicates vertically
+      const c = el(svg, 'circle', { cx: X(t), cy: cy + jitter * 0.6, r: 4.5, fill: f.color, stroke: 'var(--surface)', 'stroke-width': 2 });
+      c.addEventListener('mousemove', e => showTip(e, `<b>${f.name}</b> victory<br>total domination at ${t} min`));
+      c.addEventListener('mouseleave', hideTip);
+    });
+    if (f.times.length >= 3) {
+      const med = f.times[Math.floor(f.times.length / 2)];
+      el(svg, 'line', { x1: X(med), x2: X(med), y1: cy - 13, y2: cy + 13, stroke: f.color, 'stroke-width': 2, opacity: .5 });
+    }
+  });
+}
+
+// ---- Chart 3: flips per game, small multiples ----
+{
+  const svg = document.getElementById('flipchart');
+  const W = 860, T = 30, rowH = 36, L0 = 110;
+  const panels = [
+    { key: 'conv', label: 'By conviction 🕊' },
+    { key: 'conq', label: 'By conquest ⚔' },
+    { key: 'defect', label: 'By defection 🏳' },
+  ];
+  const pw = (W - L0 - 30) / 3, gap = 26;
+  const vmax = 12;
+  panels.forEach((p, pi) => {
+    const px = L0 + pi * (pw + 0);
+    const inner = pw - gap;
+    el(svg, 'text', { x: px, y: 16, 'font-size': 11.5, class: 'dimtext', 'letter-spacing': '.06em' }, p.label.toUpperCase());
+    F.forEach((f, i) => {
+      const y = T + i * rowH + 9;
+      if (pi === 0) el(svg, 'text', { x: L0 - 12, y: y + 12, 'text-anchor': 'end', 'font-size': 13 }, f.name);
+      el(svg, 'line', { x1: px, x2: px + inner, y1: y + 8, y2: y + 8, class: 'gridline' });
+      const v = f[p.key];
+      const bar = el(svg, 'rect', { x: px, y, width: Math.max(v / vmax * inner, 2), height: 16, rx: 4, fill: f.color });
+      el(svg, 'text', { x: px + Math.max(v / vmax * inner, 2) + 6, y: y + 12.5, 'font-size': 11.5, class: 'dimtext' }, v.toFixed(1));
+      bar.addEventListener('mousemove', e => showTip(e, `<b>${f.name}</b><br>${v.toFixed(1)} regions per game ${p.label.toLowerCase()}`));
+      bar.addEventListener('mouseleave', hideTip);
+    });
+  });
+}
+
+// ---- data table ----
+{
+  const tb = document.getElementById('datatable');
+  const med = a => a.length ? a[Math.floor(a.length / 2)] : null;
+  for (const f of F) {
+    const tr = document.createElement('tr');
+    const m = med(f.times);
+    tr.innerHTML = `<td><span class="chip" style="background:${f.color}"></span>${f.name}</td>
+      <td class="num">${f.wins}</td><td class="num">${f.pct.toFixed(1)}%</td>
+      <td class="num">${f.lo}–${f.hi}%</td>
+      <td class="num">${m ? m.toFixed(1) + ' min' : '—'}</td>
+      <td class="num">${f.ff}</td>
+      <td class="num">${f.conv.toFixed(1)}</td><td class="num">${f.conq.toFixed(1)}</td><td class="num">${f.defect.toFixed(1)}</td>`;
+    tb.appendChild(tr);
+  }
+}
+</script>

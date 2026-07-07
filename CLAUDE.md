@@ -35,24 +35,35 @@ itself (`src/ui/recorder.js`); the player saves a JSON log from the end screen o
 Shared logs land in `matches/`. Human games are ground truth the AI tournaments can't
 provide — when a human log contradicts tournament conclusions, weight the human log.
 
-**Report on ship only.** The balance-report artifact (scratchpad) is updated only when
-a change merges — per-experiment results just go to balance-history.jsonl.
+**Report on ship only.** The balance-report artifact is updated only when a change
+merges — per-experiment results just go to balance-history.jsonl. Its source is
+`docs/balance-report.html`; republish to the existing artifact URL (in STATE.md).
 
-**Keep session state small.** Maintain `<scratchpad>/STATE.md` (current config truth,
-round history one-liners, open questions) so post-compaction recovery is one small read.
+**Keep session state small.** `STATE.md` (repo root, committed) is the durable session
+memory: current config truth, standings, open problems, lessons. Read it FIRST in a new
+session; update + commit it with every shipped change. The scratchpad does not survive
+sessions — anything durable belongs in the repo.
 
 ## Verification
 
 - Headless sim: `node tools/tournament.mjs [games] [cap] [--patch=f.json]` (JSONL per game).
-- Browser: `PWTOOLS=<scratchpad>/pwtools node tools/verify.mjs <outdir> <check.mjs>`;
-  check scripts export `run(page, {shot, sleep, report})`. Headless in-page timers are
+- Browser: `PWTOOLS=<dir> node tools/verify.mjs <outdir> tools/checks/<check>.mjs` with
+  `QUERY='?faction=x'` (without it the faction-select screen blocks boot). PWTOOLS = any
+  dir containing node_modules/playwright — in a fresh session recreate it once with
+  `npm i playwright` in an empty scratchpad dir (Chromium itself is preinstalled).
+  Check scripts export `run(page, {shot, sleep, report})`. Headless in-page timers are
   starved — dispatch interactions in a single evaluate; events reach the HUD on the
   *next frame* (sleep before reading alerts).
-- AI-vs-AI probe pattern for "can faction X actually do Y": see scratchpad probe scripts.
+- Regression checks live in `tools/checks/` (fixpack, ux, cnc controls, repair, recorder,
+  surv). AI-vs-AI probes in `tools/probes/` (min-12 snapshot pattern; `N=1` env to smoke).
 
 ## Gotchas
 
 - `gh` CLI unavailable — use GitHub MCP tools; PR merge = deploy.
+- After a SQUASH merge the local branch still carries pre-squash commits — the next PR
+  405s with "merge conflicts". Fix: `git rebase --onto origin/main <last-squashed-commit>`
+  then push `--force-with-lease`. (Bit us four times.)
+- Tournament variance is ±10pp at n=60 — compare Wilson-CI bands, never point orderings.
 - GLTFLoader strips dots from node names (`handslot.r` → `handslotr`).
 - The HUD constructor wipes `#hud` innerHTML — construct HUD before Overlays.
 - Militia are pop-0 units; owner null = neutral. AI excludes militia from armies.
