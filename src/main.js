@@ -174,6 +174,7 @@ async function boot() {
       hud.handleEvent(ev, world);
       audio.handleEvent(ev, world, humanFaction);
       if (ev.type === 'forest_cut') terrain.setForestCut(ev.col, ev.row, true);
+      if (ev.type === 'forest_grown') terrain.setForestCut(ev.col, ev.row, false);
       if (ev.type === 'entity_removed' || ev.type === 'unit_died') selection.delete(ev.id);
     }
 

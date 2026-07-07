@@ -104,7 +104,7 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--acce
   personality knobs were partly dead code. With everything fixed, the first honest tournament rewrote
   the standings overnight. This is the report of the clean world: fair rules, honest telemetry, and a
   meta that still owes Portugal a future.</p>
-  <p class="method-line">31 tournament rounds · ~1,100 games · full log in <span class="knob-file">tools/balance-history.jsonl</span> ·
+  <p class="method-line">33 tournament rounds · ~1,180 games · full log in <span class="knob-file">tools/balance-history.jsonl</span> ·
   reproduce with <span class="knob-file">node tools/round.mjs --name=x --full</span></p>
 
   <div class="chart-card">
@@ -144,6 +144,7 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--acce
     <tr><td>R15 · Galicia's mineral trickle 0.18 → 0.25: the Atlantic war levels</td><td class="num">23.3%</td><td class="num">5.0%</td><td class="num">25.0%</td><td class="num">18.3%</td><td class="num">28.3%</td></tr>
     <tr><td>R16 · THE AUDIT: config leak + zombie armies + dead AI knobs fixed — first honest measurement</td><td class="num">63.3%</td><td class="num">1.7%</td><td class="num">10.0%</td><td class="num">0%</td><td class="num">25.0%</td></tr>
     <tr class="shipped"><td><strong>R17 · clean-world retune: Galicia's kit slimmed, fatigue +25%, dominators draw heat — shipped</strong></td><td class="num"><strong>56.7%</strong></td><td class="num"><strong>1.7%</strong></td><td class="num"><strong>18.3%</strong></td><td class="num"><strong>0%</strong></td><td class="num"><strong>23.3%</strong></td></tr>
+    <tr class="shipped"><td><strong>R18 · the forests grow back: cut groves regrow at 75% stock after 210s — player-requested, shipped</strong></td><td class="num"><strong>63.3%</strong></td><td class="num"><strong>8.3%</strong></td><td class="num"><strong>11.7%</strong></td><td class="num"><strong>3.3%</strong></td><td class="num"><strong>13.3%</strong></td></tr>
   </table>
   </div>
 
@@ -239,6 +240,13 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--acce
   flat: <strong>Galicia's corner-fortress-convertor remains the strongest AI hand (56.7%), and Portugal —
   the hegemon's nearest soft target — has not yet won an honest game.</strong> Both are documented open
   problems; the difference is that the next tuning round starts from truth.</p>
+
+  <p><strong>R18 — the forests grow back.</strong> The first player-driven design change of the live era:
+  cut groves regrow after three and a half minutes at three-quarter stock, so wood-poor nations no longer
+  hit a hard wall in long games. Sixty games say the balance holds — every nation lands inside its R17
+  interval — and Portugal, for the first time in an honest world, <strong>won two games</strong>. Castile
+  softened (23.3% → 13.3%, intervals overlapping): an aggressor profits less when its victims' economies
+  grow back behind it.</p>
 
   <p><strong>Where the table stands for a human player:</strong> the AI records now describe honest
   temperaments, not bugs. Galicia is the comfortable pick, Castile and Catalonia the solid mains,
@@ -422,10 +430,11 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--acce
   </table>
   </div>
 
-  <p class="footnote">Method: 31 tournament rounds (~1,100 games — twelve full 60-game tournaments plus
+  <p class="footnote">Method: 33 tournament rounds (~1,180 games — thirteen full 60-game tournaments plus
   20-game diagnostic screens), every nation driven by its AI personality, 100&nbsp;ms ticks, 75-minute cap,
   Wilson intervals at 95%. Rounds before R16 were measured with a biased harness (the era-tech config leak)
-  and survive here as history, not truth. The shipped build is R17 (the clean-world retune); the full round
+  and survive here as history, not truth. The shipped build is R18 (R17's clean-world rules plus forest
+  regrowth); the deep-dive dossiers and charts below describe the R17 final tournament; the full round
   log with kill-graphs lives in <code>tools/balance-history.jsonl</code>. A tournament of AIs measures
   <em>bonuses + AI temperaments</em> together, not human play — the dossiers translate. Reproduce:
   <code>node tools/round.mjs --name=x --full</code>.</p>

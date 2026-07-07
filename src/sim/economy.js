@@ -1,10 +1,24 @@
 // Passive economy: building rates, region tribute, train queues, era timers.
 
-import { BUILDINGS, ERAS } from '../config/rules.js';
+import { BUILDINGS, ERAS, NODES } from '../config/rules.js';
 import { FACTIONS } from '../config/factions.js';
 import { regionTribute } from './regions.js';
 
 export function updateEconomy(world, dt) {
+  // stumps regrow in cut order — the constant delay keeps the queue sorted,
+  // so only the front ever needs checking
+  while (world.stumps.length && world.stumps[0].regrowAt <= world.time) {
+    const t = world.stumps.shift();
+    if (t.building) { // someone built on the clearing — try again in a while
+      t.regrowAt = world.time + NODES.wood.regrowTime;
+      world.stumps.push(t);
+      continue;
+    }
+    t.terrain = 'forest';
+    t.wood = NODES.wood.perTile * NODES.wood.regrowTo;
+    world.pushEvent({ type: 'forest_grown', col: t.col, row: t.row });
+  }
+
   // building passive rates + training
   let marketOwners = new Set();
   for (const b of world.entities.values()) {

@@ -85,7 +85,23 @@ export async function run(page, { sleep, report }) {
   // 7. the ⚔ command bar exists on desktop (fine-pointer) too
   report.checks.commandBar = await page.evaluate(() => !!document.getElementById('tb-amove'));
 
-  // 8. the fully-loaded res-bar (badges shown) must not slide under the
+  // 8. cut forests regrow (stump queue in the economy tick) — wood is renewable
+  report.checks.forestRegrow = await page.evaluate(() => {
+    const g = window.__game, w = g.world, pid = g.controls.humanId;
+    const cap = w.entities.get(w.players[pid].capitalId);
+    const t = w.tiles.find(t => t.terrain === 'forest'
+      && Math.abs(t.col - cap.col) + Math.abs(t.row - cap.row) <= 6);
+    const worker = w.addUnit(pid, 'worker', t.col, t.row);
+    t.wood = 1; // one swing left
+    w.orderGather(pid, [worker.id], { type: 'forest', col: t.col, row: t.row });
+    for (let i = 0; i < 100 && t.terrain === 'forest'; i++) w.step();
+    const cut = t.terrain === 'grass' && t.regrowAt > w.time;
+    t.regrowAt = w.time; // fast-forward instead of stepping 210s of sim
+    for (let i = 0; i < 5; i++) w.step();
+    return { cut, regrown: t.terrain === 'forest', wood: Math.round(t.wood) };
+  });
+
+  // 9. the fully-loaded res-bar (badges shown) must not slide under the
   //    domination bar — DOM geometry passes even when pixels are covered
   report.checks.hudOverlap = await page.evaluate(() => {
     const g = window.__game, p = g.world.players[g.controls.humanId];

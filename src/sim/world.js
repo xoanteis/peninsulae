@@ -19,6 +19,7 @@ export class World {
     this.time = 0;
     this.events = [];
     this.tiles = parseMap();
+    this.stumps = [];                // cut forest tiles awaiting regrowth, in cut order
     for (const t of this.tiles) {
       t.building = null;             // entity id occupying the tile
       if (t.terrain === 'forest') t.wood = NODES.wood.perTile;
