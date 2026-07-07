@@ -2,7 +2,7 @@
 //   idle · moving · toWork · working · toFight · fighting · dying
 // Anim hints for the renderer: idle · walk · work · attack · shoot · die
 
-import { UNITS, BUILDINGS, NODES } from '../config/rules.js';
+import { UNITS, BUILDINGS, NODES, REPAIR } from '../config/rules.js';
 import { FACTIONS } from '../config/factions.js';
 import { tileToWorld, worldToTile, neighbors, hexDistance } from './hex.js';
 import { tryAttack, acquireTarget } from './combat.js';
@@ -187,6 +187,11 @@ function workSpot(world, u) {
     const { x, z } = b;
     return { x, z, key: `b${b.id}`, arrive: 1.25 };
   }
+  if (t.type === 'repair') {
+    const b = world.entities.get(t.buildingId);
+    if (!b || b.progress < 1 || b.hp >= b.maxHp) return null;
+    return { x: b.x, z: b.z, key: `r${b.id}`, arrive: 1.25 };
+  }
   if (t.type !== 'gather') return null;
   const tg = t.target;
   if (tg.type === 'forest') {
@@ -289,6 +294,25 @@ function doWork(world, u, dt) {
       world.pushEvent({ type: 'building_complete', id: b.id, kind: b.kind, owner: b.owner, col: b.col, row: b.row });
       afterBuild(world, u, b);
     }
+    return;
+  }
+
+  if (t.type === 'repair') {
+    const b = world.entities.get(t.buildingId);
+    if (!b || b.hp <= 0) { u.state = 'idle'; u.task = null; return; }
+    if (b.hp >= b.maxHp) { u.state = 'idle'; u.task = null; return; }
+    u.facing = Math.atan2(b.x - u.x, b.z - u.z);
+    const def = b.kind === 'village' ? { cost: {} } : BUILDINGS[b.kind];
+    // masonry costs wood: a full 0->max restore bills a share of the build cost
+    const woodPerHp = REPAIR.woodShare * (def.cost?.wood ?? REPAIR.fallbackWood) / b.maxHp;
+    const hpGain = Math.min(REPAIR.hpPerSec * dt, b.maxHp - b.hp);
+    const bill = hpGain * woodPerHp;
+    if (p.res.wood < bill) {
+      if (!t.warned) { t.warned = true; world.pushEvent({ type: 'ui_error', message: 'No wood to keep repairing', owner: u.owner }); }
+      u.state = 'idle'; u.task = null; return;
+    }
+    p.res.wood -= bill;
+    b.hp += hpGain;
     return;
   }
 

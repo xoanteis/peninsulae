@@ -110,6 +110,13 @@ export const START = {
   workers: 5, soldiers: 2,
 };
 
+// masonry: workers restore damaged buildings for a share of the build cost
+export const REPAIR = {
+  hpPerSec: 30,     // per worker on the scaffold
+  woodShare: 0.35,  // wood cost of a full 0->max restore, as share of build wood
+  fallbackWood: 120, // for buildings with no wood cost (the capital)
+};
+
 // gathering
 export const NODES = {
   wood: { rate: 1.0, perTile: 320, maxWorkers: 3 },

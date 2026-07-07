@@ -84,6 +84,8 @@ staff-bearing pilgrim…), workers share the hooded-peasant model with faction b
   Festival Hall (Kingdom era, more Identity), Barracks (soldiers), Archery Range (crossbows),
   Watchtower (auto-fires), Blacksmith (attack/armor upgrades).
 - **Population** capped by houses; **construction** shows scaffolding and hammering workers.
+- **Repair**: workers mend damaged buildings (right-click) at a steady rate for a share of the
+  build cost in wood — a garrisoned tower can be kept standing under siege.
 
 ## Eras (tech progression)
 

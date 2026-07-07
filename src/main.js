@@ -80,6 +80,7 @@ async function boot() {
         case 'attack': world.orderAttack(humanFaction, o.ids, o.targetId); audio.play('blip', { volume: 0.4 }); break;
         case 'gather': world.orderGather(humanFaction, o.ids, o.target); audio.play('ui_click', { volume: 0.4 }); break;
         case 'build': world.orderBuild(humanFaction, o.ids, o.buildingId); break;
+        case 'repair': world.orderRepair(humanFaction, o.ids, o.buildingId); audio.play('ui_click', { volume: 0.4 }); break;
         case 'workslot': world.orderGather(humanFaction, o.ids, { type: 'slot', buildingId: o.buildingId }); break;
         case 'rally': audio.play('ui_click', { volume: 0.4 }); break;
         case 'place': {

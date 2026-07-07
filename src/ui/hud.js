@@ -182,6 +182,8 @@ export class HUD {
           <p>There is <b>no stone</b>: rocks and the sierra itself can't be gathered — but a <b>⛏ Mine built beside a
           mountain</b> turns it into gold. Only workers build: place a building and a worker starts raising it at once
           (whichever you've selected, or the nearest one otherwise). Soldiers can't build.</p>
+          <p><b>🔧 Repair</b> — right-click a damaged building with workers selected and they mend it
+          (masonry costs a little wood). A tower under siege can be kept standing by the workers behind it.</p>
           <h3>Eras</h3>
           <p>County → Kingdom → Golden Age. Advance at your capital: unlocks buildings and your nation's
           signature power. Blacksmith forges attack & armor upgrades.</p>
@@ -277,7 +279,7 @@ export class HUD {
         this.showEnd(ev.owner);
         break;
       case 'ui_error':
-        this.alert(`✋ ${ev.message}`, { ttl: 3.5 });
+        if (!ev.owner || my(ev.owner)) this.alert(`✋ ${ev.message}`, { ttl: 3.5 });
         break;
     }
   }

@@ -80,7 +80,7 @@ export class Overlays {
       case 'work_pulse': {
         const u = world.entities.get(ev.id);
         if (!u || u.owner !== this.humanId) break;
-        const labels = { forest: '+wood', fish: '+food', slot: '+', construct: '🔨' };
+        const labels = { forest: '+wood', fish: '+food', slot: '+', construct: '🔨', repair: '🔧' };
         if (ev.task === 'slot') break; // building bar shows it
         if (Math.random() < 0.4) this.float(labels[ev.task] ?? '+', ev.x, 1.4, ev.z, '#d9f2b8');
         break;
