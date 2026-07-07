@@ -28,6 +28,13 @@ old results from raw JSONL or conversation.
 when a check fails or for one final ship-quality shot. For routine visual checks use
 `VIEWPORT=960x600 DSF=1`.
 
+**Human match logs are read through the analyzer, never raw.** The game always records
+itself (`src/ui/recorder.js`); the player saves a JSON log from the end screen or F2
+(Shift+F2 recovers the localStorage backup after a reload). Analyze with
+`node tools/analyze-match.mjs <file>` — timeline, build order, curves, coaching flags.
+Shared logs land in `matches/`. Human games are ground truth the AI tournaments can't
+provide — when a human log contradicts tournament conclusions, weight the human log.
+
 **Report on ship only.** The balance-report artifact (scratchpad) is updated only when
 a change merges — per-experiment results just go to balance-history.jsonl.
 

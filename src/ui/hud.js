@@ -18,12 +18,13 @@ const BUILD_ORDER = ['house', 'farm', 'lumbercamp', 'mine', 'market', 'church', 
 const fmtCost = cost => Object.entries(cost).map(([k, v]) => `${RES_ICONS[k] ?? k}${v}`).join(' ') || 'free';
 
 export class HUD {
-  constructor({ root, world, humanId, controls, rig, audio }) {
+  constructor({ root, world, humanId, controls, rig, audio, recorder }) {
     this.world = world;
     this.humanId = humanId;
     this.controls = controls;
     this.rig = rig;
     this.audio = audio;
+    this.recorder = recorder;
     this.regionKey = null;
     this.refresh = 0;
     this.ended = false;
@@ -197,7 +198,7 @@ export class HUD {
           ⌨️ <b>Ctrl+1–9</b> assign group · <b>1–9</b> recall (double-tap centers) · <b>F</b>+click attack-move ·
           <b>X</b> stop · <b>E</b> all soldiers on screen · <b>.</b> idle worker · <b>P</b> pause ·
           <b>H</b> home · <b>Space</b> last alert<br>
-          <b>WASD/arrows</b> pan · <b>Q/R</b> rotate · <b>+/−</b> zoom · <b>F1</b> help · <b>M</b> mute · <b>Esc</b> cancel<br>
+          <b>WASD/arrows</b> pan · <b>Q/R</b> rotate · <b>+/−</b> zoom · <b>F1</b> help · <b>F2</b> save match log · <b>M</b> mute · <b>Esc</b> cancel<br>
           🖐 <b>Trackpad:</b> two-finger scroll pans · pinch zooms · two-finger tap orders<br>
           📱 <b>Touch:</b> drag pan · pinch zoom · tap select · <b>long-press</b> order (landscape recommended)</p>
           <h3>Economy</h3>
@@ -355,7 +356,15 @@ export class HUD {
           : `The peninsula belongs to the ${f?.name ?? 'rebels'}. Your story becomes a song of resistance.`}</p>
         <p>${mins} minutes · ${Object.values(this.world.regions).filter(r => r.owner === this.humanId).length} regions held at the end</p>
         <button class="big-btn" onclick="location.reload()">Play again</button>
+        <button class="big-btn" id="btn-matchlog">📜 Save match log</button>
       </div>`;
+    this.wireMatchLog();
+  }
+
+  // the log feeds tools/analyze-match.mjs — how a human game gets studied
+  wireMatchLog() {
+    const btn = this.el.endOverlay.querySelector('#btn-matchlog');
+    if (btn) btn.onclick = () => this.recorder?.download();
   }
 
   // when the player's own capital falls but others fight on
@@ -371,7 +380,9 @@ export class HUD {
         The dream of independence waits for another century.</p>
         <button class="big-btn" onclick="location.reload()">Play again</button>
         <button class="big-btn" id="btn-spectate">👁 Watch the war play out</button>
+        <button class="big-btn" id="btn-matchlog">📜 Save match log</button>
       </div>`;
+    this.wireMatchLog();
     // spectating: hide the verdict, keep the world running — a new end screen
     // will rise when someone actually wins
     this.el.endOverlay.querySelector('#btn-spectate').onclick = () => {
