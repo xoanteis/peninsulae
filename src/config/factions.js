@@ -9,17 +9,13 @@ export const FACTIONS = {
     unitNames: { worker: 'Labrego', soldier: 'Irmandiño', crossbow: 'Besteiro' },
     eraTech: 'Camiño de Santiago',
     blurb: 'Patient people of the Atlantic mists. The sea feeds them, the Way of St James binds them, and every region they win by conviction strengthens the pilgrimage.',
-    bonusText: 'Fishing +50% · The mines of Gallaecia: rich veins + a steady gold trickle · Irmandiños +15% HP · Fortress-cathedral capital, cheap watchtowers, churches 30% off · Converted regions feed the Camino & arm their militias (Irmandades)',
+    bonusText: 'Fishing +50% · The gold of Gallaecia: a steady mineral trickle · Irmandiños +15% HP · Fortress-cathedral capital · Churches 30% off · Converted regions feed the Camino',
     bonus: {
-      fishRate: 1.5, churchCostMul: 0.7, caminoIdentity: 0.15, // per converted region /s
-      militiaJoin: true, // Irmandades: village guards of convinced regions take up your banner
-      towerCostMul: 0.65, capitalHpMul: 1.5, // the sanctuary: hold what conviction wins
-      // As Minas — Gallaecia was the Roman gold province; wolfram, tin and slate.
-      // Rich mine veins plus a passive trickle of scattered diggings fund the army
-      // Galicia's Identity-based economy could never afford. Irmandiños are hardy.
-      // (0.35 trickle overshot to 35%; 0.18 left Galicia trailing Portugal in the
-      // Atlantic war once the Basques began marching — 0.25 levels the two rivals.)
-      mineRate: 1.5, mineralTrickle: 0.25, unitHpMul: 1.15,
+      // The kit was slimmed hard after the integrity fixes: with the harness bias
+      // and the AI bugs gone, the old nine-bonus stack made Galicia unbeatable
+      // (63% and never once killed). Removed: militiaJoin, towerCostMul, mineRate.
+      fishRate: 1.5, churchCostMul: 0.7, caminoIdentity: 0.1, // per converted region /s
+      capitalHpMul: 1.3, mineralTrickle: 0.15, unitHpMul: 1.15,
     },
     aiStyle: { aggression: 0.4, convictionLove: 0.95, expandCoastal: 0.6, economy: 0.7, turtle: 0.7 },
   },
@@ -59,9 +55,11 @@ export const FACTIONS = {
     blurb: 'The first nation of fixed borders turned its back to Castile and its face to the ocean. The coast is theirs by vocation.',
     bonusText: 'Workers 20% faster · Coastal regions convert at a discount and pay extra tribute',
     bonus: {
-      workerSpeedMul: 1.2, coastalConvertMul: 0.7, coastalTributeMul: 1.15,
+      // coastalTributeMul restored to 1.25: the 1.15 trim was compensating for the
+      // era-tech leak that gave Portugal permanent Sagres — fixed now.
+      workerSpeedMul: 1.2, coastalConvertMul: 0.7, coastalTributeMul: 1.25,
     },
-    aiStyle: { aggression: 0.35, convictionLove: 0.6, expandCoastal: 1.0, economy: 0.75 },
+    aiStyle: { aggression: 0.5, convictionLove: 0.6, expandCoastal: 1.0, economy: 0.75, turtle: 0.4 },
   },
   castile: {
     name: 'Castilians', adj: 'Castilian', motto: 'Plus Ultra',

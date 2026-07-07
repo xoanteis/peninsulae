@@ -79,16 +79,17 @@ export class AIController {
       return; // defenders already ordered at it
     }
     this.defendTargetId = null;
-    // enemies near any of my buildings?
-    for (const b of my.buildings) {
+    // enemies near any of my buildings? The capital is checked first — a farm
+    // raid must never distract the guard from a siege of the castle
+    for (const b of [my.cap, ...my.buildings.filter(x => x !== my.cap)]) {
       const foes = w.unitsNear(b.x, b.z, 6).filter(u =>
         u.owner && u.owner !== '__dead__' && u.owner !== this.pid && u.kind !== 'worker');
       if (foes.length) {
         this.underThreat = true;
         this.defendTargetId = foes[0].id;
-        // only soldiers already near home answer the horn — the away army
-        // fights its own battle instead of marching back across the map
-        const near = s => Math.hypot(s.x - b.x, s.z - b.z) < 30;
+        // soldiers near home answer the horn for ordinary raids; a siege of the
+        // CAPITAL recalls everyone — losing the castle is losing the war
+        const near = s => b.kind === 'capital' || Math.hypot(s.x - b.x, s.z - b.z) < 30;
         const defenders = [...my.idleSoldiers, ...my.soldiers.filter(s => s.task?.auto)]
           .filter(near).slice(0, 8);
         if (defenders.length) w.orderAttack(this.pid, defenders.map(u => u.id), foes[0].id);
@@ -260,7 +261,7 @@ export class AIController {
     // regicide is an endgame move (or the hegemon's), not an early land grab —
     // until then a living nation's home region is off the expansion list
     const endgame = w.time > 1080
-      || (w.time > 600 && Object.values(w.regions).every(r => r.owner))
+      || (w.time > 900 && Object.values(w.regions).every(r => r.owner))
       || (this.style.aggression > 0.7 && p.era >= 1 && w.time > 660);
     // pick a target region
     const targets = Object.values(w.regions).filter(r => {
@@ -316,7 +317,9 @@ export class AIController {
 
     let targetRegion = this.expandTarget ? w.regions[this.expandTarget] : null;
     // endgame: hunt capitals — once the map is carved up, or as the era-1 hegemon
-    const lateGame = w.time > 600 && Object.values(w.regions).every(r => r.owner);
+    // the free-for-all opens only when the map is carved AND the game is old —
+    // fixed AI made conviction fast enough to carve Iberia by minute 10
+    const lateGame = w.time > 900 && Object.values(w.regions).every(r => r.owner);
     const isHegemon = this.style.aggression > 0.7 && p.era >= 1 && w.time > 660;
     if ((isHegemon || lateGame || w.time > 1080) && army.length >= assaultSize) {
       // march on the NEAREST rival capital, not the leader's — focus-firing
@@ -334,11 +337,18 @@ export class AIController {
       const scored = rivals.map(o => {
         const c = w.entities.get(o.capitalId);
         const d = c && myCap ? Math.hypot(c.x - myCap.x, c.z - myCap.z) : 1e9;
-        return [o, d + (armies[o.id] ?? 0) * 5 + Math.random() * 45];
+        // near + weak is tempting, but a runaway dominator draws heat despite
+        // its walls. Deterrence is deliberately mild: strong armies scale with
+        // empire size, and 5x deterrence made the leading empire mathematically
+        // unattackable — the fortress-turtle inherited Iberia unopposed.
+        const heat = w.dominationShare(o.id) * 90;
+        return [o, d + (armies[o.id] ?? 0) * 2 - heat + Math.random() * 45];
       }).sort((a, b) => a[1] - b[1]);
       const rival = scored[0]?.[0];
       const cap = rival && w.entities.get(rival.capitalId);
-      if (cap && Math.random() < 0.45) {
+      // an early regicide needs a real siege army, same as storming a castle
+      const needed = assaultSize + (w.time < 900 ? 4 : 0);
+      if (cap && army.length >= needed && Math.random() < 0.45) {
         w.orderAttack(this.pid, army.map(u => u.id), cap.id);
         this.attackWave = { target: cap.id };
         this.lastWarOrder = w.time;
