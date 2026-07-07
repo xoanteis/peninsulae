@@ -133,6 +133,9 @@ export class Controls {
   setPlacing(kind) {
     this.placing = kind;
     this.canvas.style.cursor = kind ? 'copy' : '';
+    // every way in or out of placement (menu, Esc, click-to-place, touch) lands
+    // here — the HUD banner must track all of them, not just the menu button
+    this.onPlacingChange?.();
   }
 
   screenToGround(cx, cy) {

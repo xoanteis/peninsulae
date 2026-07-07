@@ -42,4 +42,15 @@ export async function run(page, { sleep, report }) {
   await sleep(1200);
   report.checks.idleBadge = await page.evaluate(() =>
     document.querySelector('#idle-badge')?.textContent ?? null);
+
+  // 5. place-hint banner tracks EVERY exit path (all funnel through setPlacing)
+  report.checks.placeHint = await page.evaluate(() => {
+    const g = window.__game, hint = document.getElementById('place-hint');
+    const hidden = () => hint.classList.contains('hidden');
+    g.controls.setPlacing('farm');
+    const shownOnPlace = !hidden(), text = hint.textContent;
+    g.controls.setPlacing(null); // same path Esc / click-to-place / touch take
+    const hiddenAfter = hidden();
+    return { shownOnPlace, text, hiddenAfter };
+  });
 }
