@@ -40,7 +40,7 @@ export const BUILDINGS = {
   mine: {
     name: 'Mine', hp: 320, cost: { wood: 65 }, buildTime: 18, model: 'mine',
     needsMountain: true, slots: 2, slotRate: { gold: 0.8 },
-    desc: 'Dig gold from the sierra. Needs a mountain beside it. Two worker slots.',
+    desc: 'Dig gold from the sierra. Build it on the rocky ground beside a mountain. Two worker slots.',
   },
   lumbercamp: {
     name: 'Lumber Camp', hp: 280, cost: { wood: 50 }, buildTime: 12, model: 'lumbermill',

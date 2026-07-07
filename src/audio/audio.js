@@ -134,7 +134,8 @@ export class AudioEngine {
         if (ev.owner === humanId) this.play('build_place', { volume: 0.9 });
         break;
       case 'work_pulse':
-        if (ev.task === 'construct') this.play('hammer', { volume: 0.35, at: { x: ev.x, z: ev.z }, throttleMs: 450 });
+        // repair hammers too — a silent repair is invisible repair
+        if (ev.task === 'construct' || ev.task === 'repair') this.play('hammer', { volume: 0.35, at: { x: ev.x, z: ev.z }, throttleMs: 450 });
         break;
       case 'building_complete':
         if (ev.owner === humanId) this.play('build_place', { volume: 0.9, rate: 1.15 });

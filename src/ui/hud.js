@@ -59,6 +59,10 @@ export class HUD {
       const muted = this.audio.toggleMute();
       this.el.btnMute.textContent = muted ? '🔇' : '🔊';
     };
+    // the 💤 badge is re-rendered into the res-bar every refresh, so delegate the click
+    this.el.resBar.addEventListener('click', e => {
+      if (e.target.closest('#idle-badge')) this.controls.cycleIdleWorker();
+    });
     window.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT') return;
       if (e.code === 'F1') { e.preventDefault(); this.toggleHelp(); }
@@ -108,7 +112,7 @@ export class HUD {
     this.tips = [
       { at: 3, text: `🏰 Select your Capital and train ${wname}s — send them to forests 🪵 and fishing ripples 🐟 (long-press / right-click)` },
       { at: 28, text: '🛡 Neutral villages defend themselves — their towers fire at anyone who comes close. Keep clear until you bring soldiers, or convert the region peacefully with 📜' },
-      { at: 42, text: '⛏ Rocks and mountains can\'t be gathered — build a Mine beside a mountain to dig gold. Forests, shoals and farms cover the rest' },
+      { at: 42, text: '⛏ Scattered rocks mark the ground beside the sierra — build a Mine on such a tile to dig gold. Forests, shoals and farms cover the rest' },
       { at: 60, text: '🌾 Build Farms and Houses (bottom-right menu) — a worker starts raising it at once. Click any region to see its tribute and the 🕊 Convert action' },
       { at: 95, text: '⚔️ Castile is coming. Raise a Barracks and watchtowers before the Kingdom era — or out-convert everyone first' },
     ];
@@ -267,9 +271,17 @@ export class HUD {
         break;
       case 'worker_idle': {
         if (!my(ev.owner)) break;
+        if (ev.reason === 'slots_full') {
+          // direct answer to a player order — its own (short) throttle, not the 15s one
+          if (this.lastSlotsFullAlert && world.time - this.lastSlotsFullAlert < 4) break;
+          this.lastSlotsFullAlert = world.time;
+          const bname = BUILDINGS[ev.kind]?.name ?? 'building';
+          this.alert(`👷 The ${bname} is full — the extra worker stands idle 💤`, { x: ev.x, z: ev.z, ttl: 5 });
+          break;
+        }
         if (this.lastIdleAlert && world.time - this.lastIdleAlert < 15) break;
         this.lastIdleAlert = world.time;
-        this.alert(`🌲 A worker stands idle (press . to find idle workers)`, { x: ev.x, z: ev.z, ttl: 6 });
+        this.alert(`🌲 A worker stands idle — click the 💤 badge (or press .)`, { x: ev.x, z: ev.z, ttl: 6 });
         break;
       }
       case 'region_flipped': {
@@ -641,10 +653,15 @@ export class HUD {
     }
 
     const p = this.world.players[this.humanId];
-    // resources
+    // resources (+ idle-worker badge: click cycles them, same as the . key)
+    let idleW = 0;
+    for (const e of this.world.entities.values()) {
+      if (e.type === 'unit' && e.kind === 'worker' && e.owner === this.humanId && e.state === 'idle') idleW++;
+    }
     this.el.resBar.innerHTML = Object.entries(p.res).map(([k, v]) =>
       `<span class="res"><span class="res-ico">${RES_ICONS[k]}</span>${Math.floor(v)}</span>`).join('') +
       `<span class="res"><span class="res-ico">👥</span>${p.pop}/${p.popCap}</span>` +
+      (idleW ? `<span class="res idle-chip" id="idle-badge" title="idle workers — click (or press .) to cycle through them">💤${idleW}</span>` : '') +
       `<span class="res era-chip">👑 ${ERAS[p.era].name}${p.eraTimer != null ? ' ⏳' : ''}</span>`;
 
     // domination

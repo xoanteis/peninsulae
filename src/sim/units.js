@@ -366,7 +366,15 @@ function doWork(world, u, dt) {
   if (t.type === 'repair') {
     const b = world.entities.get(t.buildingId);
     if (!b || b.hp <= 0 || b.owner !== u.owner) { u.state = 'idle'; u.task = null; return; }
-    if (b.hp >= b.maxHp) { u.state = 'idle'; u.task = null; return; }
+    if (b.hp >= b.maxHp) {
+      // a right-click on a chipped mine means "put him to work there", not "patch and quit":
+      // when the repaired building has a free work slot, step into it instead of loitering
+      if (b.slots && b.slots.length < (BUILDINGS[b.kind]?.slots ?? 0)) {
+        u.task = { type: 'gather', target: { type: 'slot', buildingId: b.id } };
+        u.state = 'toWork';
+      } else { u.state = 'idle'; u.task = null; }
+      return;
+    }
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
     const def = b.kind === 'village' ? { cost: {} } : BUILDINGS[b.kind];
     // masonry costs wood: a full 0->max restore bills a share of the build cost
@@ -384,6 +392,7 @@ function doWork(world, u, dt) {
   }
 
   const tg = t.target;
+  let pulseKind; // building kind for slot work, so the UI can label the yield
   if (tg.type === 'forest') {
     const tile = world.tileAt(tg.col, tg.row);
     if (!tile || !(tile.wood > 0)) { u.state = 'toWork'; return; }
@@ -405,9 +414,14 @@ function doWork(world, u, dt) {
     if (!b || b.progress < 1) { u.state = 'idle'; u.task = null; return; }
     const def = BUILDINGS[b.kind];
     if (!b.slots.includes(u.id)) {
-      if (b.slots.length >= def.slots) { u.state = 'idle'; u.task = null; return; }
+      if (b.slots.length >= def.slots) {
+        u.state = 'idle'; u.task = null;
+        world.pushEvent({ type: 'worker_idle', id: u.id, owner: u.owner, x: u.x, z: u.z, reason: 'slots_full', kind: b.kind });
+        return;
+      }
       b.slots.push(u.id);
     }
+    pulseKind = b.kind;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
     for (const [k, v] of Object.entries(def.slotRate)) {
       let rate = v;
@@ -420,7 +434,7 @@ function doWork(world, u, dt) {
   }
   // periodic feedback for the renderer
   if ((u.workT | 0) !== ((u.workT - dt) | 0)) {
-    world.pushEvent({ type: 'work_pulse', id: u.id, x: u.x, z: u.z, task: tg?.type ?? t.type });
+    world.pushEvent({ type: 'work_pulse', id: u.id, x: u.x, z: u.z, task: tg?.type ?? t.type, kind: pulseKind });
   }
 }
 

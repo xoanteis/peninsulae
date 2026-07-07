@@ -44,10 +44,29 @@ NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harn
 - Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
   across games in one process and silently biases every harness (cost us months of data).
 
-## Awaiting
-- A human match log from the player (told to play at the live site and share the JSON —
-  via matches/ upload or paste). Analyze with tools/analyze-match.mjs, then (a) coach,
-  (b) cross-check R17 conclusions against human reality.
+## Human match log #1 (matches/2026-07-07-galicia-win-41min.json) — first ground truth
+Player as galicia WON in 41.4 min via corner turtle → late defection cascade. Key facts:
+- Confirms open problem #2 IN HUMAN PLAY: 17 towers by min 11, army 3 vs rival 16 at min 10,
+  floated 7.6k food / 5.1k wood / 1.9k identity, 4.2 idle workers, supply-blocked in 27
+  snapshots — and was NEVER punished. Corner + towers = zero AI pressure for 20+ min.
+  The "a human wouldn't over-fortify" lesson is WRONG — the human did, and it won anyway.
+- Kill graph matches R17: castile executed portugal (min 22 vs AI 11-13 — human presence
+  slows it), catalonia killed basque (26) and castile (32). Orderings hold with a human in.
+- UX gaps surfaced: attack-move (F+click) never discovered; no in-game idle-worker or
+  supply-block indicator (flags only appear post-game in the analyzer).
+- Candidate directions it supports: AI punishes weak-army neighbors early (anti-turtle);
+  in-game nudges for idle workers / pop-cap / resource float; attack-move discoverability.
+
+## UX fix pack from player feedback (2026-07-07) — SHIPPED, regression check tools/checks/feedback.mjs
+1. Mining order traps — FIXED: repair completion now flows into a free work slot;
+   a click anywhere on a building's tile counts as the building (pick-miss no longer
+   becomes a blind move); full slots push worker_idle reason 'slots_full' → specific
+   HUD alert; slot workers float "+gold"/"+food" (work_pulse now carries building kind).
+2. Repair visibility — FIXED: hammer SFX on repair pulses, 🔧 floater every pulse.
+3. Idle workers — FIXED: 💤 badge in the res-bar (click = cycle, same code as '.') +
+   pulsing 💤 marker over each idle worker (overlays pool of 24).
+4. Rocks — FIXED: scattered only on mountain-adjacent land now (mine-site signpost,
+   ~55% of such tiles); mine desc + min-42s tip updated. Purely cosmetic, no tile bonus.
 
 ## Deployed / published
 - Game: https://xoanteis.github.io/peninsulae/ (Pages from main; PR merge = deploy)
