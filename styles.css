@@ -124,11 +124,14 @@ button:hover { background: rgba(255, 226, 168, 0.22); }
 .era-chip { color: var(--accent); min-width: auto; }
 .idle-chip { cursor: pointer; color: #ffd97a; min-width: auto; }
 .idle-chip:hover { text-shadow: 0 0 6px rgba(255, 217, 122, 0.7); }
+.pop-badge { cursor: pointer; color: var(--danger); min-width: auto; font-weight: 700; }
+.pop-badge:hover { text-shadow: 0 0 6px rgba(255, 107, 87, 0.7); }
 
-/* domination race */
+/* domination race — right-anchored beside the help buttons: centered at left:50%
+   it painted over the res-bar's pop/badge/era chips on ≤1440px viewports */
 #domination {
-  position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-  width: min(420px, 40vw); padding: 6px 10px 7px;
+  position: fixed; top: 10px; right: 108px;
+  width: min(380px, 34vw); padding: 6px 10px 7px;
 }
 #dom-segments { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #555; }
 .dom-seg { height: 100%; transition: width 0.6s ease; }
@@ -212,11 +215,11 @@ button:hover { background: rgba(255, 226, 168, 0.22); }
 .end-sub { margin: 12px 0 6px; font-style: italic; }
 
 /* compact layout for phones */
-@media (max-width: 920px) {
+@media (max-width: 1100px) {
   :root { font-size: 12px; }
   #res-bar { gap: 8px; padding: 5px 9px; }
   .res { min-width: 44px; }
-  #domination { width: 34vw; top: 6px; }
+  #domination { width: 26vw; top: 6px; }
   #minimap { width: 168px; height: 127px; }
   #alerts { top: 52px; max-width: 230px; }
   #build-menu { width: 208px; padding: 5px; }

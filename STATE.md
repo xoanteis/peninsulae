@@ -92,7 +92,16 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
    (drafting clause only when it applies), quieter styling. Worker plurals are real
    words now (unitNames.workers: Labregos/Baserritarrak/Pagesos/Camponeses/Labriegos
    — "Pagèss" was shipping). Banner lifecycle asserted in checks/feedback.mjs.
-7. Train button slid out from under a spam-clicking cursor (player couldn't queue
+7a. Follow-ups from match log #2 (all verified in checks/feedback.mjs): queue cap
+   5→10 (world.trainUnit; chips group by kind "×N" so a full queue fits the fixed
+   row); 🏠! pop-cap badge in res-bar when pop==cap (click = place house); ⚔ command
+   bar now on desktop too (attack-move was keyboard/help-only — unused in 2 games) +
+   a 150s tip. FOUND VIA PIXELS: the longer res-bar slid UNDER the centered
+   domination bar on ≤1440px viewports — DOM assertions passed while pixels were
+   covered. Domination bar is right-anchored now; overlap asserted geometrically
+   (check #8). LESSON: after HUD layout changes, verify overlap with rects AND one
+   screenshot — DOM-only checks can't see z-order coverage.
+7b. Train button slid out from under a spam-clicking cursor (player couldn't queue
    5 without re-aiming). THREE causes on the bottom-anchored, centered panel:
    (a) queue row only existed when non-empty → height jump on first click — row now
    always rendered, min-height 25px, free slots shown as dots; (b) the live train %
