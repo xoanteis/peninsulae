@@ -7,9 +7,10 @@ import { REGIONS, MAP_W, MAP_H } from '../config/map.js';
 import { regionConvertCost } from '../sim/regions.js';
 import { tileToWorld } from '../sim/hex.js';
 
-// wood is a pine, not the log emoji: 🪵's ring cross-section reads as a second
-// coin at res-bar size and players confused it with gold
-const RES_ICONS = { food: '🌾', wood: '🌲', gold: '🪙', identity: '📜' };
+// icon choices are player-tested: 🪵's ring cross-section read as a second coin
+// (now 🌲), and 🪙 is too new (2019) — some system fonts draw it as a spiral-marked
+// disc or worse, so gold is the ancient, universally-rendered 💰
+const RES_ICONS = { food: '🌾', wood: '🌲', gold: '💰', identity: '📜' };
 const BUILD_ICONS = {
   house: '🏠', farm: '🌾', lumbercamp: '🪚', mine: '⛏️', market: '⚖️', church: '⛪',
   festival: '🎻', barracks: '⚔️', archery: '🏹', tower: '🗼', blacksmith: '🛠️',
@@ -208,7 +209,7 @@ export class HUD {
           🖐 <b>Trackpad:</b> two-finger scroll pans · pinch zooms · two-finger tap orders<br>
           📱 <b>Touch:</b> drag pan · pinch zoom · tap select · <b>long-press</b> order (landscape recommended)</p>
           <h3>Economy</h3>
-          <p>Workers chop <b>🌲 forests</b>, tend <b>🌾 farms</b>, dig <b>🪙 gold mines</b> by mountains, and cast nets at
+          <p>Workers chop <b>🌲 forests</b>, tend <b>🌾 farms</b>, dig <b>💰 gold mines</b> by mountains, and cast nets at
           <b>fish shoals</b> (ripples on the coast). <b>📜 Identity</b> flows from your capital, churches and festival halls
           — it is the currency of nationhood. Owning regions pays their historical tribute; houses raise your population cap.</p>
           <p>There is <b>no stone</b>: rocks and the sierra itself can't be gathered — but a <b>⛏ Mine built beside a
