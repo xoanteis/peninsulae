@@ -332,7 +332,7 @@ export class World {
     if (!b || b.owner !== pid || b.progress < 1) return 'invalid';
     const def = BUILDINGS[b.kind];
     if (!def.trains?.includes(kind)) return 'invalid';
-    if (b.trainQueue.length >= 5) return 'queue full';
+    if (b.trainQueue.length >= 10) return 'queue full';
     const f = FACTIONS[pid];
     const cost = {};
     for (const [k, v] of Object.entries(UNITS[kind].cost)) {

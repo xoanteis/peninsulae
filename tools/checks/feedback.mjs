@@ -55,15 +55,48 @@ export async function run(page, { sleep, report }) {
     g.hud.renderSelPanel(g.selection);
     const btn = () => document.querySelector('#sel-panel [data-train="worker"]');
     const r0 = btn().getBoundingClientRect();
-    for (let i = 0; i < 5; i++) btn().click(); // re-query: each click rebuilds the panel
+    for (let i = 0; i < 10; i++) btn().click(); // re-query: each click rebuilds the panel
     const r1 = btn().getBoundingClientRect();
     for (let i = 0; i < 20; i++) w.step(); // 2s of training
     g.hud.renderSelPanel(g.selection);
     return {
-      queued: cap.trainQueue.length,
+      queued: cap.trainQueue.length, // cap is 10
       buttonStable: r0.top === r1.top && r0.left === r1.left,
+      groupedChip: document.querySelector('#sel-panel .sp-chip')?.textContent.includes('×10') ?? false,
       pct: document.querySelector('#sel-panel .sp-pct')?.textContent ?? null,
     };
+  });
+
+  // 6. pop-cap badge: appears when supply-blocked, click arms house placement
+  report.checks.popBadge = await page.evaluate(() => {
+    const g = window.__game, p = g.world.players[g.controls.humanId];
+    const saved = p.popCap;
+    p.popCap = p.pop; // simulate a supply block
+    g.hud.update(1, g.selection); // force a res-bar refresh
+    const shown = !!document.getElementById('pop-badge');
+    document.getElementById('pop-badge')?.click();
+    const placingHouse = g.controls.placing === 'house';
+    g.controls.setPlacing(null);
+    p.popCap = saved;
+    g.hud.update(1, g.selection);
+    return { shown, placingHouse, goneAfter: !document.getElementById('pop-badge') };
+  });
+
+  // 7. the ⚔ command bar exists on desktop (fine-pointer) too
+  report.checks.commandBar = await page.evaluate(() => !!document.getElementById('tb-amove'));
+
+  // 8. the fully-loaded res-bar (badges shown) must not slide under the
+  //    domination bar — DOM geometry passes even when pixels are covered
+  report.checks.hudOverlap = await page.evaluate(() => {
+    const g = window.__game, p = g.world.players[g.controls.humanId];
+    const saved = p.popCap;
+    p.popCap = p.pop; // force the 🏠 badge so the bar is at max length
+    g.hud.update(1, g.selection);
+    const rb = document.getElementById('res-bar').getBoundingClientRect();
+    const dom = document.getElementById('domination').getBoundingClientRect();
+    p.popCap = saved;
+    g.hud.update(1, g.selection);
+    return { resRight: Math.round(rb.right), domLeft: Math.round(dom.left), clear: rb.right <= dom.left };
   });
 
   // 6. place-hint banner tracks EVERY exit path (all funnel through setPlacing)

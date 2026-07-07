@@ -63,9 +63,13 @@ export class HUD {
       const muted = this.audio.toggleMute();
       this.el.btnMute.textContent = muted ? '🔇' : '🔊';
     };
-    // the 💤 badge is re-rendered into the res-bar every refresh, so delegate the click
+    // the 💤/🏠 badges are re-rendered into the res-bar every refresh, so delegate clicks
     this.el.resBar.addEventListener('click', e => {
       if (e.target.closest('#idle-badge')) this.controls.cycleIdleWorker();
+      if (e.target.closest('#pop-badge')) {
+        this.audio.play('ui_click', { volume: 0.5 });
+        this.controls.setPlacing('house');
+      }
     });
     window.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT') return;
@@ -81,15 +85,17 @@ export class HUD {
       }
     });
 
-    // touch micro bar: the few army commands a phone can't reach by keyboard
-    if (window.matchMedia?.('(pointer: coarse)').matches || 'ontouchstart' in window) {
+    // command bar: army commands for touch AND mouse. Desktop used to rely on
+    // keyboard alone — attack-move went unused across two whole human games
+    // because F+click only existed in the help screen.
+    {
       const bar = document.createElement('div');
       bar.id = 'touch-bar';
       bar.className = 'panel';
       bar.innerHTML = `
-        <button id="tb-army" title="select army on screen">👥</button>
-        <button id="tb-amove" title="attack-move: arm, then tap the map">⚔</button>
-        <button id="tb-stop" title="stop">⏹</button>`;
+        <button id="tb-army" title="select army on screen (E)">👥</button>
+        <button id="tb-amove" title="attack-move (F): arm, then click the map — the army fights on the way">⚔</button>
+        <button id="tb-stop" title="stop (X)">⏹</button>`;
       root.appendChild(bar);
       bar.querySelector('#tb-army').onclick = () => { this.audio.play('ui_click', { volume: 0.4 }); this.controls.selectSoldiersOnScreen(); };
       bar.querySelector('#tb-amove').onclick = () => {
@@ -97,7 +103,7 @@ export class HUD {
         this.controls.amove = !this.controls.amove;
         btn.classList.toggle('active', this.controls.amove);
         this.audio.play('ui_click', { volume: 0.4 });
-        if (this.controls.amove) this.alert('⚔ Attack-move armed — tap where the army should sweep', { ttl: 4 });
+        if (this.controls.amove) this.alert('⚔ Attack-move armed — click where the army should sweep', { ttl: 4 });
       };
       bar.querySelector('#tb-stop').onclick = () => {
         const ids = this.controls.myUnitIds();
@@ -119,6 +125,7 @@ export class HUD {
       { at: 42, text: '⛏ Scattered rocks mark the ground beside the sierra — build a Mine on such a tile to dig gold. Forests, shoals and farms cover the rest' },
       { at: 60, text: '🌾 Build Farms and Houses (bottom-right menu) — a worker starts raising it at once. Click any region to see its tribute and the 🕊 Convert action' },
       { at: 95, text: '⚔️ Castile is coming. Raise a Barracks and watchtowers before the Kingdom era — or out-convert everyone first' },
+      { at: 150, text: '⚔ Plain move orders walk PAST enemies. Use F+click (or the ⚔ button, right edge) to attack-move — the army fights everything on the way' },
     ];
   }
 
@@ -547,14 +554,21 @@ export class HUD {
           }
           return `<button data-train="${kind}">${UNIT_ICONS[kind]} ${f.unitNames[kind] ?? kind}<small>${fmtCost(cost)}</small></button>`;
         }).join('') + `</div>`;
-        // the queue row is ALWAYS rendered, with its 5 slots marked: the panel is
+        // the queue row is ALWAYS rendered, with free slots marked: the panel is
         // bottom-anchored, so any height change shoves the train buttons up from
-        // under a spam-clicking cursor. The progress % lives in a span updated in
-        // place (renderSelPanel) — putting it in this html would rebuild the panel
-        // every tick and eat clicks. Queue cap of 5 mirrors world.trainUnit.
-        html += `<div class="sp-row sp-queue">⏳ ` + b.trainQueue.map((job, i) =>
-          `<button class="sp-chip" data-cancel="${i}" title="cancel & refund">${UNIT_ICONS[job.kind] ?? '👤'}${i === 0 ? ` <span class="sp-pct"></span>` : ''} ✕</button>`
-        ).join('') + `<span class="sp-free">${'·'.repeat(5 - b.trainQueue.length)}</span></div>`;
+        // under a spam-clicking cursor. Chips group by kind (×N) so a full queue
+        // fits the fixed-width row; ✕ refunds the group's newest job. The live %
+        // sits in a span updated in place (renderSelPanel) — in this html it would
+        // rebuild the panel every tick and eat clicks. Cap of 10 mirrors trainUnit.
+        const groups = [];
+        b.trainQueue.forEach((job, i) => {
+          const g = groups[groups.length - 1];
+          if (g && g.kind === job.kind) { g.n++; g.last = i; }
+          else groups.push({ kind: job.kind, n: 1, first: i, last: i });
+        });
+        html += `<div class="sp-row sp-queue">⏳ ` + groups.map(g =>
+          `<button class="sp-chip" data-cancel="${g.last}" title="cancel & refund the newest">${UNIT_ICONS[g.kind] ?? '👤'}${g.first === 0 ? ` <span class="sp-pct"></span>` : ''}${g.n > 1 ? ` ×${g.n}` : ''} ✕</button>`
+        ).join('') + `<span class="sp-free">${'·'.repeat(Math.max(0, 10 - b.trainQueue.length))}</span></div>`;
         html += `<div class="sp-hint">two-finger tap the map to set the rally point</div>`;
       }
       if (b.kind === 'capital') {
@@ -687,6 +701,7 @@ export class HUD {
     this.el.resBar.innerHTML = Object.entries(p.res).map(([k, v]) =>
       `<span class="res" title="${k}"><span class="res-ico">${RES_ICONS[k]}</span>${Math.floor(v)}</span>`).join('') +
       `<span class="res" title="population / housing cap"><span class="res-ico">👥</span>${p.pop}/${p.popCap}</span>` +
+      (p.pop >= p.popCap ? `<span class="res pop-badge" id="pop-badge" title="Population capped — training is blocked. Click to place a 🏠 House">🏠!</span>` : '') +
       (idleW ? `<span class="res idle-chip" id="idle-badge" title="idle workers — click (or press .) to cycle through them">💤${idleW}</span>` : '') +
       `<span class="res era-chip">👑 ${ERAS[p.era].name}${p.eraTimer != null ? ' ⏳' : ''}</span>`;
 

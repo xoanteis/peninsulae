@@ -44,6 +44,20 @@ NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harn
 - Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
   across games in one process and silently biases every harness (cost us months of data).
 
+## Human match log #2 (matches/2026-07-07-galicia-win-32min.json) — coaching + UX fixes WORK
+Same player, same faction, played AFTER the coaching + UX fix packs. Win in 32.2 min
+(was 41.4). Before → after: era 1 last @7.6 → FIRST @4.9 · army@10 6-vs-16 → 10-vs-14
+(both rush flags gone) · wood float 5123 → 2159 · gold 1890 → 879 · food 7618 → 5727 ·
+idle 4.2 → 3.6 · train orders 71 → 117 (5-at-a-time queue spam visible in the log —
+the #25 fix in action) · player took 2 of 4 kills (was 0, AIs did all killing).
+STILL OPEN after 2 games: (a) attack-move NEVER used in either game — discoverability
+fix needed (desktop hint or button, not just F+click in help); (b) supply-blocked in
+31 snapshots (worse than 27) — pop-cap needs an in-game nudge (badge-style, like idle);
+(c) worker count plateaus ~15 both games; (d) identity floats ~2000 both games.
+Design cross-checks: portugal collapsed again (2 workers by min 10 — fragility is
+systemic, not matchup luck); ALL nation deaths in both games came via defection/shatter
+cascades (zombie-dissolve is THE kill mechanic); galicia human 2/2 wins.
+
 ## Human match log #1 (matches/2026-07-07-galicia-win-41min.json) — first ground truth
 Player as galicia WON in 41.4 min via corner turtle → late defection cascade. Key facts:
 - Confirms open problem #2 IN HUMAN PLAY: 17 towers by min 11, army 3 vs rival 16 at min 10,
@@ -78,7 +92,16 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
    (drafting clause only when it applies), quieter styling. Worker plurals are real
    words now (unitNames.workers: Labregos/Baserritarrak/Pagesos/Camponeses/Labriegos
    — "Pagèss" was shipping). Banner lifecycle asserted in checks/feedback.mjs.
-7. Train button slid out from under a spam-clicking cursor (player couldn't queue
+7a. Follow-ups from match log #2 (all verified in checks/feedback.mjs): queue cap
+   5→10 (world.trainUnit; chips group by kind "×N" so a full queue fits the fixed
+   row); 🏠! pop-cap badge in res-bar when pop==cap (click = place house); ⚔ command
+   bar now on desktop too (attack-move was keyboard/help-only — unused in 2 games) +
+   a 150s tip. FOUND VIA PIXELS: the longer res-bar slid UNDER the centered
+   domination bar on ≤1440px viewports — DOM assertions passed while pixels were
+   covered. Domination bar is right-anchored now; overlap asserted geometrically
+   (check #8). LESSON: after HUD layout changes, verify overlap with rects AND one
+   screenshot — DOM-only checks can't see z-order coverage.
+7b. Train button slid out from under a spam-clicking cursor (player couldn't queue
    5 without re-aiming). THREE causes on the bottom-anchored, centered panel:
    (a) queue row only existed when non-empty → height jump on first click — row now
    always rendered, min-height 25px, free slots shown as dots; (b) the live train %
