@@ -10,6 +10,7 @@ import { Controls } from './ui/controls.js';
 import { TouchControls } from './input/touch.js';
 import { Overlays } from './ui/overlays.js';
 import { HUD } from './ui/hud.js';
+import { MatchRecorder } from './ui/recorder.js';
 import { pickFaction } from './ui/factionSelect.js';
 import { AudioEngine } from './audio/audio.js';
 import { MAP_W, MAP_H } from './config/map.js';
@@ -36,6 +37,8 @@ async function boot() {
   const [humanFaction] = await Promise.all([pickFaction(), modelsReady]);
 
   const world = new World(humanFaction);
+  const recorder = new MatchRecorder(world, humanFaction);
+  recorder.attachHotkey();
   const audio = new AudioEngine();
   const armAudio = () => { audio.init(); window.removeEventListener('pointerdown', armAudio); window.removeEventListener('keydown', armAudio); };
   window.addEventListener('pointerdown', armAudio);
@@ -72,6 +75,7 @@ async function boot() {
       if (hit) audio.play('ui_click', { volume: 0.3 });
     },
     onOrder(o) {
+      recorder.recordOrder(o);
       switch (o.type) {
         case 'move': world.orderMove(humanFaction, o.ids, o.x, o.z); break;
         case 'amove': world.orderAttackMove(humanFaction, o.ids, o.x, o.z); audio.play('blip', { volume: 0.5 }); break;
@@ -119,7 +123,7 @@ async function boot() {
 
   const touch = new TouchControls({ canvas, rig, controls });
   // HUD first: it resets #hud's innerHTML, which would orphan the overlay layer
-  const hud = new HUD({ root: hudRoot, world, humanId: humanFaction, controls, rig, audio });
+  const hud = new HUD({ root: hudRoot, world, humanId: humanFaction, controls, rig, audio, recorder });
   const overlays = new Overlays(hudRoot, camera, canvas, world, humanFaction);
   hud.updatePlaceHint = hud.updatePlaceHint.bind(hud);
   audio.setListener(rig.target.x, rig.target.z, rig.dist);
@@ -162,6 +166,7 @@ async function boot() {
 
     const events = world.events.splice(0);
     for (const ev of events) {
+      recorder.handleEvent(ev);
       unitR.handleEvent(ev, world);
       buildingR.handleEvent(ev, world);
       fx.handleEvent(ev, world);
@@ -172,6 +177,7 @@ async function boot() {
       if (ev.type === 'entity_removed' || ev.type === 'unit_died') selection.delete(ev.id);
     }
 
+    recorder.update();
     rig.update(dt);
     updateSunFollow(lights, rig.target);
     audio.setListener(rig.target.x, rig.target.z, rig.dist);
@@ -205,7 +211,7 @@ async function boot() {
   }
   requestAnimationFrame(frame);
 
-  Object.assign(dbg, { ready: true, scene, rig, camera, renderer, world, terrain, selection, controls, hud, audio, touch });
+  Object.assign(dbg, { ready: true, scene, rig, camera, renderer, world, terrain, selection, controls, hud, audio, touch, recorder });
 
   loading.classList.add('fading');
   setTimeout(() => loading.classList.add('hidden'), 700);
