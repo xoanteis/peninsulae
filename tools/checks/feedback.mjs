@@ -98,7 +98,11 @@ export async function run(page, { sleep, report }) {
     const cut = t.terrain === 'grass' && t.regrowAt > w.time;
     t.regrowAt = w.time; // fast-forward instead of stepping 210s of sim
     for (let i = 0; i < 5; i++) w.step();
-    return { cut, regrown: t.terrain === 'forest', wood: Math.round(t.wood) };
+    return {
+      cut, regrown: t.terrain === 'forest', wood: Math.round(t.wood),
+      recorded: g.recorder?.log.forests ?? null,          // telemetry counters
+      fingerprint: g.recorder?.log.meta.rules ?? null,     // build fingerprint
+    };
   });
 
   // 9. the fully-loaded res-bar (badges shown) must not slide under the

@@ -51,6 +51,18 @@ NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harn
 - Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
   across games in one process and silently biases every harness (cost us months of data).
 
+## Human match log #3 (matches/2026-07-07-galicia-win-32min-game3.json) — the deploy race
+Player reported "no regrow" — CORRECT: game started 21:40 UTC, R18 Pages deploy finished
+21:42 UTC. Played the #26 build (proof in-log: 10-soldier queue burst at 10.6). Fixed the
+telemetry so this never needs archaeology again: meta.rules fingerprint (forestRegrow) +
+forests cut/grown counters in the recorder, printed by the analyzer; old logs degrade to
+"build[unknown]". Plus a one-time in-game alert on first regrowth (mechanic legibility).
+Game 3 numbers (all pre-regrow, WITH pop badge + queue-10): workers 17.4 avg (plateau
+BROKEN, was ~15) · supply-blocked 14 snaps (was 31 — badge works) · 0 worker losses ·
+idle 3.0 · 8 houses in opening. Still open: attack-move UNUSED (3 games — bar+tip shipped
+in #26 didn't land either); era 1 late again (8.8); wood float back up 5.3k (~25 towers);
+repair never used while 4 buildings razed (new flag).
+
 ## Human match log #2 (matches/2026-07-07-galicia-win-32min.json) — coaching + UX fixes WORK
 Same player, same faction, played AFTER the coaching + UX fix packs. Win in 32.2 min
 (was 41.4). Before → after: era 1 last @7.6 → FIRST @4.9 · army@10 6-vs-16 → 10-vs-14

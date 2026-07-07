@@ -28,7 +28,8 @@ const fellAt = Object.fromEntries(log.events.filter(e => e[1] === 'fell').map(e 
 console.log(`MATCH  you=${me} · ${log.meta.date.slice(0, 16)} · ${duration.toFixed(1)} min · ` +
   (log.result
     ? `winner: ${log.result.winner ?? 'draw'} · you ${log.result.humanSurvived ? 'survived' : `fell (min ${mins(fellAt[me] ?? 0)})`}`
-    : 'IN PROGRESS (mid-game save)'));
+    : 'IN PROGRESS (mid-game save)') +
+  (log.meta.rules ? ` · build[regrow ${log.meta.rules.forestRegrow}s]` : ' · build[unknown — log predates the rules fingerprint]'));
 
 // ---- timeline: the strategic beats --------------------------------------
 console.log('\nTIMELINE');
@@ -79,6 +80,7 @@ console.log(`  orders: ${log.orders.length} (${(log.orders.length / Math.max(act
 console.log(`  idle workers: avg ${avg(C.idleWorkers).toFixed(1)} of ${avg(C.workers).toFixed(1)}` +
   ` · losses: ${final[C.lossesArmy]} army, ${final[C.lossesWorkers]} workers`);
 if (floatSnaps.length) console.log(`  avg stockpile after min 8: 🌾${favg(C.food)} 🪵${favg(C.wood)} 🪙${favg(C.gold)} 📜${favg(C.identity)}`);
+if (log.forests) console.log(`  forests (all nations): ${log.forests.cut} cut · ${log.forests.grown} regrown`);
 const myFlips = log.events.filter(e => e[1] === 'flip' && e[3] === me);
 console.log(`  regions gained: ${myFlips.filter(e => e[4] === 'conviction').length} by conviction, ` +
   `${myFlips.filter(e => e[4] === 'conquest').length} by conquest, ${myFlips.filter(e => e[4] === 'defection').length} by defection`);
