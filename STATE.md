@@ -44,10 +44,18 @@ NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harn
 - Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
   across games in one process and silently biases every harness (cost us months of data).
 
-## Awaiting
-- A human match log from the player (told to play at the live site and share the JSON —
-  via matches/ upload or paste). Analyze with tools/analyze-match.mjs, then (a) coach,
-  (b) cross-check R17 conclusions against human reality.
+## Human match log #1 (matches/2026-07-07-galicia-win-41min.json) — first ground truth
+Player as galicia WON in 41.4 min via corner turtle → late defection cascade. Key facts:
+- Confirms open problem #2 IN HUMAN PLAY: 17 towers by min 11, army 3 vs rival 16 at min 10,
+  floated 7.6k food / 5.1k wood / 1.9k identity, 4.2 idle workers, supply-blocked in 27
+  snapshots — and was NEVER punished. Corner + towers = zero AI pressure for 20+ min.
+  The "a human wouldn't over-fortify" lesson is WRONG — the human did, and it won anyway.
+- Kill graph matches R17: castile executed portugal (min 22 vs AI 11-13 — human presence
+  slows it), catalonia killed basque (26) and castile (32). Orderings hold with a human in.
+- UX gaps surfaced: attack-move (F+click) never discovered; no in-game idle-worker or
+  supply-block indicator (flags only appear post-game in the analyzer).
+- Candidate directions it supports: AI punishes weak-army neighbors early (anti-turtle);
+  in-game nudges for idle workers / pop-cap / resource float; attack-move discoverability.
 
 ## Deployed / published
 - Game: https://xoanteis.github.io/peninsulae/ (Pages from main; PR merge = deploy)
