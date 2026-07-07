@@ -57,7 +57,7 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
 - Candidate directions it supports: AI punishes weak-army neighbors early (anti-turtle);
   in-game nudges for idle workers / pop-cap / resource float; attack-move discoverability.
 
-## UX fix pack from player feedback (2026-07-07) — BUILT, regression check tools/checks/feedback.mjs
+## UX fix pack from player feedback (2026-07-07) — SHIPPED, regression check tools/checks/feedback.mjs
 1. Mining order traps — FIXED: repair completion now flows into a free work slot;
    a click anywhere on a building's tile counts as the building (pick-miss no longer
    becomes a blind move); full slots push worker_idle reason 'slots_full' → specific
