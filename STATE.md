@@ -44,6 +44,20 @@ NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harn
 - Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
   across games in one process and silently biases every harness (cost us months of data).
 
+## Human match log #2 (matches/2026-07-07-galicia-win-32min.json) — coaching + UX fixes WORK
+Same player, same faction, played AFTER the coaching + UX fix packs. Win in 32.2 min
+(was 41.4). Before → after: era 1 last @7.6 → FIRST @4.9 · army@10 6-vs-16 → 10-vs-14
+(both rush flags gone) · wood float 5123 → 2159 · gold 1890 → 879 · food 7618 → 5727 ·
+idle 4.2 → 3.6 · train orders 71 → 117 (5-at-a-time queue spam visible in the log —
+the #25 fix in action) · player took 2 of 4 kills (was 0, AIs did all killing).
+STILL OPEN after 2 games: (a) attack-move NEVER used in either game — discoverability
+fix needed (desktop hint or button, not just F+click in help); (b) supply-blocked in
+31 snapshots (worse than 27) — pop-cap needs an in-game nudge (badge-style, like idle);
+(c) worker count plateaus ~15 both games; (d) identity floats ~2000 both games.
+Design cross-checks: portugal collapsed again (2 workers by min 10 — fragility is
+systemic, not matchup luck); ALL nation deaths in both games came via defection/shatter
+cascades (zombie-dissolve is THE kill mechanic); galicia human 2/2 wins.
+
 ## Human match log #1 (matches/2026-07-07-galicia-win-41min.json) — first ground truth
 Player as galicia WON in 41.4 min via corner turtle → late defection cascade. Key facts:
 - Confirms open problem #2 IN HUMAN PLAY: 17 towers by min 11, army 3 vs rival 16 at min 10,
