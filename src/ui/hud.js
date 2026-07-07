@@ -7,7 +7,9 @@ import { REGIONS, MAP_W, MAP_H } from '../config/map.js';
 import { regionConvertCost } from '../sim/regions.js';
 import { tileToWorld } from '../sim/hex.js';
 
-const RES_ICONS = { food: '🌾', wood: '🪵', gold: '🪙', identity: '📜' };
+// wood is a pine, not the log emoji: 🪵's ring cross-section reads as a second
+// coin at res-bar size and players confused it with gold
+const RES_ICONS = { food: '🌾', wood: '🌲', gold: '🪙', identity: '📜' };
 const BUILD_ICONS = {
   house: '🏠', farm: '🌾', lumbercamp: '🪚', mine: '⛏️', market: '⚖️', church: '⛪',
   festival: '🎻', barracks: '⚔️', archery: '🏹', tower: '🗼', blacksmith: '🛠️',
@@ -110,7 +112,7 @@ export class HUD {
     // opening tips for the first minutes of a match
     const wname = FACTIONS[humanId ?? this.humanId]?.unitNames?.worker ?? 'worker';
     this.tips = [
-      { at: 3, text: `🏰 Select your Capital and train ${wname}s — send them to forests 🪵 and fishing ripples 🐟 (long-press / right-click)` },
+      { at: 3, text: `🏰 Select your Capital and train ${wname}s — send them to forests 🌲 and fishing ripples 🐟 (long-press / right-click)` },
       { at: 28, text: '🛡 Neutral villages defend themselves — their towers fire at anyone who comes close. Keep clear until you bring soldiers, or convert the region peacefully with 📜' },
       { at: 42, text: '⛏ Scattered rocks mark the ground beside the sierra — build a Mine on such a tile to dig gold. Forests, shoals and farms cover the rest' },
       { at: 60, text: '🌾 Build Farms and Houses (bottom-right menu) — a worker starts raising it at once. Click any region to see its tribute and the 🕊 Convert action' },
@@ -206,7 +208,7 @@ export class HUD {
           🖐 <b>Trackpad:</b> two-finger scroll pans · pinch zooms · two-finger tap orders<br>
           📱 <b>Touch:</b> drag pan · pinch zoom · tap select · <b>long-press</b> order (landscape recommended)</p>
           <h3>Economy</h3>
-          <p>Workers chop <b>🪵 forests</b>, tend <b>🌾 farms</b>, dig <b>🪙 mines</b> by mountains, and cast nets at
+          <p>Workers chop <b>🌲 forests</b>, tend <b>🌾 farms</b>, dig <b>🪙 gold mines</b> by mountains, and cast nets at
           <b>fish shoals</b> (ripples on the coast). <b>📜 Identity</b> flows from your capital, churches and festival halls
           — it is the currency of nationhood. Owning regions pays their historical tribute; houses raise your population cap.</p>
           <p>There is <b>no stone</b>: rocks and the sierra itself can't be gathered — but a <b>⛏ Mine built beside a
@@ -281,7 +283,7 @@ export class HUD {
         }
         if (this.lastIdleAlert && world.time - this.lastIdleAlert < 15) break;
         this.lastIdleAlert = world.time;
-        this.alert(`🌲 A worker stands idle — click the 💤 badge (or press .)`, { x: ev.x, z: ev.z, ttl: 6 });
+        this.alert(`💤 A worker stands idle — click the badge (or press .)`, { x: ev.x, z: ev.z, ttl: 6 });
         break;
       }
       case 'region_flipped': {
@@ -553,7 +555,8 @@ export class HUD {
       }
       if (b.slots) {
         const def2 = BUILDINGS[b.kind];
-        html += `<div class="sp-row">👷 ${b.slots.length}/${def2.slots} working — send workers with a two-finger tap</div>`;
+        const yields = Object.keys(def2.slotRate).map(k => `${RES_ICONS[k]} ${k}`).join(' ');
+        html += `<div class="sp-row">👷 ${b.slots.length}/${def2.slots} working — yields ${yields} · staff with right-click / two-finger tap</div>`;
       }
     }
     // every building anchors a region — show its allegiance and actions
@@ -659,8 +662,8 @@ export class HUD {
       if (e.type === 'unit' && e.kind === 'worker' && e.owner === this.humanId && e.state === 'idle') idleW++;
     }
     this.el.resBar.innerHTML = Object.entries(p.res).map(([k, v]) =>
-      `<span class="res"><span class="res-ico">${RES_ICONS[k]}</span>${Math.floor(v)}</span>`).join('') +
-      `<span class="res"><span class="res-ico">👥</span>${p.pop}/${p.popCap}</span>` +
+      `<span class="res" title="${k}"><span class="res-ico">${RES_ICONS[k]}</span>${Math.floor(v)}</span>`).join('') +
+      `<span class="res" title="population / housing cap"><span class="res-ico">👥</span>${p.pop}/${p.popCap}</span>` +
       (idleW ? `<span class="res idle-chip" id="idle-badge" title="idle workers — click (or press .) to cycle through them">💤${idleW}</span>` : '') +
       `<span class="res era-chip">👑 ${ERAS[p.era].name}${p.eraTimer != null ? ' ⏳' : ''}</span>`;
 

@@ -67,6 +67,9 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
    pulsing 💤 marker over each idle worker (overlays pool of 24).
 4. Rocks — FIXED: scattered only on mountain-adjacent land now (mine-site signpost,
    ~55% of such tiles); mine desc + min-42s tip updated. Purely cosmetic, no tile bonus.
+5. Wood icon 🪵 read as a second coin at res-bar size (player confusion) — now 🌲
+   everywhere via RES_ICONS; res chips have title tooltips; selected slot buildings
+   state their yield ("👷 n/2 working — yields 🪙 gold").
 
 ## Deployed / published
 - Game: https://xoanteis.github.io/peninsulae/ (Pages from main; PR merge = deploy)
