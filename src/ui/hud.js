@@ -217,7 +217,7 @@ export class HUD {
           🖐 <b>Trackpad:</b> two-finger scroll pans · pinch zooms · two-finger tap orders<br>
           📱 <b>Touch:</b> drag pan · pinch zoom · tap select · <b>long-press</b> order (landscape recommended)</p>
           <h3>Economy</h3>
-          <p>Workers chop <b>🌲 forests</b>, tend <b>🌾 farms</b>, dig <b>💰 gold mines</b> by mountains, and cast nets at
+          <p>Workers chop <b>🌲 forests</b> (cut groves regrow after a few minutes), tend <b>🌾 farms</b>, dig <b>💰 gold mines</b> by mountains, and cast nets at
           <b>fish shoals</b> (ripples on the coast). <b>📜 Identity</b> flows from your capital, churches and festival halls
           — it is the currency of nationhood. Owning regions pays their historical tribute; houses raise your population cap.</p>
           <p>There is <b>no stone</b>: rocks and the sierra itself can't be gathered — but a <b>⛏ Mine built beside a

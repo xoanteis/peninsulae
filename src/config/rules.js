@@ -119,6 +119,11 @@ export const REPAIR = {
 
 // gathering
 export const NODES = {
-  wood: { rate: 1.0, perTile: 320, maxWorkers: 3 },
+  wood: {
+    rate: 1.0, perTile: 320, maxWorkers: 3,
+    // cut groves regrow — permanent depletion starves wood-poor nations out of
+    // the late game. regrowTime 0/null disables (patchable off-switch).
+    regrowTime: 210, regrowTo: 0.75, // seconds to regrow; fraction of perTile restored
+  },
   fish: { rate: 1.1, maxWorkers: 2 },
 };

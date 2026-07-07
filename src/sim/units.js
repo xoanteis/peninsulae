@@ -403,6 +403,10 @@ function doWork(world, u, dt) {
     p.res.wood += got;
     if (tile.wood <= 0) {
       tile.terrain = 'grass';
+      if (NODES.wood.regrowTime) { // the stump regrows later (economy tick)
+        tile.regrowAt = world.time + NODES.wood.regrowTime;
+        world.stumps.push(tile);
+      }
       world.pushEvent({ type: 'forest_cut', col: tg.col, row: tg.row });
       u.state = 'toWork'; // find the next one
     }
