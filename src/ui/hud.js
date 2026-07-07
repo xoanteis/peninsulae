@@ -516,6 +516,18 @@ export class HUD {
       panel.innerHTML = html;
       this.wireSelPanel(panel, ents);
     }
+    if (html) {
+      // per-tick numbers are patched into stable spans instead of being part of
+      // the structural html — a full rebuild mid-click would swallow the press
+      const b0 = ents.length === 1 && ents[0].type === 'building' ? ents[0] : null;
+      const pct = panel.querySelector('.sp-pct');
+      if (pct && b0?.trainQueue?.length) {
+        pct.textContent = `${Math.round(b0.trainQueue[0].t / b0.trainQueue[0].time * 100)}%`;
+      }
+      const timer = panel.querySelector('.sp-timer');
+      const t = this.world.players[this.humanId].eraTimer;
+      if (timer && t != null) timer.textContent = Math.ceil(t);
+    }
   }
 
   buildingHtml(b) {
@@ -535,17 +547,19 @@ export class HUD {
           }
           return `<button data-train="${kind}">${UNIT_ICONS[kind]} ${f.unitNames[kind] ?? kind}<small>${fmtCost(cost)}</small></button>`;
         }).join('') + `</div>`;
-        if (b.trainQueue.length) {
-          // clickable queue chips — a misclick can be refunded
-          html += `<div class="sp-row sp-queue">⏳ ` + b.trainQueue.map((job, i) =>
-            `<button class="sp-chip" data-cancel="${i}" title="cancel & refund">${UNIT_ICONS[job.kind] ?? '👤'}${i === 0 ? ` ${Math.round(job.t / job.time * 100)}%` : ''} ✕</button>`
-          ).join('') + `</div>`;
-        }
+        // the queue row is ALWAYS rendered, with its 5 slots marked: the panel is
+        // bottom-anchored, so any height change shoves the train buttons up from
+        // under a spam-clicking cursor. The progress % lives in a span updated in
+        // place (renderSelPanel) — putting it in this html would rebuild the panel
+        // every tick and eat clicks. Queue cap of 5 mirrors world.trainUnit.
+        html += `<div class="sp-row sp-queue">⏳ ` + b.trainQueue.map((job, i) =>
+          `<button class="sp-chip" data-cancel="${i}" title="cancel & refund">${UNIT_ICONS[job.kind] ?? '👤'}${i === 0 ? ` <span class="sp-pct"></span>` : ''} ✕</button>`
+        ).join('') + `<span class="sp-free">${'·'.repeat(5 - b.trainQueue.length)}</span></div>`;
         html += `<div class="sp-hint">two-finger tap the map to set the rally point</div>`;
       }
       if (b.kind === 'capital') {
         const next = ERAS[p.era + 1];
-        if (p.eraTimer != null) html += `<div class="sp-row">👑 Advancing… ${Math.ceil(p.eraTimer)}s</div>`;
+        if (p.eraTimer != null) html += `<div class="sp-row">👑 Advancing… <span class="sp-timer"></span>s</div>`;
         else if (next) html += `<div class="sp-actions"><button data-era="1">👑 ${next.name} era<small>${fmtCost(next.cost)}</small></button></div>`;
         else html += `<div class="sp-row">👑 Golden Age — the summit of your power</div>`;
       }
@@ -603,6 +617,13 @@ export class HUD {
     return html;
   }
 
+  // rebuild the panel NOW, inside the click handler — deferring to the next
+  // update tick risks replacing the button mid-press and eating the click
+  refreshSelPanel(panel) {
+    panel.dataset.html = '';
+    this.renderSelPanel(this.controls.selection);
+  }
+
   wireSelPanel(panel, ents) {
     const world = this.world;
     const b = ents[0];
@@ -611,14 +632,14 @@ export class HUD {
         const err = world.trainUnit(this.humanId, b.id, btn.dataset.train);
         this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
         if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        panel.dataset.html = '';
+        this.refreshSelPanel(panel);
       };
     });
     panel.querySelectorAll('[data-cancel]').forEach(btn => {
       btn.onclick = () => {
         const err = world.cancelTrain(this.humanId, b.id, Number(btn.dataset.cancel));
         this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
-        panel.dataset.html = '';
+        this.refreshSelPanel(panel);
       };
     });
     panel.querySelectorAll('[data-era]').forEach(btn => {
@@ -626,7 +647,7 @@ export class HUD {
         const err = world.advanceEra(this.humanId);
         this.audio.play(err ? 'ui_error' : 'era', { volume: 0.7 });
         if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        panel.dataset.html = '';
+        this.refreshSelPanel(panel);
       };
     });
     panel.querySelectorAll('[data-smith]').forEach(btn => {
@@ -634,7 +655,7 @@ export class HUD {
         const err = world.buySmithUpgrade(this.humanId, btn.dataset.smith);
         this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
         if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        panel.dataset.html = '';
+        this.refreshSelPanel(panel);
       };
     });
     panel.querySelectorAll('[data-convert]').forEach(btn => {
@@ -642,7 +663,7 @@ export class HUD {
         const err = world.startConversion(this.humanId, btn.dataset.convert);
         this.audio.play(err ? 'ui_error' : 'coins', { volume: 0.8 });
         if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        panel.dataset.html = '';
+        this.refreshSelPanel(panel);
       };
     });
   }

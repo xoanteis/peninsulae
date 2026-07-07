@@ -86,6 +86,12 @@ body {
   padding: 8px 18px; font-weight: 700; letter-spacing: 0.08em; display: none;
 }
 .sp-chip { padding: 2px 7px; margin-right: 4px; font-size: 0.72rem; }
+/* fixed-footprint queue row: chips come and go without moving the buttons above.
+   width:0 + min-width:100% keeps the row from driving the panel's shrink-to-fit
+   width — a wider panel re-centers (translateX -50%) and slides under the cursor */
+.sp-queue { min-height: 25px; white-space: nowrap; overflow: hidden; width: 0; min-width: 100%; }
+.sp-pct { display: inline-block; min-width: 2.3em; text-align: right; }
+.sp-free { color: var(--ink-dim); opacity: 0.5; letter-spacing: 7px; margin-left: 3px; }
 #touch-bar {
   position: fixed; right: 10px; top: 50%; transform: translateY(-50%);
   display: flex; flex-direction: column; gap: 8px; padding: 8px;
@@ -146,7 +152,7 @@ button:hover { background: rgba(255, 226, 168, 0.22); }
 /* selection panel */
 #sel-panel {
   position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-  min-width: 300px; max-width: 460px; padding: 10px 14px; font-size: 0.9rem;
+  min-width: 320px; max-width: 460px; padding: 10px 14px; font-size: 0.9rem;
 }
 .sp-title { font-weight: 700; margin-bottom: 4px; }
 .sp-title small { color: var(--ink-dim); font-weight: 400; }

@@ -78,6 +78,18 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
    (drafting clause only when it applies), quieter styling. Worker plurals are real
    words now (unitNames.workers: Labregos/Baserritarrak/Pagesos/Camponeses/Labriegos
    — "Pagèss" was shipping). Banner lifecycle asserted in checks/feedback.mjs.
+7. Train button slid out from under a spam-clicking cursor (player couldn't queue
+   5 without re-aiming). THREE causes on the bottom-anchored, centered panel:
+   (a) queue row only existed when non-empty → height jump on first click — row now
+   always rendered, min-height 25px, free slots shown as dots; (b) the live train %
+   in the html made dataset.html differ every tick → full innerHTML rebuild 4x/s ate
+   mid-press clicks — volatile numbers (train %, era countdown) now live in spans
+   (.sp-pct/.sp-timer) patched in place, and handlers rebuild synchronously in the
+   click (refreshSelPanel); (c) 5 chips widened the panel past min-width → centered
+   panel re-centers, sliding ~3px — queue row is width:0/min-width:100% so it never
+   drives panel width (+ min-width 320). trainSpam asserted in checks/feedback.mjs
+   (5 clicks, buttonStable, live pct). LESSON: bottom-anchored centered panels must
+   have geometry-stable content; never put per-tick numbers in structural innerHTML.
 
 ## Deployed / published
 - Game: https://xoanteis.github.io/peninsulae/ (Pages from main; PR merge = deploy)
