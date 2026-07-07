@@ -23,7 +23,7 @@ export function pickFaction() {
               <span class="fs-bonus">${f.bonusText}</span>
             </button>`).join('')}
         </div>
-        <p class="fs-hint">Castile begins mighty — the other four fight for independence. Press H in game for the full manual.</p>
+        <p class="fs-hint">Castile begins mighty — the other four fight for independence. Press F1 in game for the full manual.</p>
       </div>`;
     document.body.appendChild(el);
     el.querySelectorAll('.fs-card').forEach(card => {

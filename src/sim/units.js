@@ -60,9 +60,26 @@ export function updateUnit(world, u, dt) {
 
     case 'toWork': {
       const spot = workSpot(world, u);
-      if (!spot) { u.state = 'idle'; u.task = null; break; }
+      if (!spot) {
+        // a gatherer whose node ran out goes idle — say so, don't just stop
+        if (u.task?.type === 'gather') {
+          world.pushEvent({ type: 'worker_idle', id: u.id, owner: u.owner, x: u.x, z: u.z, reason: 'depleted' });
+        }
+        u.state = 'idle'; u.task = null; break;
+      }
       const d = dist(u.x, u.z, spot.x, spot.z);
       if (d <= (spot.arrive ?? ARRIVE + 0.25)) {
+        // a node only feeds so many hands — the overflow seeks another tile
+        if (nodeFull(world, u)) {
+          const tg = u.task?.target;
+          if (tg?.type === 'forest') {
+            const next = nearestUncrowdedForest(world, u, tg.col, tg.row, 6);
+            if (next) { u.task.target = { type: 'forest', col: next.col, row: next.row }; break; }
+          }
+          u.state = 'idle'; u.task = null;
+          world.pushEvent({ type: 'worker_idle', id: u.id, owner: u.owner, x: u.x, z: u.z, reason: 'crowded' });
+          break;
+        }
         u.state = 'working';
         u.workT = 0;
       } else {
@@ -271,6 +288,53 @@ export function nearestForest(world, col, row, maxR = 6) {
   return best;
 }
 
+// How many workers are already working this unit's target node?
+function workersOnNode(world, u) {
+  const tg = u.task?.target;
+  if (!tg) return 0;
+  let n = 0;
+  for (const e of world.entities.values()) {
+    if (e === u || e.type !== 'unit' || e.kind !== 'worker' || e.state !== 'working') continue;
+    const o = e.task?.target;
+    if (o && o.type === tg.type && o.col === tg.col && o.row === tg.row) n++;
+  }
+  return n;
+}
+
+function nodeFull(world, u) {
+  const tg = u.task?.target;
+  if (!tg) return false;
+  const cap = tg.type === 'forest' ? NODES.wood.maxWorkers : tg.type === 'fish' ? NODES.fish.maxWorkers : null;
+  if (!cap) return false; // slot buildings enforce their own capacity
+  return workersOnNode(world, u) >= cap;
+}
+
+function nearestUncrowdedForest(world, u, col, row, maxR) {
+  let best = null, bestD = Infinity;
+  for (const t of world.tiles) {
+    if (t.terrain !== 'forest' || !(t.wood > 0)) continue;
+    if (t.col === col && t.row === row) continue;
+    const d = hexDistance(col, row, t.col, t.row);
+    if (d >= bestD || d > maxR) continue;
+    // count workers on that candidate tile
+    let n = 0;
+    for (const e of world.entities.values()) {
+      if (e.type !== 'unit' || e.kind !== 'worker' || e.state !== 'working') continue;
+      const o = e.task?.target;
+      if (o?.type === 'forest' && o.col === t.col && o.row === t.row) n++;
+    }
+    if (n < NODES.wood.maxWorkers) { best = t; bestD = d; }
+  }
+  return best;
+}
+
+// once-a-second feedback shared by every work type (hammer SFX, floaters)
+function workPulse(world, u, dt, task) {
+  if ((u.workT | 0) !== ((u.workT - dt) | 0)) {
+    world.pushEvent({ type: 'work_pulse', id: u.id, x: u.x, z: u.z, task });
+  }
+}
+
 function doWork(world, u, dt) {
   const t = u.task;
   const p = world.players[u.owner];
@@ -287,7 +351,9 @@ function doWork(world, u, dt) {
     const def = BUILDINGS[b.kind];
     const rate = UNITS.worker.buildRate * (12 / Math.max(def.buildTime, 1));
     b.progress = Math.min(1, b.progress + rate * dt);
+    b.lastProgressAt = world.time; // the AI demolishes sites that stall
     b.hp = Math.min(b.maxHp, b.hp + b.maxHp * rate * dt * 0.9);
+    workPulse(world, u, dt, 'construct');
     if (b.progress >= 1) {
       b.hp = b.maxHp;
       if (def.popCap && b.owner) world.players[b.owner].popCap += def.popCap;
@@ -299,7 +365,7 @@ function doWork(world, u, dt) {
 
   if (t.type === 'repair') {
     const b = world.entities.get(t.buildingId);
-    if (!b || b.hp <= 0) { u.state = 'idle'; u.task = null; return; }
+    if (!b || b.hp <= 0 || b.owner !== u.owner) { u.state = 'idle'; u.task = null; return; }
     if (b.hp >= b.maxHp) { u.state = 'idle'; u.task = null; return; }
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
     const def = b.kind === 'village' ? { cost: {} } : BUILDINGS[b.kind];
@@ -313,6 +379,7 @@ function doWork(world, u, dt) {
     }
     p.res.wood -= bill;
     b.hp += hpGain;
+    workPulse(world, u, dt, 'repair');
     return;
   }
 

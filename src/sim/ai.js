@@ -37,9 +37,9 @@ export class AIController {
     this.defend(my);
     this.economy(my);
     this.trainAndBuild(my);
+    this.eras(my);   // before expand: reserve the era budget before sermons spend it
     this.expand(my);
     this.war(my);
-    this.eras(my);
   }
 
   collect() {
@@ -70,13 +70,27 @@ export class AIController {
     const w = this.world, p = w.players[this.pid];
     this.underThreat = false;
     if (!my.cap) return;
+    // stick with the current threat while it lives — retargeting every tick
+    // made defenders dither between foes instead of killing any of them
+    const held = this.defendTargetId && w.entities.get(this.defendTargetId);
+    if (held && held.owner && held.owner !== '__dead__' && held.owner !== this.pid
+      && my.buildings.some(b => Math.hypot(held.x - b.x, held.z - b.z) < 8)) {
+      this.underThreat = true;
+      return; // defenders already ordered at it
+    }
+    this.defendTargetId = null;
     // enemies near any of my buildings?
     for (const b of my.buildings) {
       const foes = w.unitsNear(b.x, b.z, 6).filter(u =>
         u.owner && u.owner !== '__dead__' && u.owner !== this.pid && u.kind !== 'worker');
       if (foes.length) {
         this.underThreat = true;
-        const defenders = [...my.idleSoldiers, ...my.soldiers.filter(s => s.task?.auto)].slice(0, 8);
+        this.defendTargetId = foes[0].id;
+        // only soldiers already near home answer the horn — the away army
+        // fights its own battle instead of marching back across the map
+        const near = s => Math.hypot(s.x - b.x, s.z - b.z) < 30;
+        const defenders = [...my.idleSoldiers, ...my.soldiers.filter(s => s.task?.auto)]
+          .filter(near).slice(0, 8);
         if (defenders.length) w.orderAttack(this.pid, defenders.map(u => u.id), foes[0].id);
         this.attackWave = null;
         return;
@@ -89,11 +103,11 @@ export class AIController {
     if (!my.cap) return;
     const capTile = worldToTile(my.cap.x, my.cap.z);
 
-    // demolish sites nobody has managed to reach — they jam the whole pipeline
+    // demolish sites that have stalled — unreached OR abandoned mid-build; a
+    // zombie half-built site would otherwise jam the 2-site pipeline forever
     for (const s of my.sites) {
-      if (s.progress === 0 && w.time - s.placedAt > 100) {
-        w.demolish(this.pid, s.id);
-      }
+      const lastLife = s.lastProgressAt ?? s.placedAt;
+      if (w.time - lastLife > 100) w.demolish(this.pid, s.id);
     }
     // keep construction moving even when nobody is idle
     if (my.sites.length) {
@@ -104,11 +118,13 @@ export class AIController {
       }
     }
     // starvation rebalance: pull one worker onto the missing resource
+    // (independent ifs — when both are short, both get a puller this tick)
     if (p.res.wood < 60) {
       const puller = my.workers.find(u => u.state === 'working' && u.task?.target?.type !== 'forest');
       const f = puller && nearestForest(w, ...Object.values(worldToTile(puller.x, puller.z)), 16);
       if (puller && f) w.orderGather(this.pid, [puller.id], { type: 'forest', col: f.col, row: f.row });
-    } else if (p.res.food < 45) {
+    }
+    if (p.res.food < 45) {
       const puller = my.workers.find(u => u.state === 'working' && u.task?.target?.type === 'forest');
       const capT = worldToTile(my.cap?.x ?? 0, my.cap?.z ?? 0);
       const n = puller && this.nearFish(capT);
@@ -192,7 +208,8 @@ export class AIController {
     if (has('barracks') < 1 + (p.era >= 1 ? 1 : 0)) return 'barracks';
     if (p.res.gold < 60 && has('market') < 1) return 'market'; // soldiers cost gold
     if (has('mine') < (this.bonus.mineRate ? 2 : 1) && this.mineSpotExists()) return 'mine';
-    if (has('church') < 1 + this.style.convictionLove) return 'church';
+    // conviction-lovers actually build more churches (0.95 -> 3, 0.4 -> 2, 0.2 -> 1)
+    if (has('church') < 1 + Math.round(this.style.convictionLove * 2)) return 'church';
     if (has('market') < (this.style.economy > 0.7 ? 2 : 1)) return 'market';
     // fortify nations (cheap towers) wall their core with a FEW towers — capped so
     // they don't sink their whole treasury into static defense and starve the army
@@ -203,7 +220,9 @@ export class AIController {
       if (has('archery') < 1) return 'archery';
       if (has('blacksmith') < 1) return 'blacksmith';
       if (has('festival') < 1 && this.style.convictionLove > 0.5) return 'festival';
-      if (has('tower') < 2 && this.style.turtle) return 'tower';
+      // turtles pile stone beyond the two starting guard towers (0.9 -> +2)
+      if (has('tower') < 2 + Math.round((this.style.turtle ?? 0) * 2)
+        && this.affordable('tower') && my.soldiers.length >= 2) return 'tower';
     }
     if (has('house') < 6 && p.pop >= p.popCap - 2) return 'house';
     return null;
@@ -261,14 +280,18 @@ export class AIController {
       s -= hexDistance(...Object.values(worldToTile(my.cap?.x ?? 0, my.cap?.z ?? 0)), ...r.meta.village) * 0.15;
       return s + Math.random() * 0.5;
     };
-    targets.sort((a, b) => score(b) - score(a));
-    const target = targets[0];
+    // score once per region, then sort — random inside a comparator is undefined
+    const target = targets.map(r => [r, score(r)]).sort((a, b) => b[1] - a[1])[0][0];
 
     // conviction if we love it and can afford it
     if (!target.conversion && !target.owner || (target.owner && target.resent)) {
       const cost = regionConvertCost(w, this.pid, target.key);
       const wantConvict = Math.random() < this.style.convictionLove;
-      if (wantConvict && p.res.identity >= cost && !target.conversion) {
+      // keep half the next era's Identity in the coffers — sermons were eating
+      // the era budget and conviction factions lagged a whole age behind
+      const nextEra = ERAS[p.era + 1];
+      const eraReserve = nextEra ? (nextEra.cost.identity ?? 0) * 0.5 : 0;
+      if (wantConvict && p.res.identity >= cost + eraReserve && !target.conversion) {
         w.startConversion(this.pid, target.key);
         return;
       }
@@ -283,9 +306,10 @@ export class AIController {
     // don't spam re-orders while a wave is en route
     const busy = my.soldiers.filter(s => s.task && !s.task.auto).length;
     if (busy > my.soldiers.length * 0.4 && w.time - (this.lastWarOrder ?? 0) < 25) return;
-    // a share of the army stays home to guard the castle
+    // a share of the army stays home to guard the castle — turtles keep more
+    const guardShare = 0.2 + (this.style.turtle ?? 0) * 0.25;
     const idleArmy = my.soldiers.filter(s => s.state === 'idle' || s.task?.auto);
-    const guard = Math.min(Math.ceil(this.armyTarget * 0.3), 5);
+    const guard = Math.min(Math.ceil(this.armyTarget * guardShare), 6);
     const army = idleArmy.slice(guard);
     const assaultSize = Math.max(6, 10 - Math.floor(Math.max(0, w.time - 900) / 300));
     if (army.length < Math.min(this.armyTarget, assaultSize)) return;
@@ -299,15 +323,20 @@ export class AIController {
       // whoever leads the race executed quiet converters every game
       const myCap = w.entities.get(p.capitalId);
       const rivals = Object.values(w.players).filter(o => o.alive && o.id !== this.pid);
-      const armyOf = o => [...w.entities.values()]
-        .filter(e => e.type === 'unit' && e.owner === o.id && e.kind !== 'worker').length;
-      const score = o => {
+      // count every rival's army in ONE entity pass, and score each rival once —
+      // random scores inside a sort comparator gave undefined orderings
+      const armies = {};
+      for (const e of w.entities.values()) {
+        if (e.type === 'unit' && e.owner && e.owner !== '__dead__' && e.kind !== 'worker') {
+          armies[e.owner] = (armies[e.owner] ?? 0) + 1;
+        }
+      }
+      const scored = rivals.map(o => {
         const c = w.entities.get(o.capitalId);
         const d = c && myCap ? Math.hypot(c.x - myCap.x, c.z - myCap.z) : 1e9;
-        return d + armyOf(o) * 5 + Math.random() * 45;
-      };
-      rivals.sort((a, b) => score(a) - score(b));
-      const rival = rivals[0];
+        return [o, d + (armies[o.id] ?? 0) * 5 + Math.random() * 45];
+      }).sort((a, b) => a[1] - b[1]);
+      const rival = scored[0]?.[0];
       const cap = rival && w.entities.get(rival.capitalId);
       if (cap && Math.random() < 0.45) {
         w.orderAttack(this.pid, army.map(u => u.id), cap.id);

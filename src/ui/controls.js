@@ -88,24 +88,45 @@ export class Controls {
         if (ids.length) { this.amove = true; this.canvas.style.cursor = 'crosshair'; }
         break;
       }
-      case 'KeyS': {
-        const ids = this.myUnitIds();
+      case 'KeyX': { // stop (S belongs to camera pan — the old double-binding
+        const ids = this.myUnitIds(); // halted armies while players scrolled)
         if (ids.length) { this.onOrder({ type: 'stop', ids }); }
         break;
       }
-      case 'KeyE': { // select every soldier on screen
+      case 'Period': { // cycle idle workers, RTS-style
+        const idle = [...this.world.entities.values()].filter(u =>
+          u.type === 'unit' && u.owner === this.humanId && u.kind === 'worker'
+          && u.state === 'idle');
+        if (!idle.length) break;
+        this._idleCycle = ((this._idleCycle ?? -1) + 1) % idle.length;
+        const u = idle[this._idleCycle];
         this.selection.clear();
-        for (const u of this.world.entities.values()) {
-          if (u.type !== 'unit' || u.owner !== this.humanId || u.kind === 'worker' || u.state === 'dying') continue;
-          const s = this.project(u.x, u.z);
-          if (!s.behind && s.x >= 0 && s.y >= 0 && s.x <= window.innerWidth && s.y <= window.innerHeight) {
-            this.selection.add(u.id);
-          }
-        }
-        this.onSelect();
+        this.selection.add(u.id);
+        this.rig.jumpTo(u.x, u.z);
+        this.onSelect(u);
+        break;
+      }
+      case 'KeyP': {
+        this.onOrder({ type: 'pause' });
+        break;
+      }
+      case 'KeyE': { // select every soldier on screen
+        this.selectSoldiersOnScreen();
         break;
       }
     }
+  }
+
+  selectSoldiersOnScreen() {
+    this.selection.clear();
+    for (const u of this.world.entities.values()) {
+      if (u.type !== 'unit' || u.owner !== this.humanId || u.kind === 'worker' || u.state === 'dying') continue;
+      const s = this.project(u.x, u.z);
+      if (!s.behind && s.x >= 0 && s.y >= 0 && s.x <= window.innerWidth && s.y <= window.innerHeight) {
+        this.selection.add(u.id);
+      }
+    }
+    this.onSelect();
   }
 
   centerOnSelection() {
@@ -300,7 +321,7 @@ export class Controls {
     const e = { clientX, clientY };
     const ids = [...this.selection].filter(id => {
       const ent = this.world.entities.get(id);
-      return ent?.type === 'unit';
+      return ent?.type === 'unit' && ent.owner === this.humanId; // only your own take orders
     });
     const p = this.screenToGround(e.clientX, e.clientY);
     if (!p) return;

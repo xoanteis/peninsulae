@@ -6,7 +6,6 @@ export const FACTIONS = {
     name: 'Galicians', adj: 'Galician', motto: 'O Camiño e o Mar',
     color: 0x3f7fd4, buildingColor: 'blue', flag: 'flag_blue',
     soldierModel: 'char_mage', // the Irmandiño pilgrim-rebel, staff in hand
-    soldierWeapon: 'weapon_staff',
     unitNames: { worker: 'Labrego', soldier: 'Irmandiño', crossbow: 'Besteiro' },
     eraTech: 'Camiño de Santiago',
     blurb: 'Patient people of the Atlantic mists. The sea feeds them, the Way of St James binds them, and every region they win by conviction strengthens the pilgrimage.',
@@ -28,7 +27,6 @@ export const FACTIONS = {
     name: 'Basques', adj: 'Basque', motto: 'Burdina eta Foruak',
     color: 0xe8e4da, buildingColor: 'basque', flag: 'flag_basque', // runtime-tinted set
     soldierModel: 'char_barbarian', // the aizkolari, two-handed axe
-    soldierWeapon: 'weapon_axe2h',
     unitNames: { worker: 'Baserritarra', soldier: 'Aizkolari', crossbow: 'Balestari' },
     eraTech: 'Foruak',
     blurb: 'The oldest people of Iberia, unmoved since before Rome. Their mountains hold iron, their law is ancient, and what they build does not break.',
@@ -43,7 +41,6 @@ export const FACTIONS = {
     name: 'Catalans', adj: 'Catalan', motto: 'Seny i Comerç',
     color: 0xe3b23c, buildingColor: 'yellow', flag: 'flag_yellow',
     soldierModel: 'char_rogue', // the almogàver, quick and lethal
-    soldierWeapon: 'weapon_sword',
     unitNames: { worker: 'Pagès', soldier: 'Almogàver', crossbow: 'Ballester' },
     eraTech: 'Consolat de Mar',
     blurb: 'Merchants and builders of the Mediterranean. Their ledgers reach further than any sword, and every region in the network pays.',
@@ -57,7 +54,6 @@ export const FACTIONS = {
     name: 'Portuguese', adj: 'Portuguese', motto: 'Descobrimentos',
     color: 0x3f9e4d, buildingColor: 'green', flag: 'flag_green',
     soldierModel: 'char_rogue_hooded', // the navigator-cavaleiro
-    soldierWeapon: 'weapon_sword',
     unitNames: { worker: 'Camponês', soldier: 'Cavaleiro', crossbow: 'Besteiro' },
     eraTech: 'Escola de Sagres',
     blurb: 'The first nation of fixed borders turned its back to Castile and its face to the ocean. The coast is theirs by vocation.',
@@ -71,13 +67,12 @@ export const FACTIONS = {
     name: 'Castilians', adj: 'Castilian', motto: 'Plus Ultra',
     color: 0xc94434, buildingColor: 'red', flag: 'flag_red',
     soldierModel: 'char_knight', // the tercio
-    soldierWeapon: 'weapon_sword',
     unitNames: { worker: 'Labriego', soldier: 'Tercio', crossbow: 'Ballestero' },
     eraTech: 'Tercios',
     blurb: 'The hegemon of the meseta. The center holds the largest lands and the cheapest armies — and means to hold everything else.',
     bonusText: 'Starts with 2 extra regions · Soldiers 25% cheaper and train 30% faster',
     bonus: {
-      soldierCostMul: 0.75, trainTimeMul: 0.7, extraRegions: true,
+      soldierCostMul: 0.75, trainTimeMul: 0.7,
     },
     aiStyle: { aggression: 0.95, convictionLove: 0.2, expandCoastal: 0.2, economy: 0.5 },
   },
