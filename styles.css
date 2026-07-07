@@ -175,7 +175,8 @@ button:hover { background: rgba(255, 226, 168, 0.22); }
 #place-hint {
   position: fixed; bottom: 128px; left: 50%; transform: translateX(-50%);
   background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 8px;
-  padding: 6px 14px; font-size: 0.85rem; color: var(--accent);
+  padding: 4px 12px; font-size: 0.78rem; color: var(--ink);
+  opacity: 0.92; pointer-events: none;
 }
 
 /* help overlay */

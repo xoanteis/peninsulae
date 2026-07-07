@@ -72,6 +72,12 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
    (2010 codepoint, safe everywhere). All via RES_ICONS; res chips have title
    tooltips; selected slot buildings state their yield ("👷 n/2 working — yields
    💰 gold"). LESSON: only use pre-2015 emoji for load-bearing UI icons.
+6. Place-hint banner lingered: updatePlaceHint only ran from the menu button, but
+   placement also ends via Esc / click-to-place / touch — all funnel through
+   controls.setPlacing, which now notifies the HUD (onPlacingChange). Text slimmed
+   (drafting clause only when it applies), quieter styling. Worker plurals are real
+   words now (unitNames.workers: Labregos/Baserritarrak/Pagesos/Camponeses/Labriegos
+   — "Pagèss" was shipping). Banner lifecycle asserted in checks/feedback.mjs.
 
 ## Deployed / published
 - Game: https://xoanteis.github.io/peninsulae/ (Pages from main; PR merge = deploy)

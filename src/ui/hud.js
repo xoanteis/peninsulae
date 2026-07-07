@@ -56,6 +56,7 @@ export class HUD {
 
     this.buildBuildMenu();
     this.buildHelp();
+    this.controls.onPlacingChange = () => this.updatePlaceHint();
     this.el.btnHelp.title = 'How to play (F1)';
     this.el.btnHelp.onclick = () => this.toggleHelp();
     this.el.btnMute.onclick = () => {
@@ -111,9 +112,9 @@ export class HUD {
     this.alertsData = [];
 
     // opening tips for the first minutes of a match
-    const wname = FACTIONS[humanId ?? this.humanId]?.unitNames?.worker ?? 'worker';
+    const wnames = FACTIONS[humanId ?? this.humanId]?.unitNames?.workers ?? 'workers';
     this.tips = [
-      { at: 3, text: `🏰 Select your Capital and train ${wname}s — send them to forests 🌲 and fishing ripples 🐟 (long-press / right-click)` },
+      { at: 3, text: `🏰 Select your Capital and train ${wnames} — send them to forests 🌲 and fishing ripples 🐟 (long-press / right-click)` },
       { at: 28, text: '🛡 Neutral villages defend themselves — their towers fire at anyone who comes close. Keep clear until you bring soldiers, or convert the region peacefully with 📜' },
       { at: 42, text: '⛏ Scattered rocks mark the ground beside the sierra — build a Mine on such a tile to dig gold. Forests, shoals and farms cover the rest' },
       { at: 60, text: '🌾 Build Farms and Houses (bottom-right menu) — a worker starts raising it at once. Click any region to see its tribute and the 🕊 Convert action' },
@@ -135,14 +136,13 @@ export class HUD {
       b.title = def.desc;
       b.onclick = () => {
         if (!this.ownsWorker()) {
-          const wname = FACTIONS[this.humanId]?.unitNames?.worker ?? 'worker';
+          const wnames = FACTIONS[this.humanId]?.unitNames?.workers ?? 'workers';
           this.audio.play('ui_error', { volume: 0.5 });
-          this.alert(`🔨 Only ${wname}s build — train one at your Capital first`, { ttl: 3.5 });
+          this.alert(`🔨 Only ${wnames} build — train one at your Capital first`, { ttl: 3.5 });
           return;
         }
         this.audio.play('ui_click');
         this.controls.setPlacing(this.controls.placing === kind ? null : kind);
-        this.updatePlaceHint();
       };
       grid.appendChild(b);
     }
@@ -168,9 +168,10 @@ export class HUD {
     const k = this.controls.placing;
     this.el.placeHint.classList.toggle('hidden', !k);
     if (k) {
+      // short by default; the drafting behavior is only worth words when it applies
       const wname = FACTIONS[this.humanId]?.unitNames?.worker ?? 'worker';
-      const who = this.hasBuilder() ? 'your selected ' + wname + 's build it' : 'the nearest ' + wname + ' will build it';
-      this.el.placeHint.textContent = `Placing ${BUILDINGS[k].name} — click a tile in your regions · ${who} · Shift-click for more · Esc to cancel`;
+      const who = this.hasBuilder() ? '' : ` · drafts your nearest ${wname}`;
+      this.el.placeHint.textContent = `Placing ${BUILDINGS[k].name}${who} · Shift-click for more · Esc to cancel`;
     }
     for (const b of this.el.buildMenu.querySelectorAll('.bm-item')) {
       b.classList.toggle('active', b.dataset.kind === k);
