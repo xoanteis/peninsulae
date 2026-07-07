@@ -151,6 +151,8 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
 
 ## Tool map (details in CLAUDE.md)
 - Balance round: node tools/round.mjs --name=x [--patch=exp.json] [--full] [--raw=f.jsonl]
+  [--jobs=N] — a --full is ~3.5 min now (unitsNear int-key spatial hash 2x + all-core
+  workers 2x; verified behavior-identical vs R19 bands). Ship-intent → straight to --full.
 - Probes: tools/probes/ (N=1 env for smoke) · headless recorder test: recorder-headless.mjs
 - Browser checks: tools/checks/*.mjs via tools/verify.mjs (all green as of the persistence PR)
 - Docs regen: node tools/gendocs.mjs after any bonus change
