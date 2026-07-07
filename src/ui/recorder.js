@@ -5,6 +5,8 @@
 // DOM/localStorage are only touched in save paths, so node can import this
 // for headless tests.
 
+import { NODES } from '../config/rules.js';
+
 const SNAP_EVERY = 20; // seconds of sim time between snapshots
 const BACKUP_EVERY_SNAPS = 3; // localStorage backup cadence (~1 min)
 
@@ -23,17 +25,21 @@ export class MatchRecorder {
     this.nextSnap = 0;
     this.snapsSinceBackup = 0;
     this.log = {
-      v: 1,
+      v: 2,
       meta: {
         faction: humanId,
         date: new Date().toISOString(),
         players: this.pids,
         snapEvery: SNAP_EVERY,
         snapCols: SNAP_COLS,
+        // build fingerprint: which rules this game actually ran — "did my build
+        // have X?" must be answerable from the log, not deploy archaeology
+        rules: { forestRegrow: NODES.wood.regrowTime ?? 0 },
       },
       snaps: [],   // [t, [row per player, meta.players order]]
       events: [],  // [t, tag, ...] — strategic timeline, all nations
       orders: [],  // [t, type, detail?] — the human's commands only
+      forests: { cut: 0, grown: 0 },
       result: null,
     };
   }
@@ -61,6 +67,8 @@ export class MatchRecorder {
         if (l) l[ev.kind === 'worker' ? 'workers' : 'army']++;
         break;
       }
+      case 'forest_cut': this.log.forests.cut++; break;
+      case 'forest_grown': this.log.forests.grown++; break;
       // HUD-issued commands surface as sim events — fold the human's into the order stream
       case 'train_started':
         if (ev.owner === this.humanId) this.log.orders.push([t, 'train', ev.kind]);

@@ -280,6 +280,14 @@ export class HUD {
           this.rig.addShake(0.6);
         }
         break;
+      case 'forest_grown': {
+        // teach the mechanic once — dozens of tiles regrow per game, one alert suffices
+        if (this.sawRegrow) break;
+        this.sawRegrow = true;
+        const g = tileToWorld(ev.col, ev.row);
+        this.alert('🌲 A cut grove has regrown — forests return in a few minutes', { x: g.x, z: g.z, ttl: 8 });
+        break;
+      }
       case 'worker_idle': {
         if (!my(ev.owner)) break;
         if (ev.reason === 'slots_full') {
