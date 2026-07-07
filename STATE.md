@@ -12,12 +12,19 @@ raw tournament JSONL, or old conversations.
   aiStyle aggression 0.5 / turtle 0.4
 - castile: soldierCostMul 0.75 · trainTimeMul 0.7 · +2 regions (map hardcode, no flag)
 - rules: capital 3000 · resent tribute 0.65 · loyal 2x hold · empire fatigue +25%/region>2 ·
-  REPAIR 30hp/s @35% wood
+  REPAIR 30hp/s @35% wood · FORESTS REGROW (NODES.wood.regrowTime 210s @ regrowTo 0.75;
+  0 disables — player-requested design, validated at 60 games)
 - AI meta: era techs are PER-PLAYER (p.techs — never mutate FACTIONS!) · nearest-rival targeting
   (army x2 deterrence, dominator heat x90) · lateGame gate 900s, hegemon 660s · early sieges +4 ·
   capital siege recalls whole army · turtle/convictionLove live knobs · zombie nations dissolve
 
-## R17 standings (60 games, honest harness)
+## forest-regrow-full standings (60 games, SHIPPED — the new reference round)
+galicia 63.3 [50.7-74.4] · castile 13.3 [6.9-24.2] · catalonia 11.7 · basque 8.3 ·
+portugal 3.3 [0.9-11.4] — portugal's FIRST wins in the clean harness (2). All bands
+overlap R17: mechanic passed. Directional watch: castile softened (regrow blunts
+attrition aggression), galicia drifted up. Median win 24.6m. First-fall: portugal 36/60.
+
+## R17 standings (60 games, honest harness — superseded by forest-regrow-full)
 galicia 56.7 [44-68] · castile 23.3 · catalonia 18.3 · basque 1.7 · portugal 0 [0-6]
 Kill graph: castile executes portugal (32x, ~min 11-13); galicia now dies 26x/60 (heat works).
 
