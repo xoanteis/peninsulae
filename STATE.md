@@ -57,6 +57,21 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
 - Candidate directions it supports: AI punishes weak-army neighbors early (anti-turtle);
   in-game nudges for idle workers / pop-cap / resource float; attack-move discoverability.
 
+## UX backlog from player feedback (2026-07-07, diagnosed in code — not yet built)
+1. Mining order traps: (a) pick miss (22px) falls through to plain move — worker stands
+   beside mine looking identical to a miner; (b) damaged mine: right-click = repair, and
+   repair completion idles the worker (units.js:369) instead of entering the slot;
+   (c) full slots idle silently (units.js:407); (d) slot work shows NO floater by design
+   (overlays.js:91). Fixes: repair→slot flow, tile-click = mine click, full-slots hint,
+   "+gold" floater for slot workers.
+2. Repair invisible: 🔧 floater only 40%/s, NO sound (audio.js:137 hammers construct only).
+   Fix: hammer SFX on repair pulses + per-pulse floater + green HP-bar flash.
+3. Idle workers invisible in groups: '.' works but no persistent HUD badge, no per-unit
+   marker. Fix: HUD idle badge w/ count (reuse Period-key cycle) + 💤 overhead floater.
+4. Decorative rocks (terrain.js:103, 5.5% of grass tiles) read as mineral deposits — false
+   affordance; player sited mines by them. Mines only need mountain adjacency. Fix: scatter
+   rocks only on mountain-adjacent tiles (signpost) or drop them; optional tile bonus.
+
 ## Deployed / published
 - Game: https://xoanteis.github.io/peninsulae/ (Pages from main; PR merge = deploy)
 - Balance report artifact: https://claude.ai/code/artifact/787124ec-debb-4119-bdcf-305262aa255a
