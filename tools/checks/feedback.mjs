@@ -43,7 +43,30 @@ export async function run(page, { sleep, report }) {
   report.checks.idleBadge = await page.evaluate(() =>
     document.querySelector('#idle-badge')?.textContent ?? null);
 
-  // 5. place-hint banner tracks EVERY exit path (all funnel through setPlacing)
+  // 5. train button must not move under a spam-clicking cursor: queue row has a
+  //    fixed footprint and handlers rebuild synchronously
+  report.checks.trainSpam = await page.evaluate(() => {
+    const g = window.__game, w = g.world, pid = g.controls.humanId;
+    const p = w.players[pid];
+    p.res.food = 2000; p.res.wood = 2000; p.res.gold = 2000;
+    const cap = w.entities.get(p.capitalId);
+    g.selection.clear();
+    g.selection.add(cap.id);
+    g.hud.renderSelPanel(g.selection);
+    const btn = () => document.querySelector('#sel-panel [data-train="worker"]');
+    const r0 = btn().getBoundingClientRect();
+    for (let i = 0; i < 5; i++) btn().click(); // re-query: each click rebuilds the panel
+    const r1 = btn().getBoundingClientRect();
+    for (let i = 0; i < 20; i++) w.step(); // 2s of training
+    g.hud.renderSelPanel(g.selection);
+    return {
+      queued: cap.trainQueue.length,
+      buttonStable: r0.top === r1.top && r0.left === r1.left,
+      pct: document.querySelector('#sel-panel .sp-pct')?.textContent ?? null,
+    };
+  });
+
+  // 6. place-hint banner tracks EVERY exit path (all funnel through setPlacing)
   report.checks.placeHint = await page.evaluate(() => {
     const g = window.__game, hint = document.getElementById('place-hint');
     const hidden = () => hint.classList.contains('hidden');
