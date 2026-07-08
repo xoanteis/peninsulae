@@ -60,6 +60,21 @@ NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harn
 - Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
   across games in one process and silently biases every harness (cost us months of data).
 
+## Human match log #4 (matches/2026-07-08-galicia-win-38min-game4.json) — R19 world, human-confirmed
+First game on the full R18+R19 build (fingerprint ✓). Regrow REAL: 101 cut / 92 regrown.
+PORTUGAL TRANSFORMED in human play: era 1 FIRST (4.4), era 2 FIRST (6.9), 17 workers by
+min 15 (was 2-4 in games 1-3), survived to 29.4 — the map fix reads exactly like the
+tournaments said. Win took 37.8 min (was 32) — stronger rivals = slower human win;
+catalonia peaked at 10 regions. Player metrics across 4 games: idle 4.2→3.6→3.0→1.2
+(flag GONE — badge works) · food float 7.6k→5.7k→4.1k→3.2k · wood 5.1k→2.2k→5.3k→2.5k ·
+10-unit queue bursts everywhere (172 train orders). The 3 stubborn items were ADDRESSED
+by design changes (all asserted in checks/feedback.mjs): (a) attack-move is now the
+DEFAULT for military-only ground right-clicks (Alt = plain move; F stays for mixed) —
+teaching failed 3 times, so the default changed instead; (b) 🔧N badge for buildings
+<60% HP, click cycles them (the badge pattern with the proven track record); (c) 🏠
+badge is queue-aware: fires amber (pop-soon) when pop+queued > cap, before the block.
+Game 5 verdict: watch for amove orders in the log and whether supply-block snaps drop.
+
 ## Human match log #3 (matches/2026-07-07-galicia-win-32min-game3.json) — the deploy race
 Player reported "no regrow" — CORRECT: game started 21:40 UTC, R18 Pages deploy finished
 21:42 UTC. Played the #26 build (proof in-log: 10-soldier queue burst at 10.6). Fixed the

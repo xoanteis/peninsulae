@@ -63,9 +63,10 @@ export class HUD {
       const muted = this.audio.toggleMute();
       this.el.btnMute.textContent = muted ? '🔇' : '🔊';
     };
-    // the 💤/🏠 badges are re-rendered into the res-bar every refresh, so delegate clicks
+    // the 💤/🏠/🔧 badges are re-rendered into the res-bar every refresh, so delegate clicks
     this.el.resBar.addEventListener('click', e => {
       if (e.target.closest('#idle-badge')) this.controls.cycleIdleWorker();
+      if (e.target.closest('#repair-badge')) this.controls.cycleDamagedBuilding();
       if (e.target.closest('#pop-badge')) {
         this.audio.play('ui_click', { volume: 0.5 });
         this.controls.setPlacing('house');
@@ -125,7 +126,7 @@ export class HUD {
       { at: 42, text: '⛏ Scattered rocks mark the ground beside the sierra — build a Mine on such a tile to dig gold. Forests, shoals and farms cover the rest' },
       { at: 60, text: '🌾 Build Farms and Houses (bottom-right menu) — a worker starts raising it at once. Click any region to see its tribute and the 🕊 Convert action' },
       { at: 95, text: '⚔️ Castile is coming. Raise a Barracks and watchtowers before the Kingdom era — or out-convert everyone first' },
-      { at: 150, text: '⚔ Plain move orders walk PAST enemies. Use F+click (or the ⚔ button, right edge) to attack-move — the army fights everything on the way' },
+      { at: 150, text: '⚔ Armies attack-move by default — they fight everything on the way. Alt+right-click marches them PAST enemies without engaging' },
     ];
   }
 
@@ -209,8 +210,8 @@ export class HUD {
         <section>
           <h3>Controls</h3>
           <p>🖱 <b>Click</b> select · <b>double-click</b> all of that type · <b>drag</b> box-select · <b>Shift</b> add<br>
-          <b>Right-click</b> order (move · attack · gather · build · rally) · <b>right-drag</b> or <b>screen edge</b> pan · <b>wheel</b> zoom<br>
-          ⌨️ <b>Ctrl+1–9</b> assign group · <b>1–9</b> recall (double-tap centers) · <b>F</b>+click attack-move ·
+          <b>Right-click</b> order (armies attack-move · workers gather/build · <b>Alt</b>+right-click plain move) · <b>right-drag</b> or <b>screen edge</b> pan · <b>wheel</b> zoom<br>
+          ⌨️ <b>Ctrl+1–9</b> assign group · <b>1–9</b> recall (double-tap centers) · <b>F</b>+click attack-move (mixed groups) ·
           <b>X</b> stop · <b>E</b> all soldiers on screen · <b>.</b> idle worker · <b>P</b> pause ·
           <b>H</b> home · <b>Space</b> last alert<br>
           <b>WASD/arrows</b> pan · <b>Q/R</b> rotate · <b>+/−</b> zoom · <b>F1</b> help · <b>F2</b> save match log · <b>M</b> mute · <b>Esc</b> cancel<br>
@@ -701,15 +702,25 @@ export class HUD {
     }
 
     const p = this.world.players[this.humanId];
-    // resources (+ idle-worker badge: click cycles them, same as the . key)
-    let idleW = 0;
+    // resources + action badges (💤 idle workers · 🏠 housing · 🔧 damaged buildings)
+    let idleW = 0, queuedPop = 0, hurtN = 0;
     for (const e of this.world.entities.values()) {
-      if (e.type === 'unit' && e.kind === 'worker' && e.owner === this.humanId && e.state === 'idle') idleW++;
+      if (e.type === 'unit') {
+        if (e.kind === 'worker' && e.owner === this.humanId && e.state === 'idle') idleW++;
+      } else if (e.owner === this.humanId && e.progress >= 1) {
+        for (const job of e.trainQueue) queuedPop += UNITS[job.kind]?.pop ?? 0;
+        if (e.hp < e.maxHp * 0.6) hurtN++;
+      }
     }
+    // predictive: warn when the QUEUE will outrun housing, not when it already has
+    const popState = p.pop >= p.popCap ? 'blocked' : (p.pop + queuedPop > p.popCap ? 'soon' : null);
     this.el.resBar.innerHTML = Object.entries(p.res).map(([k, v]) =>
       `<span class="res" title="${k}"><span class="res-ico">${RES_ICONS[k]}</span>${Math.floor(v)}</span>`).join('') +
       `<span class="res" title="population / housing cap"><span class="res-ico">👥</span>${p.pop}/${p.popCap}</span>` +
-      (p.pop >= p.popCap ? `<span class="res pop-badge" id="pop-badge" title="Population capped — training is blocked. Click to place a 🏠 House">🏠!</span>` : '') +
+      (popState ? `<span class="res pop-badge${popState === 'soon' ? ' pop-soon' : ''}" id="pop-badge" title="${popState === 'blocked'
+        ? 'Population capped — training is blocked. Click to place a 🏠 House'
+        : 'Queued units will outrun the housing cap — click to place a 🏠 House ahead of need'}">🏠!</span>` : '') +
+      (hurtN ? `<span class="res repair-chip" id="repair-badge" title="damaged buildings — click to cycle them; right-click one with a worker to repair (costs wood)">🔧${hurtN}</span>` : '') +
       (idleW ? `<span class="res idle-chip" id="idle-badge" title="idle workers — click (or press .) to cycle through them">💤${idleW}</span>` : '') +
       `<span class="res era-chip">👑 ${ERAS[p.era].name}${p.eraTimer != null ? ' ⏳' : ''}</span>`;
 

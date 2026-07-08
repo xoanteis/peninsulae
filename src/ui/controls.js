@@ -227,7 +227,7 @@ export class Controls {
       if (!wasPan) {
         if (this.amove) this.issueAmove(e.clientX, e.clientY);
         else if (this.suppressContextUntil && performance.now() < this.suppressContextUntil) { /* touch */ }
-        else this.contextOrder(e.clientX, e.clientY);
+        else this.contextOrder(e.clientX, e.clientY, e.altKey);
       }
       return;
     }
@@ -325,7 +325,19 @@ export class Controls {
     this.onSelect(u);
   }
 
-  contextOrder(clientX, clientY) {
+  // ground clicks route by selection: pure-military selections attack-move by
+  // default (four human games never once used F+click — blind marches past
+  // enemies were the cost); alt forces a plain move (retreat without engaging)
+  groundOrderType(ids, alt) {
+    if (alt || !ids.length) return 'move';
+    const allMilitary = ids.every(id => {
+      const u = this.world.entities.get(id);
+      return u && u.kind !== 'worker';
+    });
+    return allMilitary ? 'amove' : 'move';
+  }
+
+  contextOrder(clientX, clientY, alt = false) {
     const e = { clientX, clientY };
     const ids = [...this.selection].filter(id => {
       const ent = this.world.entities.get(id);
@@ -386,6 +398,20 @@ export class Controls {
       this.onOrder({ type: 'hint', message: 'The sierra can\'t be gathered — build a ⛏ Mine on a tile beside a mountain to dig its gold' });
       return;
     }
-    this.onOrder({ type: 'move', ids, x: p.x, z: p.z });
+    this.onOrder({ type: this.groundOrderType(ids, alt), ids, x: p.x, z: p.z });
+  }
+
+  // cycle damaged buildings, HUD 🔧 badge (mirrors cycleIdleWorker)
+  cycleDamagedBuilding() {
+    const hurt = [...this.world.entities.values()].filter(b =>
+      b.type === 'building' && b.owner === this.humanId && b.progress >= 1
+      && b.hp < b.maxHp * 0.6);
+    if (!hurt.length) return;
+    this._hurtCycle = ((this._hurtCycle ?? -1) + 1) % hurt.length;
+    const b = hurt[this._hurtCycle];
+    this.selection.clear();
+    this.selection.add(b.id);
+    this.rig.jumpTo(b.x, b.z);
+    this.onSelect(b);
   }
 }
