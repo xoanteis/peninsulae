@@ -149,6 +149,17 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
   param to the SAME address; update only when a change ships)
 - docs/AUDIT.md: full audit ledger (all items fixed as of the audit fix pack PR #18)
 
+## Render perf (profiled 2026-07-08; scenecensus/frameprof scripts rebuildable from PR #30)
+- FIXED: per-unit material clones (hit-flash rationale) gave 840 unique materials
+  (795 entity meshes → 791 mats). Now shared + 3-step cached flash pool → 56 unique
+  (entities: 7). Benefits real GPUs (state reuse in color+shadow passes); invisible in
+  headless SwiftShader, where raster dominates — judge browser perf by COUNTERS
+  (drawCalls/materials/census), not headless frame times.
+- Future levers, measured & flagged: 1,131 draw calls (InstancedMesh per building
+  kind+color would collapse ~400); 413 GPU textures (≈130 = skeleton bone textures,
+  inherent; rest = per-GLTF-file texture instances — loader dedup possible); 1.25M tris
+  (KayKit tree density — designer trade-off). Terrain already exemplary (15 instanced).
+
 ## Tool map (details in CLAUDE.md)
 - Balance round: node tools/round.mjs --name=x [--patch=exp.json] [--full] [--raw=f.jsonl]
   [--jobs=N] — a --full is ~3.5 min now (unitsNear int-key spatial hash 2x + all-core
