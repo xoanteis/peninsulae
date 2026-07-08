@@ -154,7 +154,10 @@ export class MatchRecorder {
   static downloadBackup() {
     try {
       const raw = localStorage.getItem('peninsulae:lastMatch');
-      if (raw) saveFile(raw, `peninsulae-${JSON.parse(raw).meta.faction}-recovered.json`);
+      // localStorage is writable by anything on this origin — sanitize before
+      // the value becomes a download filename
+      const fac = String(JSON.parse(raw).meta?.faction ?? '').replace(/[^\w-]/g, '').slice(0, 24) || 'unknown';
+      if (raw) saveFile(raw, `peninsulae-${fac}-recovered.json`);
     } catch { /* nothing stored */ }
   }
 

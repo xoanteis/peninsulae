@@ -60,6 +60,20 @@ NOTE: pre-R16 rows in tools/balance-history.jsonl were measured on a biased harn
 - Never mutate the FACTIONS module object (or any shared config) from sim code — it leaks
   across games in one process and silently biases every harness (cost us months of data).
 
+## Human match log #5 (matches/2026-07-08-basque-win-38min-game5.json) — smart-click VERDICT
+Player switched to BASQUE (the 8.3% floor faction) and won in 37.8 min, killing all four
+AIs (86-unit army endgame, 0 conquest flips — capital kills → defection cascades).
+SMART-CLICK WORKS: amove 163 = the #1 order type (4 prior games: zero attack-moves).
+Design-change-over-teaching vindicated completely. Repair still unused (7 razed — razed
+means died UNDER FIRE; the 🔧 badge aids post-battle mending, not siege survival).
+Supply-block persists (31 snaps) despite 9 opening houses — an 86-pop army outruns any
+badge; late-game housing is a different problem than opening housing. Idle regressed to
+4.1 (basque mines full + fewer fish?). BALANCE INSIGHT — BASQUE IS IDENTITY-STARVED:
+identity float 864 (lowest ever seen), era 1 LAST at 10.6, era 2 at 28.6, even with a
+strong economy. The kit has zero identity generation. The sim already has an unused
+bonus.mineIdentity hook (units.js "the mine is also a moot") — one config line + one
+3.5-min round to test. Prime candidate for the basque floor.
+
 ## Human match log #4 (matches/2026-07-08-galicia-win-38min-game4.json) — R19 world, human-confirmed
 First game on the full R18+R19 build (fingerprint ✓). Regrow REAL: 101 cut / 92 regrown.
 PORTUGAL TRANSFORMED in human play: era 1 FIRST (4.4), era 2 FIRST (6.9), 17 workers by
@@ -174,6 +188,24 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
   kind+color would collapse ~400); 413 GPU textures (≈130 = skeleton bone textures,
   inherent; rest = per-GLTF-file texture instances — loader dedup possible); 1.25M tris
   (KayKit tree density — designer trade-off). Terrain already exemplary (15 instanced).
+
+## Security posture (reviewed + hardened 2026-07-08)
+- THE trust boundary is tools/analyze-match.mjs: matches/ solicits logs from strangers
+  and the analyzer's output is read as trusted text (by humans AND the AI workflow).
+  It now sanitizes at every output boundary: \p{C} stripped (ANSI/RTL spoofing dead),
+  faction/region/order ids allowlisted (unknowns print as ⟨not-a-faction:…⟩), numbers
+  coerced, arrays capped, 20MB file limit. Output byte-identical on all real logs;
+  hostile fixture neutralized. NEVER print raw log strings outside the analyzer.
+- CSP (meta tag): default-src 'self'; script 'self'+importmap hash (recompute the hash
+  if the importmap changes — comment in index.html); blob: allowed for connect/img
+  (GLTFLoader embedded textures — the CSP itself caught this in testing). Inline
+  onclick= handlers are forbidden — wire buttons in JS (endgame buttons converted).
+- Good posture (verified): zero runtime deps, vendored three.js, ?faction allowlisted,
+  no UGC in DOM, textContent for dynamic text, minimal workflow permissions, no secrets.
+- DEFERRED: SHA-pinning GH Actions (api.github.com unreachable from the sandbox — pin
+  by hand with `gh api repos/actions/checkout/git/ref/tags/vN`); localStorage recovery
+  filename now sanitized. Origin note: xoanteis.github.io is shared across ALL your
+  Pages projects — a compromised sibling project can touch this game's localStorage.
 
 ## Tool map (details in CLAUDE.md)
 - Balance round: node tools/round.mjs --name=x [--patch=exp.json] [--full] [--raw=f.jsonl]
