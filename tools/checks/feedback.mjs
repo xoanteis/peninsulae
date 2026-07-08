@@ -85,6 +85,50 @@ export async function run(page, { sleep, report }) {
   // 7. the ⚔ command bar exists on desktop (fine-pointer) too
   report.checks.commandBar = await page.evaluate(() => !!document.getElementById('tb-amove'));
 
+  // 7b. smart right-click: military-only ground clicks attack-move; workers and
+  //     alt-clicks stay plain moves
+  report.checks.smartClick = await page.evaluate(() => {
+    const g = window.__game, w = g.world, pid = g.controls.humanId;
+    const cap = w.entities.get(w.players[pid].capitalId);
+    const s1 = w.addUnit(pid, 'soldier', cap.col, cap.row);
+    const s2 = w.addUnit(pid, 'soldier', cap.col, cap.row);
+    const wk = w.addUnit(pid, 'worker', cap.col, cap.row);
+    const t = g.controls.groundOrderType.bind(g.controls);
+    return {
+      army: t([s1.id, s2.id], false),        // amove
+      armyAlt: t([s1.id, s2.id], true),      // move
+      mixed: t([s1.id, s2.id, wk.id], false), // move
+      workers: t([wk.id], false),            // move
+    };
+  });
+
+  // 7c. 🔧 badge: appears for damaged buildings, click cycles to them; and the
+  //     🏠 badge fires EARLY when the queue will outrun housing
+  report.checks.badges = await page.evaluate(() => {
+    const g = window.__game, w = g.world, pid = g.controls.humanId;
+    const p = w.players[pid];
+    const cap = w.entities.get(p.capitalId);
+    const tower = [...w.entities.values()].find(e => e.type === 'building' && e.owner === pid && e.kind === 'tower');
+    tower.hp = Math.round(tower.maxHp * 0.4);
+    g.hud.update(1, g.selection);
+    const repairShown = document.getElementById('repair-badge')?.textContent ?? null;
+    document.getElementById('repair-badge')?.click();
+    const cycledTo = g.selection.has(tower.id);
+    tower.hp = tower.maxHp;
+    // predictive housing: fill the queue so pop + queued > cap while pop < cap
+    p.res.food = 5000;
+    for (let i = 0; i < 10; i++) w.trainUnit(pid, cap.id, 'worker');
+    const savedCap = p.popCap;
+    p.popCap = p.pop + 3; // pop below cap, queue overshoots
+    g.hud.update(1, g.selection);
+    const soon = document.getElementById('pop-badge')?.className.includes('pop-soon') ?? false;
+    cap.trainQueue.length = 0;
+    p.popCap = savedCap;
+    g.hud.update(1, g.selection);
+    const cleared = !document.getElementById('repair-badge') && !document.getElementById('pop-badge');
+    return { repairShown, cycledTo, soon, cleared };
+  });
+
   // 8. cut forests regrow (stump queue in the economy tick) — wood is renewable
   report.checks.forestRegrow = await page.evaluate(() => {
     const g = window.__game, w = g.world, pid = g.controls.humanId;

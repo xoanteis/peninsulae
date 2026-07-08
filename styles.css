@@ -126,6 +126,9 @@ button:hover { background: rgba(255, 226, 168, 0.22); }
 .idle-chip:hover { text-shadow: 0 0 6px rgba(255, 217, 122, 0.7); }
 .pop-badge { cursor: pointer; color: var(--danger); min-width: auto; font-weight: 700; }
 .pop-badge:hover { text-shadow: 0 0 6px rgba(255, 107, 87, 0.7); }
+.pop-badge.pop-soon { color: var(--accent); } /* queue will outrun housing — warn, not yet blocked */
+.repair-chip { cursor: pointer; color: #ff9c8a; min-width: auto; }
+.repair-chip:hover { text-shadow: 0 0 6px rgba(255, 156, 138, 0.7); }
 
 /* domination race — right-anchored beside the help buttons: centered at left:50%
    it painted over the res-bar's pop/badge/era chips on ≤1440px viewports */

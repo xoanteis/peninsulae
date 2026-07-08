@@ -67,10 +67,13 @@ min 15 (was 2-4 in games 1-3), survived to 29.4 — the map fix reads exactly li
 tournaments said. Win took 37.8 min (was 32) — stronger rivals = slower human win;
 catalonia peaked at 10 regions. Player metrics across 4 games: idle 4.2→3.6→3.0→1.2
 (flag GONE — badge works) · food float 7.6k→5.7k→4.1k→3.2k · wood 5.1k→2.2k→5.3k→2.5k ·
-10-unit queue bursts everywhere (172 train orders). STILL STUBBORN after 4 games:
-(a) attack-move NEVER used despite bar+tip+help — consider making right-click on ground
-with a military-only selection default to attack-move (C&C-style smart click); (b) repair
-unused while 7 buildings razed; (c) supply-blocked 34 snaps — houses still lag demand.
+10-unit queue bursts everywhere (172 train orders). The 3 stubborn items were ADDRESSED
+by design changes (all asserted in checks/feedback.mjs): (a) attack-move is now the
+DEFAULT for military-only ground right-clicks (Alt = plain move; F stays for mixed) —
+teaching failed 3 times, so the default changed instead; (b) 🔧N badge for buildings
+<60% HP, click cycles them (the badge pattern with the proven track record); (c) 🏠
+badge is queue-aware: fires amber (pop-soon) when pop+queued > cap, before the block.
+Game 5 verdict: watch for amove orders in the log and whether supply-block snaps drop.
 
 ## Human match log #3 (matches/2026-07-07-galicia-win-32min-game3.json) — the deploy race
 Player reported "no regrow" — CORRECT: game started 21:40 UTC, R18 Pages deploy finished
