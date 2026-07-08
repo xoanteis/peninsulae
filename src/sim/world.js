@@ -527,9 +527,15 @@ export class World {
     }
 
     updateEconomy(this, dt);
-    for (const e of [...this.entities.values()]) {
+    // snapshot into a reused scratch array (updateUnit can spawn/remove entities
+    // mid-loop; spreading allocated a fresh full-entity array every tick)
+    const snap = this._stepScratch ??= [];
+    snap.length = 0;
+    for (const e of this.entities.values()) snap.push(e);
+    for (const e of snap) {
       if (e.type === 'unit') updateUnit(this, e, dt);
     }
+    snap.length = 0; // don't pin dead entities until the next tick
     separation(this, dt);
     updateCombat(this, dt);
     updateRegions(this, dt);

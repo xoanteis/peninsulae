@@ -74,6 +74,22 @@ export class UnitRenderer {
     scene.add(this.rings);
     this._m4 = new THREE.Matrix4();
     this._color = new THREE.Color();
+    this.flashCache = new Map(); // shared material -> [3 emissive fade steps]
+  }
+
+  flashMat(shared, step) {
+    let steps = this.flashCache.get(shared);
+    if (!steps) {
+      this.flashCache.set(shared, steps = [0, 1, 2].map(i => {
+        if (!shared.emissive) return shared; // basic materials can't flash
+        const m = shared.clone();
+        const k = (i + 1) / 3;
+        m.emissive.setRGB(k * 0.9, k * 0.25, k * 0.15);
+        m.emissiveIntensity = 1;
+        return m;
+      }));
+    }
+    return steps[step];
   }
 
   clipsFor(modelKey) {
@@ -116,12 +132,14 @@ export class UnitRenderer {
     const mixer = new THREE.AnimationMixer(mesh);
     const view = {
       id: u.id, mesh, mixer, modelKey, current: null, currentName: null,
-      dead: false, deadT: 0, flash: 0, spawnT: 0.25,
+      dead: false, deadT: 0, flash: 0, flashStep: -1, spawnT: 0.25,
       facing: u.facing, mats: [],
     };
-    // per-unit material clones so hit flashes don't light up every sibling
+    // materials stay SHARED — per-unit clones gave every mesh its own material
+    // (~600 unique across an army), destroying renderer state reuse in both the
+    // color and shadow passes. Hit flashes swap to cached per-step variants.
     mesh.traverse(o => {
-      if (o.material) { o.material = o.material.clone(); view.mats.push(o.material); }
+      if (o.material) view.mats.push({ o, shared: o.material });
     });
     this.units.set(u.id, view);
     this.scene.add(mesh);
@@ -178,7 +196,7 @@ export class UnitRenderer {
     this.scene.remove(v.mesh);
     v.mixer.stopAllAction();
     v.mixer.uncacheRoot(v.mesh);
-    for (const m of v.mats) m.dispose(); // per-unit clones, safe to free
+    // materials are shared with the GLTF cache (and the flash pool) — never dispose
     v.mesh.traverse(o => { if (o.isSkinnedMesh) o.skeleton?.dispose(); }); // bone textures
     this.units.delete(id);
   }
@@ -232,14 +250,14 @@ export class UnitRenderer {
         if (v.deadT > 1.3) v.mesh.position.y = -(v.deadT - 1.3) * 0.6; // sink away
       }
 
-      // hit flash: emissive pulse
-      if (v.flash > 0) {
+      // hit flash: swap to cached emissive-step materials (shared mats stay pristine)
+      if (v.flash > 0 || v.flashStep >= 0) {
         v.flash -= dt;
-        const k = Math.max(v.flash, 0) / 0.18;
-        for (const m of v.mats) {
-          if (m.emissive) { m.emissive.setRGB(k * 0.9, k * 0.25, k * 0.15); m.emissiveIntensity = 1; }
+        const step = v.flash > 0 ? Math.min(2, Math.floor(v.flash / 0.18 * 3)) : -1;
+        if (step !== v.flashStep) {
+          v.flashStep = step;
+          for (const { o, shared } of v.mats) o.material = step < 0 ? shared : this.flashMat(shared, step);
         }
-        if (v.flash <= 0) for (const m of v.mats) m.emissive?.setRGB(0, 0, 0);
       }
 
       v.mixer.update(dt);
