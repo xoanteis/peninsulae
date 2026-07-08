@@ -189,6 +189,24 @@ Player as galicia WON in 41.4 min via corner turtle → late defection cascade. 
   inherent; rest = per-GLTF-file texture instances — loader dedup possible); 1.25M tris
   (KayKit tree density — designer trade-off). Terrain already exemplary (15 instanced).
 
+## Security posture (reviewed + hardened 2026-07-08)
+- THE trust boundary is tools/analyze-match.mjs: matches/ solicits logs from strangers
+  and the analyzer's output is read as trusted text (by humans AND the AI workflow).
+  It now sanitizes at every output boundary: \p{C} stripped (ANSI/RTL spoofing dead),
+  faction/region/order ids allowlisted (unknowns print as ⟨not-a-faction:…⟩), numbers
+  coerced, arrays capped, 20MB file limit. Output byte-identical on all real logs;
+  hostile fixture neutralized. NEVER print raw log strings outside the analyzer.
+- CSP (meta tag): default-src 'self'; script 'self'+importmap hash (recompute the hash
+  if the importmap changes — comment in index.html); blob: allowed for connect/img
+  (GLTFLoader embedded textures — the CSP itself caught this in testing). Inline
+  onclick= handlers are forbidden — wire buttons in JS (endgame buttons converted).
+- Good posture (verified): zero runtime deps, vendored three.js, ?faction allowlisted,
+  no UGC in DOM, textContent for dynamic text, minimal workflow permissions, no secrets.
+- DEFERRED: SHA-pinning GH Actions (api.github.com unreachable from the sandbox — pin
+  by hand with `gh api repos/actions/checkout/git/ref/tags/vN`); localStorage recovery
+  filename now sanitized. Origin note: xoanteis.github.io is shared across ALL your
+  Pages projects — a compromised sibling project can touch this game's localStorage.
+
 ## Tool map (details in CLAUDE.md)
 - Balance round: node tools/round.mjs --name=x [--patch=exp.json] [--full] [--raw=f.jsonl]
   [--jobs=N] — a --full is ~3.5 min now (unitsNear int-key spatial hash 2x + all-core

@@ -2,16 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-D2XnioWKWXcIE2epN670TChceWuJD92o/6GT7rIBAsw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<!-- the sha256 hash allowlists the inline importmap below; if you EDIT the
+     importmap, recompute: sha256 of the exact text between its script tags -->
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>Peninsulae — Five Nations, One Iberia</title>
 <link rel="stylesheet" href="./styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏰</text></svg>">
-<script>
-  // early error capture for the verification harness
-  window.__game = { errors: [] };
-  window.addEventListener('error', e => window.__game.errors.push(String(e.error?.stack || e.message)));
-  window.addEventListener('unhandledrejection', e => window.__game.errors.push('rejection: ' + String(e.reason?.stack || e.reason)));
-</script>
+<script src="./src/errcap.js"></script>
 <script type="importmap">
 {
   "imports": {

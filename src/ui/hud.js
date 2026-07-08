@@ -387,16 +387,20 @@ export class HUD {
         : draw ? 'The last two crowns fell in the same hour. No banner flies; the villages rebuild alone.'
           : `The peninsula belongs to the ${f?.name ?? 'rebels'}. Your story becomes a song of resistance.`}</p>
         <p>${mins} minutes · ${Object.values(this.world.regions).filter(r => r.owner === this.humanId).length} regions held at the end</p>
-        <button class="big-btn" onclick="location.reload()">Play again</button>
+        <button class="big-btn" id="btn-again">Play again</button>
         <button class="big-btn" id="btn-matchlog">📜 Save match log</button>
       </div>`;
     this.wireMatchLog();
   }
 
-  // the log feeds tools/analyze-match.mjs — how a human game gets studied
+  // the log feeds tools/analyze-match.mjs — how a human game gets studied.
+  // (buttons are wired here, not with onclick= attributes — the CSP forbids
+  // inline handlers)
   wireMatchLog() {
     const btn = this.el.endOverlay.querySelector('#btn-matchlog');
     if (btn) btn.onclick = () => this.recorder?.download();
+    const again = this.el.endOverlay.querySelector('#btn-again');
+    if (again) again.onclick = () => location.reload();
   }
 
   // when the player's own capital falls but others fight on
@@ -410,7 +414,7 @@ export class HUD {
         <h1>⛓️ THE CAPITAL HAS FALLEN</h1>
         <p class="end-sub">${f ? `The ${f.name} banner flies over your castle.` : 'Your nation is broken.'}
         The dream of independence waits for another century.</p>
-        <button class="big-btn" onclick="location.reload()">Play again</button>
+        <button class="big-btn" id="btn-again">Play again</button>
         <button class="big-btn" id="btn-spectate">👁 Watch the war play out</button>
         <button class="big-btn" id="btn-matchlog">📜 Save match log</button>
       </div>`;
