@@ -33,9 +33,16 @@ when a check fails or for one final ship-quality shot. For routine visual checks
 **Human match logs are read through the analyzer, never raw.** The game always records
 itself (`src/ui/recorder.js`); the player saves a JSON log from the end screen or F2
 (Shift+F2 recovers the localStorage backup after a reload). Analyze with
-`node tools/analyze-match.mjs <file>` — timeline, build order, curves, coaching flags.
-Shared logs land in `matches/`. Human games are ground truth the AI tournaments can't
-provide — when a human log contradicts tournament conclusions, weight the human log.
+`node tools/analyze-match.mjs <file>` — timeline, build order, curves, coaching flags,
+and a build fingerprint on line 1 (answers "which build was this?"). Shared logs land in
+`matches/`. Human games are ground truth the AI tournaments can't provide — when a human
+log contradicts tournament conclusions, weight the human log. SECURITY: logs are untrusted
+input from strangers; the analyzer sanitizes (test: `node tools/test-analyzer-hardening.mjs`).
+Never print raw log strings through any other path.
+
+**Filter tool output before it enters context.** `verify.mjs` prints a large JSON report —
+pipe it through `python3 -c "import json,sys; ..."` and print only the checks you need.
+Same for actions/API JSON. Raw dumps of big reports are the main avoidable token cost.
 
 **Report on ship only.** The balance-report artifact is updated only when a change
 merges — per-experiment results just go to balance-history.jsonl. Its source is
@@ -56,15 +63,22 @@ sessions — anything durable belongs in the repo.
   Check scripts export `run(page, {shot, sleep, report})`. Headless in-page timers are
   starved — dispatch interactions in a single evaluate; events reach the HUD on the
   *next frame* (sleep before reading alerts).
-- Regression checks live in `tools/checks/` (fixpack, ux, cnc controls, repair, recorder,
-  surv). AI-vs-AI probes in `tools/probes/` (min-12 snapshot pattern; `N=1` env to smoke).
+- Regression checks live in `tools/checks/` — `feedback.mjs` is THE suite (~40s, all UX
+  assertions live there; extend it, don't scatter new files). Others: fixpack, ux, cnc,
+  repair, recorder, surv, shot (generic screenshot; `FFWD=9000` fast-forwards to min 15).
+  AI-vs-AI probes in `tools/probes/` (min-12 snapshot pattern; `N=1` env to smoke).
+- Render perf: judge by COUNTERS, not headless frame times (SwiftShader = software GL).
+  `tools/perf/scenecensus.mjs` (meshes/materials/textures by group) and
+  `tools/perf/frameprof.mjs` (CDP profile + renderer.info). Sim perf: `node --cpu-prof`.
 
 ## Gotchas
 
 - `gh` CLI unavailable — use GitHub MCP tools; PR merge = deploy.
 - After a SQUASH merge the local branch still carries pre-squash commits — the next PR
-  405s with "merge conflicts". Fix: `git rebase --onto origin/main <last-squashed-commit>`
-  then push `--force-with-lease`. (Bit us four times.)
+  405s with "merge conflicts". If the branch is fully merged (the normal case):
+  `git fetch origin main && git checkout -B <branch> origin/main && git push -u origin
+  <branch> --force-with-lease`. If it carries unmerged commits: `git rebase --onto
+  origin/main <last-squashed-commit>` then force-with-lease. Do this after EVERY merge.
 - Tournament variance is ±10pp at n=60 — compare Wilson-CI bands, never point orderings.
 - GLTFLoader strips dots from node names (`handslot.r` → `handslotr`).
 - The HUD constructor wipes `#hud` innerHTML — construct HUD before Overlays.
