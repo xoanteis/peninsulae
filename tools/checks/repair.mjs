@@ -1,5 +1,4 @@
 export async function run(page, { sleep, report }) {
-  await sleep(900);
   report.checks.repair = await page.evaluate(() => {
     const g = window.__game, w = g.world, pid = g.controls.humanId;
     const p = w.players[pid];

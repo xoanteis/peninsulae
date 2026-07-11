@@ -6,8 +6,8 @@ import { FACTIONS } from '../config/factions.js';
 import { UNITS, BUILDINGS, ERAS, START, NODES, CONVICTION, TICK_MS, SMITH_UPGRADES } from '../config/rules.js';
 import { tileToWorld, worldToTile, neighbors, hexDistance, findPath } from './hex.js';
 import { updateUnit, separation } from './units.js';
-import { updateCombat } from './combat.js';
-import { initRegions, updateRegions, regionConvertCost } from './regions.js';
+import { updateCombat, killUnit, destroyBuilding } from './combat.js';
+import { initRegions, updateRegions, regionConvertCost, capitalStands } from './regions.js';
 import { updateEconomy } from './economy.js';
 import { AIController } from './ai.js';
 
@@ -194,9 +194,7 @@ export class World {
   }
 
   addBuilding(owner, kind, col, row, { complete = false, owner: ownerOverride } = {}) {
-    const def = kind === 'village'
-      ? { name: 'Village', hp: 420, cost: {} }
-      : BUILDINGS[kind];
+    const def = BUILDINGS[kind];
     const t = this.tileAt(col, row);
     const { x, z } = tileToWorld(col, row);
     const own = ownerOverride ?? owner;
@@ -263,6 +261,18 @@ export class World {
     if (a === b) return false;
     if (a == null || b == null) return true; // neutrals defend against everyone
     return a !== b;
+  }
+
+  // a player's living workers — the shared predicate behind the HUD badges,
+  // idle-cycling, the 💤 overlay markers and placement drafting
+  workersOf(pid, { idleOnly = false } = {}) {
+    const out = [];
+    for (const e of this.entities.values()) {
+      if (e.type !== 'unit' || e.kind !== 'worker' || e.owner !== pid || e.state === 'dying') continue;
+      if (idleOnly && e.state !== 'idle') continue;
+      out.push(e);
+    }
+    return out;
   }
 
   findPathTo(unit, col, row) {
@@ -336,6 +346,17 @@ export class World {
     return null;
   }
 
+  // the sibling of buildingCost — the HUD renders train-button prices from the
+  // same method that charges them, so they can never drift apart
+  unitCost(pid, kind) {
+    const f = FACTIONS[pid];
+    const cost = {};
+    for (const [k, v] of Object.entries(UNITS[kind].cost)) {
+      cost[k] = Math.round(v * (kind !== 'worker' ? (f.bonus.soldierCostMul ?? 1) : 1));
+    }
+    return cost;
+  }
+
   trainUnit(pid, buildingId, kind) {
     const b = this.entities.get(buildingId);
     const p = this.players[pid];
@@ -344,10 +365,7 @@ export class World {
     if (!def.trains?.includes(kind)) return 'invalid';
     if (b.trainQueue.length >= 10) return 'queue full';
     const f = FACTIONS[pid];
-    const cost = {};
-    for (const [k, v] of Object.entries(UNITS[kind].cost)) {
-      cost[k] = Math.round(v * (kind !== 'worker' ? (f.bonus.soldierCostMul ?? 1) : 1));
-    }
+    const cost = this.unitCost(pid, kind);
     if (p.pop + UNITS[kind].pop > p.popCap) return 'need houses';
     if (!this.canAfford(pid, cost)) return 'cannot afford';
     this.pay(pid, cost);
@@ -398,8 +416,7 @@ export class World {
     const region = this.regions[regionKey];
     if (!region || region.owner === pid) return 'invalid';
     if (region.conversion) return 'someone is already converting it';
-    if (region.meta.capitalOf && region.owner === region.meta.capitalOf &&
-        this.players[region.meta.capitalOf].alive) {
+    if (capitalStands(this, region)) {
       return 'a capital cannot be converted while its castle stands';
     }
     const cost = regionConvertCost(this, pid, regionKey);
@@ -508,6 +525,31 @@ export class World {
     this.pushEvent({ type: 'order_attack', targetId, owner: pid });
   }
 
+  orderRally(pid, buildingId, x, z) {
+    const b = this.entities.get(buildingId);
+    if (!b || b.type !== 'building' || b.owner !== pid) return;
+    b.rally = { x, z }; // consumed on train completion (economy tick)
+  }
+
+  // placement with no builder selected drafts the nearest worker, idle first —
+  // game policy, so it lives here rather than in the UI shell
+  draftBuilder(pid, buildingId, preferredIds = []) {
+    const site = this.entities.get(buildingId);
+    if (!site) return;
+    let ids = preferredIds.filter(id => this.entities.get(id)?.kind === 'worker');
+    if (!ids.length) {
+      const workers = this.workersOf(pid);
+      const idle = workers.filter(w => w.state === 'idle');
+      let best = null, bestD = Infinity;
+      for (const w of (idle.length ? idle : workers)) {
+        const d = Math.hypot(w.x - site.x, w.z - site.z);
+        if (d < bestD) { bestD = d; best = w; }
+      }
+      if (best) ids = [best.id];
+    }
+    if (ids.length) this.orderBuild(pid, ids, buildingId);
+  }
+
   // ---------- tick ----------
   step() {
     const dt = TICK_MS / 1000;
@@ -545,46 +587,9 @@ export class World {
 
   checkVictory() {
     if (this.winner) return;
-    // capital falls -> nation capitulates, regions defect to conqueror
+    // capital falls -> nation capitulates
     for (const p of Object.values(this.players)) {
-      if (!p.alive) continue;
-      const cap = this.entities.get(p.capitalId);
-      if (!cap) {
-        p.alive = false;
-        const conqueror = p.lastAttacker && this.players[p.lastAttacker]?.alive ? p.lastAttacker : null;
-        for (const region of Object.values(this.regions)) {
-          if (region.owner !== p.id) continue;
-          const wasConverted = region.converted;
-          region.conversion = null;
-          region.conquest = null;
-          region.converted = false;
-          // only garrisoned borderlands defect; regions won by conviction
-          // shatter back to the villagers — faith does not transfer at swordpoint
-          const bordersConqueror = conqueror && [...region.neighborKeys]
-            .some(k => this.regions[k].owner === conqueror);
-          const isCapitalRegion = region.meta.capitalOf === p.id;
-          if (conqueror && (isCapitalRegion || (bordersConqueror && !wasConverted))) {
-            region.owner = conqueror;
-            region.resent = true;
-            // the village and its tower change masters too — a defected region
-            // must not keep a dead nation's tower firing at its new lord
-            for (const id of region.villageIds) {
-              const b = this.entities.get(id);
-              if (b) b.owner = conqueror;
-            }
-            for (const id of region.militiaIds) this.removeEntity(id);
-            region.militiaIds = [];
-            this.pushEvent({ type: 'region_flipped', region: region.key, owner: conqueror, how: 'defection', x: region.center.x, z: region.center.z });
-          } else {
-            region.owner = null;
-            region.resent = false;
-            this.respawnMilitia(region);
-            this.pushEvent({ type: 'region_flipped', region: region.key, owner: null, how: 'shattered', x: region.center.x, z: region.center.z });
-          }
-        }
-        this.dissolveNation(p.id);
-        this.pushEvent({ type: 'nation_fell', owner: p.id, conqueror });
-      }
+      if (p.alive && !this.entities.get(p.capitalId)) this.collapseNation(p);
     }
     const regions = Object.values(this.regions);
     for (const p of Object.values(this.players)) {
@@ -605,6 +610,45 @@ export class World {
     }
   }
 
+  // The capital fell: the nation capitulates — garrisoned borderlands defect to
+  // the conqueror, everything else shatters free, and the army dissolves.
+  collapseNation(p) {
+    p.alive = false;
+    const conqueror = p.lastAttacker && this.players[p.lastAttacker]?.alive ? p.lastAttacker : null;
+    for (const region of Object.values(this.regions)) {
+      if (region.owner !== p.id) continue;
+      const wasConverted = region.converted;
+      region.conversion = null;
+      region.conquest = null;
+      region.converted = false;
+      // only garrisoned borderlands defect; regions won by conviction
+      // shatter back to the villagers — faith does not transfer at swordpoint
+      const bordersConqueror = conqueror && [...region.neighborKeys]
+        .some(k => this.regions[k].owner === conqueror);
+      const isCapitalRegion = region.meta.capitalOf === p.id;
+      if (conqueror && (isCapitalRegion || (bordersConqueror && !wasConverted))) {
+        region.owner = conqueror;
+        region.resent = true;
+        // the village and its tower change masters too — a defected region
+        // must not keep a dead nation's tower firing at its new lord
+        for (const id of region.villageIds) {
+          const b = this.entities.get(id);
+          if (b) b.owner = conqueror;
+        }
+        for (const id of region.militiaIds) this.removeEntity(id);
+        region.militiaIds = [];
+        this.pushEvent({ type: 'region_flipped', region: region.key, owner: conqueror, how: 'defection', x: region.center.x, z: region.center.z });
+      } else {
+        region.owner = null;
+        region.resent = false;
+        this.respawnMilitia(region);
+        this.pushEvent({ type: 'region_flipped', region: region.key, owner: null, how: 'shattered', x: region.center.x, z: region.center.z });
+      }
+    }
+    this.dissolveNation(p.id);
+    this.pushEvent({ type: 'nation_fell', owner: p.id, conqueror });
+  }
+
   // A fallen nation leaves no ghost army: its people scatter, its works crumble.
   // (Without this, zombie soldiers kept fighting, suppressing conversions and
   // blocking conquests, and orphaned towers kept firing forever.)
@@ -612,20 +656,11 @@ export class World {
     for (const e of [...this.entities.values()]) {
       if (e.owner !== pid) continue;
       if (e.type === 'unit') {
-        if (e.state === 'dying') continue;
-        e.state = 'dying';
-        e.anim = 'die';
-        e.dyingT = 0;
-        e.hp = 0;
-        if (UNITS[e.kind]) this.players[pid].pop -= UNITS[e.kind].pop;
-        e.owner_atDeath = e.owner;
-        e.owner = '__dead__';
-        this.pushEvent({ type: 'unit_died', id: e.id, x: e.x, z: e.z, kind: e.kind, owner: pid });
+        if (e.state !== 'dying') killUnit(this, e);
       } else {
-        // village structures were reassigned by the defect/shatter pass above;
-        // anything still owned by the dead nation collapses to ruin
-        this.pushEvent({ type: 'building_destroyed', id: e.id, kind: e.kind, owner: pid, col: e.col, row: e.row, by: null });
-        this.removeEntity(e.id);
+        // village structures were reassigned by the defect/shatter pass in
+        // collapseNation; anything still owned by the dead nation collapses to ruin
+        destroyBuilding(this, e);
       }
     }
   }

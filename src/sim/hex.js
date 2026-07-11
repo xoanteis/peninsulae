@@ -2,9 +2,9 @@
 // KayKit hex tile: 2.0 wide across flats (x), 2.31 across corners (z).
 // World: +x east, +z south. Row spacing 1.5*R, col spacing sqrt(3)*R = 2.0.
 
-export const HEX_R = 1.1547005; // outer radius so width across flats is exactly 2.0
-export const COL_SPACING = 2.0;
-export const ROW_SPACING = 1.5 * HEX_R; // 1.732...
+const HEX_R = 1.1547005; // outer radius so width across flats is exactly 2.0
+const COL_SPACING = 2.0;
+const ROW_SPACING = 1.5 * HEX_R; // 1.732...
 
 export function tileToWorld(col, row) {
   return {
@@ -30,7 +30,7 @@ function cubeRoundToOffset(qf, rf) {
   return { col: q + ((r - (r & 1)) >> 1), row: r };
 }
 
-export function offsetToAxial(col, row) {
+function offsetToAxial(col, row) {
   return { q: col - ((row - (row & 1)) >> 1), r: row };
 }
 

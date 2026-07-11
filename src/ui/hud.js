@@ -1,24 +1,16 @@
-// The full HUD: resources, domination race, selection panel, build menu,
-// alerts, minimap, help overlay, end screen. DOM-only; reads sim state.
+// The HUD shell: resources, domination race, build menu, alerts, help overlay,
+// end screen. The minimap and selection/region panel are their own widgets
+// (minimap.js, selpanel.js); global hotkeys live in hotkeys.js. DOM-only;
+// reads sim state.
 
-import { FACTIONS } from '../config/factions.js';
-import { BUILDINGS, UNITS, ERAS, SMITH_UPGRADES } from '../config/rules.js';
-import { REGIONS, MAP_W, MAP_H } from '../config/map.js';
-import { regionConvertCost } from '../sim/regions.js';
+import { FACTIONS, cssColor } from '../config/factions.js';
+import { BUILDINGS, UNITS, ERAS, REPAIR } from '../config/rules.js';
 import { tileToWorld } from '../sim/hex.js';
+import { Minimap } from './minimap.js';
+import { SelectionPanel } from './selpanel.js';
+import { RES_ICONS, BUILD_ICONS, fmtCost } from './icons.js';
 
-// icon choices are player-tested: 🪵's ring cross-section read as a second coin
-// (now 🌲), and 🪙 is too new (2019) — some system fonts draw it as a spiral-marked
-// disc or worse, so gold is the ancient, universally-rendered 💰
-const RES_ICONS = { food: '🌾', wood: '🌲', gold: '💰', identity: '📜' };
-const BUILD_ICONS = {
-  house: '🏠', farm: '🌾', lumbercamp: '🪚', mine: '⛏️', market: '⚖️', church: '⛪',
-  festival: '🎻', barracks: '⚔️', archery: '🏹', tower: '🗼', blacksmith: '🛠️',
-};
-const UNIT_ICONS = { worker: '🧑‍🌾', soldier: '⚔️', crossbow: '🏹', militia: '🛡️' };
 const BUILD_ORDER = ['house', 'farm', 'lumbercamp', 'mine', 'market', 'church', 'barracks', 'tower', 'archery', 'blacksmith', 'festival'];
-
-const fmtCost = cost => Object.entries(cost).map(([k, v]) => `${RES_ICONS[k] ?? k}${v}`).join(' ') || 'free';
 
 export class HUD {
   constructor({ root, world, humanId, controls, rig, audio, recorder }) {
@@ -28,7 +20,6 @@ export class HUD {
     this.rig = rig;
     this.audio = audio;
     this.recorder = recorder;
-    this.regionKey = null;
     this.refresh = 0;
     this.ended = false;
 
@@ -59,10 +50,7 @@ export class HUD {
     this.controls.onPlacingChange = () => this.updatePlaceHint();
     this.el.btnHelp.title = 'How to play (F1)';
     this.el.btnHelp.onclick = () => this.toggleHelp();
-    this.el.btnMute.onclick = () => {
-      const muted = this.audio.toggleMute();
-      this.el.btnMute.textContent = muted ? '🔇' : '🔊';
-    };
+    this.el.btnMute.onclick = () => this.toggleMute();
     // the 💤/🏠/🔧 badges are re-rendered into the res-bar every refresh, so delegate clicks
     this.el.resBar.addEventListener('click', e => {
       if (e.target.closest('#idle-badge')) this.controls.cycleIdleWorker();
@@ -70,19 +58,6 @@ export class HUD {
       if (e.target.closest('#pop-badge')) {
         this.audio.play('ui_click', { volume: 0.5 });
         this.controls.setPlacing('house');
-      }
-    });
-    window.addEventListener('keydown', e => {
-      if (e.target.tagName === 'INPUT') return;
-      if (e.code === 'F1') { e.preventDefault(); this.toggleHelp(); }
-      if (e.code === 'KeyM') this.el.btnMute.click();
-      if (e.code === 'KeyH') { // home: jump to capital (C&C style)
-        const cap = this.world.entities.get(this.world.players[this.humanId].capitalId);
-        if (cap) this.rig.jumpTo(cap.x, cap.z);
-      }
-      if (e.code === 'Space') { // jump to the last alert
-        e.preventDefault();
-        if (this.lastPing) this.rig.jumpTo(this.lastPing.x, this.lastPing.z);
       }
     });
 
@@ -112,9 +87,11 @@ export class HUD {
       };
     }
 
-    this.minimapBase = this.renderMinimapBase();
-    this.el.minimap.addEventListener('pointerdown', e => this.minimapJump(e));
-    this.el.minimap.addEventListener('pointermove', e => { if (e.buttons & 1) this.minimapJump(e); });
+    this.minimap = new Minimap({ canvas: this.el.minimap, world, rig, controls });
+    this.selPanel = new SelectionPanel({
+      el: this.el.selPanel, world, humanId, controls, audio,
+      alert: (text, opts) => this.alert(text, opts),
+    });
 
     this.alertsData = [];
 
@@ -129,6 +106,28 @@ export class HUD {
       { at: 150, text: '⚔ Armies attack-move by default — they fight everything on the way. Alt+right-click marches them PAST enemies without engaging' },
     ];
   }
+
+  // hotkey targets (see hotkeys.js) ------------------------------------------
+  toggleMute() {
+    const muted = this.audio.toggleMute();
+    this.el.btnMute.textContent = muted ? '🔇' : '🔊';
+  }
+
+  jumpHome() {
+    const cap = this.world.entities.get(this.world.players[this.humanId].capitalId);
+    if (cap) this.rig.jumpTo(cap.x, cap.z);
+  }
+
+  jumpToLastAlert() {
+    if (this.lastPing) this.rig.jumpTo(this.lastPing.x, this.lastPing.z);
+  }
+
+  // widget delegates (main.js and the check suite talk to the HUD) -----------
+  setRegion(key) { this.selPanel.setRegion(key); }
+  renderSelPanel(selection) { this.selPanel.render(selection); }
+  regionHtml(key, brief) { return this.selPanel.regionHtml(key, brief); }
+  drawMinimap(dt) { this.minimap.draw(dt); }
+  pingMinimap(x, z) { this.minimap.ping(x, z); }
 
   // ---------- build menu ----------
   buildBuildMenu() {
@@ -166,10 +165,7 @@ export class HUD {
   }
 
   ownsWorker() {
-    for (const e of this.world.entities.values()) {
-      if (e.type === 'unit' && e.kind === 'worker' && e.owner === this.humanId && e.state !== 'dying') return true;
-    }
-    return false;
+    return this.world.workersOf(this.humanId).length > 0;
   }
 
   updatePlaceHint() {
@@ -189,7 +185,7 @@ export class HUD {
   // ---------- help ----------
   buildHelp() {
     const factionRows = Object.values(FACTIONS).map(f => `
-      <tr><td style="color:#${f.color.toString(16).padStart(6, '0')}">${f.name}</td>
+      <tr><td style="color:${cssColor(f.color)}">${f.name}</td>
       <td><em>${f.motto}</em></td><td>${f.bonusText}</td></tr>`).join('');
     this.el.helpOverlay.innerHTML = `
       <div class="help-box panel">
@@ -264,7 +260,7 @@ export class HUD {
   handleEvent(ev, world) {
     const my = id => id === this.humanId;
     const fname = id => id ? FACTIONS[id].name : 'The rebels';
-    const fcolor = id => id ? `#${FACTIONS[id].color.toString(16).padStart(6, '0')}` : '#999';
+    const fcolor = id => id ? cssColor(FACTIONS[id].color) : '#999';
     switch (ev.type) {
       case 'under_attack':
         if (my(ev.owner)) {
@@ -428,273 +424,6 @@ export class HUD {
     };
   }
 
-  // ---------- minimap ----------
-  renderMinimapBase() {
-    const c = document.createElement('canvas');
-    c.width = this.el.minimap.width; c.height = this.el.minimap.height;
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = '#27506e';
-    ctx.fillRect(0, 0, c.width, c.height);
-    const { sx, sy } = this.minimapScale();
-    const px = Math.max(2.4, sx * 2.3);
-    for (const t of this.world.tiles) {
-      if (t.terrain === 'sea') continue;
-      const { x, z } = tileToWorld(t.col, t.row);
-      ctx.fillStyle = { grass: '#8ea44c', forest: '#4e7a34', hills: '#a3a465', mountain: '#8d8d88' }[t.terrain];
-      ctx.fillRect(x * sx - px / 2, z * sy - px / 2, px, px);
-    }
-    return c;
-  }
-
-  minimapScale() {
-    const w = tileToWorld(MAP_W - 1, MAP_H - 1);
-    return { sx: this.el.minimap.width / (w.x + 2), sy: this.el.minimap.height / (w.z + 2) };
-  }
-
-  minimapJump(e) {
-    const r = this.el.minimap.getBoundingClientRect();
-    const { sx, sy } = this.minimapScale();
-    this.rig.jumpTo((e.clientX - r.left) / r.width * this.el.minimap.width / sx,
-      (e.clientY - r.top) / r.height * this.el.minimap.height / sy);
-  }
-
-  pingMinimap(x, z) {
-    this.mmPing = { x, z, t: 3 };
-  }
-
-  drawMinimap(dt) {
-    const ctx = this.el.minimap.getContext('2d');
-    ctx.drawImage(this.minimapBase, 0, 0);
-    const { sx, sy } = this.minimapScale();
-    // region ownership tint
-    const px = Math.max(2.4, sx * 2.3);
-    for (const region of Object.values(this.world.regions)) {
-      if (!region.owner) continue;
-      ctx.fillStyle = `#${FACTIONS[region.owner].color.toString(16).padStart(6, '0')}55`;
-      for (const t of region.tiles) {
-        const { x, z } = tileToWorld(t.col, t.row);
-        ctx.fillRect(x * sx - px / 2, z * sy - px / 2, px, px);
-      }
-    }
-    // units
-    for (const e of this.world.entities.values()) {
-      if (e.type !== 'unit' || e.state === 'dying' || e.owner === '__dead__') continue;
-      ctx.fillStyle = e.owner ? `#${FACTIONS[e.owner].color.toString(16).padStart(6, '0')}` : '#ddd';
-      ctx.fillRect(e.x * sx - 1, e.z * sy - 1, 2.2, 2.2);
-    }
-    // camera viewport — real ground footprint, not a fixed rectangle
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1;
-    const tl = this.controls.screenToGround(0, 0);
-    const br = this.controls.screenToGround(window.innerWidth, window.innerHeight);
-    if (tl && br) {
-      ctx.strokeRect(Math.min(tl.x, br.x) * sx, Math.min(tl.z, br.z) * sy,
-        Math.abs(br.x - tl.x) * sx, Math.abs(br.z - tl.z) * sy);
-    } else {
-      const t = this.rig.target;
-      ctx.strokeRect(t.x * sx - 9, t.z * sy - 7, 18, 14);
-    }
-    // ping
-    if (this.mmPing && this.mmPing.t > 0) {
-      this.mmPing.t -= dt;
-      const k = 1 - (this.mmPing.t % 0.8) / 0.8;
-      ctx.strokeStyle = `rgba(255,80,60,${1 - k})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(this.mmPing.x * sx, this.mmPing.z * sy, 3 + k * 9, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  }
-
-  // ---------- selection / region panel ----------
-  setRegion(key) { this.regionKey = key; }
-
-  renderSelPanel(selection) {
-    const panel = this.el.selPanel;
-    const world = this.world;
-    const ids = [...selection];
-    const ents = ids.map(id => world.entities.get(id)).filter(Boolean);
-
-    let html = '';
-    if (ents.length === 0 && this.regionKey) {
-      html = this.regionHtml(this.regionKey);
-    } else if (ents.length === 1 && ents[0].type === 'building') {
-      html = this.buildingHtml(ents[0]);
-    } else if (ents.length >= 1) {
-      const byKind = {};
-      for (const e of ents) byKind[e.kind] = (byKind[e.kind] ?? 0) + 1;
-      const f = FACTIONS[ents[0].owner] ?? null;
-      const yours = ents.some(e => e.owner === this.humanId);
-      html = `<div class="sp-units">` + Object.entries(byKind).map(([k, n]) =>
-        `<span class="sp-unit">${UNIT_ICONS[k] ?? '👤'} ${f?.unitNames?.[k] ?? k} × ${n}</span>`).join('') + `</div>`
-        + (yours ? `<div class="sp-hint">two-finger tap: move · attack · gather · build</div>`
-          : `<div class="sp-hint">${f ? f.name : 'neutral'} — not under your command</div>`);
-    }
-    panel.classList.toggle('hidden', !html);
-    if (html && panel.dataset.html !== html) {
-      panel.dataset.html = html;
-      panel.innerHTML = html;
-      this.wireSelPanel(panel, ents);
-    }
-    if (html) {
-      // per-tick numbers are patched into stable spans instead of being part of
-      // the structural html — a full rebuild mid-click would swallow the press
-      const b0 = ents.length === 1 && ents[0].type === 'building' ? ents[0] : null;
-      const pct = panel.querySelector('.sp-pct');
-      if (pct && b0?.trainQueue?.length) {
-        pct.textContent = `${Math.round(b0.trainQueue[0].t / b0.trainQueue[0].time * 100)}%`;
-      }
-      const timer = panel.querySelector('.sp-timer');
-      const t = this.world.players[this.humanId].eraTimer;
-      if (timer && t != null) timer.textContent = Math.ceil(t);
-    }
-  }
-
-  buildingHtml(b) {
-    const world = this.world;
-    const def = b.kind === 'village' ? { name: 'Village' } : BUILDINGS[b.kind];
-    const f = b.owner ? FACTIONS[b.owner] : null;
-    const own = b.owner === this.humanId;
-    let html = `<div class="sp-title">${def.name}${f ? ` · <span style="color:${hex(f.color)}">${f.name}</span>` : ' · unclaimed'}</div>`;
-    html += `<div class="sp-row">❤️ ${Math.ceil(b.hp)}/${b.maxHp}${b.progress < 1 ? ` · 🏗 ${Math.round(b.progress * 100)}%` : ''}</div>`;
-    if (own && b.progress >= 1) {
-      const p = world.players[this.humanId];
-      if (BUILDINGS[b.kind]?.trains) {
-        html += `<div class="sp-actions">` + BUILDINGS[b.kind].trains.map(kind => {
-          const cost = {};
-          for (const [k, v] of Object.entries(UNITS[kind].cost)) {
-            cost[k] = Math.round(v * (kind !== 'worker' ? (f.bonus.soldierCostMul ?? 1) : 1));
-          }
-          return `<button data-train="${kind}">${UNIT_ICONS[kind]} ${f.unitNames[kind] ?? kind}<small>${fmtCost(cost)}</small></button>`;
-        }).join('') + `</div>`;
-        // the queue row is ALWAYS rendered, with free slots marked: the panel is
-        // bottom-anchored, so any height change shoves the train buttons up from
-        // under a spam-clicking cursor. Chips group by kind (×N) so a full queue
-        // fits the fixed-width row; ✕ refunds the group's newest job. The live %
-        // sits in a span updated in place (renderSelPanel) — in this html it would
-        // rebuild the panel every tick and eat clicks. Cap of 10 mirrors trainUnit.
-        const groups = [];
-        b.trainQueue.forEach((job, i) => {
-          const g = groups[groups.length - 1];
-          if (g && g.kind === job.kind) { g.n++; g.last = i; }
-          else groups.push({ kind: job.kind, n: 1, first: i, last: i });
-        });
-        html += `<div class="sp-row sp-queue">⏳ ` + groups.map(g =>
-          `<button class="sp-chip" data-cancel="${g.last}" title="cancel & refund the newest">${UNIT_ICONS[g.kind] ?? '👤'}${g.first === 0 ? ` <span class="sp-pct"></span>` : ''}${g.n > 1 ? ` ×${g.n}` : ''} ✕</button>`
-        ).join('') + `<span class="sp-free">${'·'.repeat(Math.max(0, 10 - b.trainQueue.length))}</span></div>`;
-        html += `<div class="sp-hint">two-finger tap the map to set the rally point</div>`;
-      }
-      if (b.kind === 'capital') {
-        const next = ERAS[p.era + 1];
-        if (p.eraTimer != null) html += `<div class="sp-row">👑 Advancing… <span class="sp-timer"></span>s</div>`;
-        else if (next) html += `<div class="sp-actions"><button data-era="1">👑 ${next.name} era<small>${fmtCost(next.cost)}</small></button></div>`;
-        else html += `<div class="sp-row">👑 Golden Age — the summit of your power</div>`;
-      }
-      if (b.kind === 'blacksmith') {
-        html += `<div class="sp-actions">` + Object.entries(SMITH_UPGRADES).map(([key, up]) => {
-          const owned = key === 'attack' ? world.players[this.humanId].upgrades.dmg > 0 : world.players[this.humanId].upgrades.armor > 0;
-          return owned ? `<span class="sp-row">✅ ${up.name}</span>` : `<button data-smith="${key}">${up.name}<small>${fmtCost(up.cost)}</small></button>`;
-        }).join('') + `</div>`;
-      }
-      if (b.slots) {
-        const def2 = BUILDINGS[b.kind];
-        const yields = Object.keys(def2.slotRate).map(k => `${RES_ICONS[k]} ${k}`).join(' ');
-        html += `<div class="sp-row">👷 ${b.slots.length}/${def2.slots} working — yields ${yields} · staff with right-click / two-finger tap</div>`;
-      }
-    }
-    // every building anchors a region — show its allegiance and actions
-    const tile = world.tileAt(b.col, b.row);
-    if (tile?.region) {
-      html += this.regionHtml(tile.region, true);
-    }
-    return html;
-  }
-
-  regionHtml(key, brief = false) {
-    const world = this.world;
-    const region = world.regions[key];
-    const meta = region.meta;
-    const owner = region.owner ? FACTIONS[region.owner] : null;
-    let html = `<div class="sp-title">${brief ? '—' : ''} ${meta.name} <small>(${meta.city})</small>
-      ${owner ? `· <span style="color:${hex(owner.color)}">${owner.name}${region.resent ? ' (held by force)' : ''}</span>` : '· unclaimed'}</div>`;
-    html += `<div class="sp-row">Tribute: ${Object.entries(meta.tribute).map(([k, v]) => `${RES_ICONS[k]}${v}/s`).join(' ')}${region.coastal ? ' · ⚓ coastal' : ''}</div>`;
-    if (region.conversion) {
-      const f = FACTIONS[region.conversion.pid];
-      html += `<div class="sp-row">🕊 ${f.name} converting… ${Math.round(region.conversion.t / 40 * 100)}%${region.conversion.suppressed ? ' (suppressed by garrison)' : ''}</div>`;
-    }
-    if (region.conquest) {
-      const f = FACTIONS[region.conquest.pid];
-      html += `<div class="sp-row">⚔️ <span style="color:${hex(f.color)}">${f.name}</span> seizing the village…</div>`;
-    }
-    if (region.owner !== this.humanId) {
-      const cost = regionConvertCost(world, this.humanId, key);
-      const blocked = meta.capitalOf && region.owner === meta.capitalOf && world.players[meta.capitalOf].alive;
-      if (!blocked && !region.conversion) {
-        // warn BEFORE the identity is spent — a paid sermon stalls under a garrison
-        const foes = world.unitsNear(region.center.x, region.center.z, 5.5)
-          .filter(u => u.owner && u.owner !== this.humanId && u.owner !== '__dead__' && u.kind !== 'worker').length;
-        html += `<div class="sp-actions"><button data-convert="${key}">🕊 Convert to our cause<small>📜${cost}</small></button></div>`;
-        if (foes) html += `<div class="sp-hint">⚠️ enemy soldiers camp here — conversion will stall until they leave</div>`;
-        const owned = Object.values(world.regions).filter(r => r.owner === this.humanId).length;
-        if (owned > 2) html += `<div class="sp-hint">a wide realm raises the price of each new conversion</div>`;
-      } else if (blocked) {
-        html += `<div class="sp-hint">a capital region — raze the castle to break it</div>`;
-      }
-    }
-    return html;
-  }
-
-  // rebuild the panel NOW, inside the click handler — deferring to the next
-  // update tick risks replacing the button mid-press and eating the click
-  refreshSelPanel(panel) {
-    panel.dataset.html = '';
-    this.renderSelPanel(this.controls.selection);
-  }
-
-  wireSelPanel(panel, ents) {
-    const world = this.world;
-    const b = ents[0];
-    panel.querySelectorAll('[data-train]').forEach(btn => {
-      btn.onclick = () => {
-        const err = world.trainUnit(this.humanId, b.id, btn.dataset.train);
-        this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
-        if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        this.refreshSelPanel(panel);
-      };
-    });
-    panel.querySelectorAll('[data-cancel]').forEach(btn => {
-      btn.onclick = () => {
-        const err = world.cancelTrain(this.humanId, b.id, Number(btn.dataset.cancel));
-        this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
-        this.refreshSelPanel(panel);
-      };
-    });
-    panel.querySelectorAll('[data-era]').forEach(btn => {
-      btn.onclick = () => {
-        const err = world.advanceEra(this.humanId);
-        this.audio.play(err ? 'ui_error' : 'era', { volume: 0.7 });
-        if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        this.refreshSelPanel(panel);
-      };
-    });
-    panel.querySelectorAll('[data-smith]').forEach(btn => {
-      btn.onclick = () => {
-        const err = world.buySmithUpgrade(this.humanId, btn.dataset.smith);
-        this.audio.play(err ? 'ui_error' : 'ui_click', { volume: 0.6 });
-        if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        this.refreshSelPanel(panel);
-      };
-    });
-    panel.querySelectorAll('[data-convert]').forEach(btn => {
-      btn.onclick = () => {
-        const err = world.startConversion(this.humanId, btn.dataset.convert);
-        this.audio.play(err ? 'ui_error' : 'coins', { volume: 0.8 });
-        if (err) this.alert(`✋ ${err}`, { ttl: 3 });
-        this.refreshSelPanel(panel);
-      };
-    });
-  }
-
   // ---------- per-frame ----------
   update(dt, selection) {
     this.refresh -= dt;
@@ -707,13 +436,12 @@ export class HUD {
 
     const p = this.world.players[this.humanId];
     // resources + action badges (💤 idle workers · 🏠 housing · 🔧 damaged buildings)
-    let idleW = 0, queuedPop = 0, hurtN = 0;
+    const idleW = this.world.workersOf(this.humanId, { idleOnly: true }).length;
+    let queuedPop = 0, hurtN = 0;
     for (const e of this.world.entities.values()) {
-      if (e.type === 'unit') {
-        if (e.kind === 'worker' && e.owner === this.humanId && e.state === 'idle') idleW++;
-      } else if (e.owner === this.humanId && e.progress >= 1) {
+      if (e.type === 'building' && e.owner === this.humanId && e.progress >= 1) {
         for (const job of e.trainQueue) queuedPop += UNITS[job.kind]?.pop ?? 0;
-        if (e.hp < e.maxHp * 0.6) hurtN++;
+        if (e.hp < e.maxHp * REPAIR.damagedFrac) hurtN++;
       }
     }
     // predictive: warn when the QUEUE will outrun housing, not when it already has
@@ -734,7 +462,7 @@ export class HUD {
     let segs = '';
     for (const [fid, f] of Object.entries(FACTIONS)) {
       const n = regions.filter(r => r.owner === fid).length;
-      if (n) segs += `<div class="dom-seg" style="width:${n / total * 100}%;background:${hex(f.color)}" title="${f.name}: ${n}"></div>`;
+      if (n) segs += `<div class="dom-seg" style="width:${n / total * 100}%;background:${cssColor(f.color)}" title="${f.name}: ${n}"></div>`;
     }
     const neutral = regions.filter(r => !r.owner).length;
     if (neutral) segs += `<div class="dom-seg" style="width:${neutral / total * 100}%;background:#777" title="unclaimed: ${neutral}"></div>`;
@@ -768,5 +496,3 @@ export class HUD {
     if (!this.ended && !p.alive) this.showPlayerFell(p.lastAttacker);
   }
 }
-
-function hex(c) { return `#${c.toString(16).padStart(6, '0')}`; }

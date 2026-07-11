@@ -1,7 +1,8 @@
 // DOM overlays that track world positions: health bars, construction progress,
 // floating resource/damage text. Crisp, cheap, pooled.
 
-import { FACTIONS } from '../config/factions.js';
+import { FACTIONS, cssColor } from '../config/factions.js';
+import { worldToScreen } from './project.js';
 
 const BAR_POOL = 72;
 const FLOAT_POOL = 40;
@@ -64,23 +65,7 @@ export class Overlays {
   }
 
   project(x, y, z) {
-    // manual projection to avoid importing three here
-    const cam = this.camera;
-    const e = cam.matrixWorldInverse.elements, p = cam.projectionMatrix.elements;
-    // world -> view
-    const vx = e[0] * x + e[4] * y + e[8] * z + e[12];
-    const vy = e[1] * x + e[5] * y + e[9] * z + e[13];
-    const vz = e[2] * x + e[6] * y + e[10] * z + e[14];
-    // view -> clip
-    const cx = p[0] * vx + p[4] * vy + p[8] * vz + p[12];
-    const cy = p[1] * vx + p[5] * vy + p[9] * vz + p[13];
-    const cw = p[3] * vx + p[7] * vy + p[11] * vz + p[15];
-    if (cw <= 0) return null;
-    const r = this.canvas.getBoundingClientRect();
-    return {
-      x: (cx / cw + 1) / 2 * r.width + r.left,
-      y: (-cy / cw + 1) / 2 * r.height + r.top,
-    };
+    return worldToScreen(this.camera, this.canvas, x, y, z);
   }
 
   float(text, x, y, z, color = '#ffe9b0') {
@@ -153,7 +138,7 @@ export class Overlays {
       if (L.owner !== L.region.owner) { // repaint only on flips
         L.owner = L.region.owner;
         const f = L.owner ? FACTIONS[L.owner] : null;
-        L.el.style.color = f ? `#${f.color.toString(16).padStart(6, '0')}` : '#cfc7b8';
+        L.el.style.color = f ? cssColor(f.color) : '#cfc7b8';
         L.el.classList.toggle('owned', !!f);
       }
     }
@@ -204,9 +189,8 @@ export class Overlays {
 
     // 💤 over own idle workers
     let m = 0;
-    for (const e of world.entities.values()) {
+    for (const e of world.workersOf(this.humanId, { idleOnly: true })) {
       if (m >= this.idleMarks.length) break;
-      if (e.type !== 'unit' || e.kind !== 'worker' || e.owner !== this.humanId || e.state !== 'idle') continue;
       const s = this.project(e.x, 1.9, e.z);
       if (!s) continue;
       const el = this.idleMarks[m++];

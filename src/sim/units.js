@@ -5,7 +5,7 @@
 import { UNITS, BUILDINGS, NODES, REPAIR } from '../config/rules.js';
 import { FACTIONS } from '../config/factions.js';
 import { tileToWorld, worldToTile, neighbors, hexDistance } from './hex.js';
-import { tryAttack, acquireTarget } from './combat.js';
+import { tryAttack, acquireTarget, bodyRadius } from './combat.js';
 
 const ARRIVE = 0.18;
 
@@ -109,7 +109,7 @@ export function updateUnit(world, u, dt) {
       const t = world.entities.get(u.task?.targetId);
       if (!t || t.hp <= 0) { u.state = 'idle'; u.task = null; break; }
       const stats = UNITS[u.kind];
-      const targetR = t.type === 'building' ? 0.95 : 0.3;
+      const targetR = bodyRadius(t);
       const d = dist(u.x, u.z, t.x, t.z) - targetR;
       if (d <= stats.range) {
         u.state = 'fighting';
@@ -245,7 +245,7 @@ function nearestEnemyBuilding(world, u, owner, maxDist) {
   let best = null, bestD = maxDist;
   for (const e of world.entities.values()) {
     if (e.type !== 'building' || e.owner !== owner || e.hp <= 0) continue;
-    const d = dist(u.x, u.z, e.x, e.z) - 0.95;
+    const d = dist(u.x, u.z, e.x, e.z) - bodyRadius(e);
     if (d < bestD) { best = e; bestD = d; }
   }
   return best;
@@ -328,70 +328,76 @@ function nearestUncrowdedForest(world, u, col, row, maxR) {
   return best;
 }
 
-// once-a-second feedback shared by every work type (hammer SFX, floaters)
-function workPulse(world, u, dt, task) {
+// once-a-second feedback shared by every work type (hammer SFX, floaters);
+// `kind` labels slot yields so the UI can name the building
+function workPulse(world, u, dt, task, kind) {
   if ((u.workT | 0) !== ((u.workT - dt) | 0)) {
-    world.pushEvent({ type: 'work_pulse', id: u.id, x: u.x, z: u.z, task });
+    world.pushEvent({ type: 'work_pulse', id: u.id, x: u.x, z: u.z, task, kind });
   }
 }
 
 function doWork(world, u, dt) {
   const t = u.task;
-  const p = world.players[u.owner];
-  const f = FACTIONS[u.owner];
   if (!t) { u.state = 'idle'; return; }
   u.anim = 'work';
   u.workT = (u.workT ?? 0) + dt;
+  if (t.type === 'construct') workConstruct(world, u, dt);
+  else if (t.type === 'repair') workRepair(world, u, dt);
+  else workGather(world, u, dt);
+}
 
-  if (t.type === 'construct') {
-    const b = world.entities.get(t.buildingId);
-    if (!b) { u.state = 'idle'; u.task = null; return; }
-    if (b.progress >= 1) { afterBuild(world, u, b); return; }
-    u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const def = BUILDINGS[b.kind];
-    const rate = UNITS.worker.buildRate * (12 / Math.max(def.buildTime, 1));
-    b.progress = Math.min(1, b.progress + rate * dt);
-    b.lastProgressAt = world.time; // the AI demolishes sites that stall
-    b.hp = Math.min(b.maxHp, b.hp + b.maxHp * rate * dt * 0.9);
-    workPulse(world, u, dt, 'construct');
-    if (b.progress >= 1) {
-      b.hp = b.maxHp;
-      if (def.popCap && b.owner) world.players[b.owner].popCap += def.popCap;
-      world.pushEvent({ type: 'building_complete', id: b.id, kind: b.kind, owner: b.owner, col: b.col, row: b.row });
-      afterBuild(world, u, b);
-    }
+function workConstruct(world, u, dt) {
+  const b = world.entities.get(u.task.buildingId);
+  if (!b) { u.state = 'idle'; u.task = null; return; }
+  if (b.progress >= 1) { afterBuild(world, u, b); return; }
+  u.facing = Math.atan2(b.x - u.x, b.z - u.z);
+  const def = BUILDINGS[b.kind];
+  const rate = UNITS.worker.buildRate * (12 / Math.max(def.buildTime, 1));
+  b.progress = Math.min(1, b.progress + rate * dt);
+  b.lastProgressAt = world.time; // the AI demolishes sites that stall
+  b.hp = Math.min(b.maxHp, b.hp + b.maxHp * rate * dt * 0.9);
+  workPulse(world, u, dt, 'construct');
+  if (b.progress >= 1) {
+    b.hp = b.maxHp;
+    if (def.popCap && b.owner) world.players[b.owner].popCap += def.popCap;
+    world.pushEvent({ type: 'building_complete', id: b.id, kind: b.kind, owner: b.owner, col: b.col, row: b.row });
+    afterBuild(world, u, b);
+  }
+}
+
+function workRepair(world, u, dt) {
+  const t = u.task;
+  const p = world.players[u.owner];
+  const b = world.entities.get(t.buildingId);
+  if (!b || b.hp <= 0 || b.owner !== u.owner) { u.state = 'idle'; u.task = null; return; }
+  if (b.hp >= b.maxHp) {
+    // a right-click on a chipped mine means "put him to work there", not "patch and quit":
+    // when the repaired building has a free work slot, step into it instead of loitering
+    if (b.slots && b.slots.length < (BUILDINGS[b.kind]?.slots ?? 0)) {
+      u.task = { type: 'gather', target: { type: 'slot', buildingId: b.id } };
+      u.state = 'toWork';
+    } else { u.state = 'idle'; u.task = null; }
     return;
   }
-
-  if (t.type === 'repair') {
-    const b = world.entities.get(t.buildingId);
-    if (!b || b.hp <= 0 || b.owner !== u.owner) { u.state = 'idle'; u.task = null; return; }
-    if (b.hp >= b.maxHp) {
-      // a right-click on a chipped mine means "put him to work there", not "patch and quit":
-      // when the repaired building has a free work slot, step into it instead of loitering
-      if (b.slots && b.slots.length < (BUILDINGS[b.kind]?.slots ?? 0)) {
-        u.task = { type: 'gather', target: { type: 'slot', buildingId: b.id } };
-        u.state = 'toWork';
-      } else { u.state = 'idle'; u.task = null; }
-      return;
-    }
-    u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const def = b.kind === 'village' ? { cost: {} } : BUILDINGS[b.kind];
-    // masonry costs wood: a full 0->max restore bills a share of the build cost
-    const woodPerHp = REPAIR.woodShare * (def.cost?.wood ?? REPAIR.fallbackWood) / b.maxHp;
-    const hpGain = Math.min(REPAIR.hpPerSec * dt, b.maxHp - b.hp);
-    const bill = hpGain * woodPerHp;
-    if (p.res.wood < bill) {
-      if (!t.warned) { t.warned = true; world.pushEvent({ type: 'ui_error', message: 'No wood to keep repairing', owner: u.owner }); }
-      u.state = 'idle'; u.task = null; return;
-    }
-    p.res.wood -= bill;
-    b.hp += hpGain;
-    workPulse(world, u, dt, 'repair');
-    return;
+  u.facing = Math.atan2(b.x - u.x, b.z - u.z);
+  const def = BUILDINGS[b.kind];
+  // masonry costs wood: a full 0->max restore bills a share of the build cost
+  const woodPerHp = REPAIR.woodShare * (def.cost?.wood ?? REPAIR.fallbackWood) / b.maxHp;
+  const hpGain = Math.min(REPAIR.hpPerSec * dt, b.maxHp - b.hp);
+  const bill = hpGain * woodPerHp;
+  if (p.res.wood < bill) {
+    if (!t.warned) { t.warned = true; world.pushEvent({ type: 'ui_error', message: 'No wood to keep repairing', owner: u.owner }); }
+    u.state = 'idle'; u.task = null; return;
   }
+  p.res.wood -= bill;
+  b.hp += hpGain;
+  workPulse(world, u, dt, 'repair');
+}
 
-  const tg = t.target;
+function workGather(world, u, dt) {
+  const tg = u.task.target;
+  const p = world.players[u.owner];
+  const f = FACTIONS[u.owner];
   let pulseKind; // building kind for slot work, so the UI can label the yield
   if (tg.type === 'forest') {
     const tile = world.tileAt(tg.col, tg.row);
@@ -436,10 +442,7 @@ function doWork(world, u, dt) {
     // identity flow from the working of their own land
     if (b.kind === 'mine' && f?.bonus.mineIdentity) p.res.identity += f.bonus.mineIdentity * dt;
   }
-  // periodic feedback for the renderer
-  if ((u.workT | 0) !== ((u.workT - dt) | 0)) {
-    world.pushEvent({ type: 'work_pulse', id: u.id, x: u.x, z: u.z, task: tg?.type ?? t.type, kind: pulseKind });
-  }
+  workPulse(world, u, dt, tg.type, pulseKind);
 }
 
 function afterBuild(world, u, b) {

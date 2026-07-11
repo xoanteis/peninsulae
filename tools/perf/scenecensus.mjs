@@ -5,9 +5,8 @@
 // exactly the countable ones. Found the 840-unique-materials bug (PR #30).
 //
 //   PWTOOLS=<dir> QUERY='?faction=galicia' node tools/verify.mjs <outdir> tools/perf/scenecensus.mjs
-export async function run(page, { sleep, report }) {
-  await sleep(1800);
-  await page.evaluate(() => { const w = window.__game.world; for (let i = 0; i < 9000; i++) w.step(); w.events.length = 0; });
+export async function run(page, { sleep, report, ffwd }) {
+  await ffwd(); // minute 15 — armies out
   await sleep(1200);
   report.checks.census = await page.evaluate(() => {
     const g = window.__game;

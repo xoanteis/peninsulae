@@ -3,42 +3,34 @@
 // one JSON line per game with winner, duration, flip methods, and final state.
 //   node tools/tournament.mjs [games=20] [maxMinutes=60] [--patch=exp.json]
 
-import { World } from '../src/sim/world.js';
-import { AIController } from '../src/sim/ai.js';
-import { TICK_MS } from '../src/config/rules.js';
+import { runGame, ticksToMinutes } from './headless.mjs';
 import { applyPatchArg } from './patch.mjs';
 
 applyPatchArg(process.argv);
 const pos = process.argv.slice(2).filter(a => !a.startsWith('--'));
 const games = Number(pos[0] || 20);
 const maxMinutes = Number(pos[1] || 60);
-const ticksPerGame = maxMinutes * 60000 / TICK_MS;
 
 for (let g = 0; g < games; g++) {
-  const world = new World('galicia');
-  world.ai.push(new AIController(world, 'galicia')); // nobody idles
   const flips = {};
   const eras = {};
   const fell = {}; // nation -> its killer and the minute it died
   let firstFall = null;
 
-  let t = 0;
-  for (; t < ticksPerGame; t++) {
-    world.step();
-    for (const ev of world.events) {
+  const { world, ticks } = runGame({
+    minutes: maxMinutes,
+    onEvent(ev, t) {
       if (ev.type === 'region_flipped' && ev.owner) {
         flips[ev.owner] ??= { conviction: 0, conquest: 0, defection: 0 };
         flips[ev.owner][ev.how] = (flips[ev.owner][ev.how] ?? 0) + 1;
       }
       if (ev.type === 'nation_fell') {
         if (!firstFall) firstFall = ev.owner;
-        fell[ev.owner] = { by: ev.conqueror ?? null, min: +(t * TICK_MS / 60000).toFixed(1) };
+        fell[ev.owner] = { by: ev.conqueror ?? null, min: +ticksToMinutes(t).toFixed(1) };
       }
       if (ev.type === 'era_advanced') eras[ev.owner] = ev.era;
-    }
-    world.events.length = 0;
-    if (world.winner) break;
-  }
+    },
+  });
 
   const finalRegions = {};
   for (const r of Object.values(world.regions)) {
@@ -48,7 +40,7 @@ for (let g = 0; g < games; g++) {
   console.log(JSON.stringify({
     game: g,
     winner: world.winner ?? null,
-    minutes: +(t * TICK_MS / 60000).toFixed(1),
+    minutes: +ticksToMinutes(ticks).toFixed(1),
     firstFall,
     fell,
     finalRegions,

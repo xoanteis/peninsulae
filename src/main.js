@@ -10,6 +10,7 @@ import { Controls } from './ui/controls.js';
 import { TouchControls } from './input/touch.js';
 import { Overlays } from './ui/overlays.js';
 import { HUD } from './ui/hud.js';
+import { installHotkeys } from './ui/hotkeys.js';
 import { MatchRecorder } from './ui/recorder.js';
 import { pickFaction } from './ui/factionSelect.js';
 import { AudioEngine } from './audio/audio.js';
@@ -38,7 +39,6 @@ async function boot() {
 
   const world = new World(humanFaction);
   const recorder = new MatchRecorder(world, humanFaction);
-  recorder.attachHotkey();
   const audio = new AudioEngine();
   const armAudio = () => { audio.init(); window.removeEventListener('pointerdown', armAudio); window.removeEventListener('keydown', armAudio); };
   window.addEventListener('pointerdown', armAudio);
@@ -86,27 +86,14 @@ async function boot() {
         case 'build': world.orderBuild(humanFaction, o.ids, o.buildingId); break;
         case 'repair': world.orderRepair(humanFaction, o.ids, o.buildingId); audio.play('ui_click', { volume: 0.4 }); break;
         case 'workslot': world.orderGather(humanFaction, o.ids, { type: 'slot', buildingId: o.buildingId }); break;
-        case 'rally': audio.play('ui_click', { volume: 0.4 }); break;
+        case 'rally': world.orderRally(humanFaction, o.buildingId, o.x, o.z); audio.play('ui_click', { volume: 0.4 }); break;
         case 'place': {
           const err = world.placeBuilding(humanFaction, o.kind, o.col, o.row);
           if (err) world.pushEvent({ type: 'ui_error', message: err });
           else {
             const t = world.tileAt(o.col, o.row);
-            let ids = [...selection].filter(id => world.entities.get(id)?.kind === 'worker');
-            if (!ids.length && t.building) {
-              // no builder in the selection: draft the nearest worker, idle first
-              const site = world.entities.get(t.building);
-              const workers = [...world.entities.values()].filter(e =>
-                e.type === 'unit' && e.kind === 'worker' && e.owner === humanFaction && e.state !== 'dying');
-              const pool = workers.filter(w => w.state === 'idle');
-              let best = null, bestD = Infinity;
-              for (const w of (pool.length ? pool : workers)) {
-                const d = Math.hypot(w.x - site.x, w.z - site.z);
-                if (d < bestD) { bestD = d; best = w; }
-              }
-              if (best) ids = [best.id];
-            }
-            if (ids.length && t.building) world.orderBuild(humanFaction, ids, t.building);
+            // a worker in the selection builds it; otherwise the sim drafts the nearest
+            if (t.building) world.draftBuilder(humanFaction, t.building, [...selection]);
           }
           break;
         }
@@ -125,7 +112,7 @@ async function boot() {
   // HUD first: it resets #hud's innerHTML, which would orphan the overlay layer
   const hud = new HUD({ root: hudRoot, world, humanId: humanFaction, controls, rig, audio, recorder });
   const overlays = new Overlays(hudRoot, camera, canvas, world, humanFaction);
-  hud.updatePlaceHint = hud.updatePlaceHint.bind(hud);
+  installHotkeys({ controls, hud, recorder });
   audio.setListener(rig.target.x, rig.target.z, rig.dist);
 
   // placement ghost: hex outline following the cursor while placing

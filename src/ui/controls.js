@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { worldToTile } from '../sim/hex.js';
+import { REPAIR } from '../config/rules.js';
+import { worldToScreen } from './project.js';
 
 // Player interaction, trackpad-first:
 //   click: select own unit/building · drag: box-select units
@@ -38,7 +40,7 @@ export class Controls {
     canvas.addEventListener('pointermove', e => this.onMove(e));
     canvas.addEventListener('pointerup', e => this.onUp(e));
     canvas.addEventListener('contextmenu', e => e.preventDefault());
-    window.addEventListener('keydown', e => this.onKey(e));
+    // keyboard shortcuts arrive via ui/hotkeys.js (the single global listener)
   }
 
   myUnitIds({ militaryOnly = false } = {}) {
@@ -49,63 +51,43 @@ export class Controls {
     });
   }
 
-  onKey(e) {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-    if (e.code === 'Escape') {
-      if (this.amove) { this.amove = false; this.canvas.style.cursor = ''; return; }
-      if (this.placing) this.setPlacing(null);
-      else { this.selection.clear(); this.onSelect(); }
+  // hotkey targets (see ui/hotkeys.js) --------------------------------------
+  cancelOrDeselect() { // Esc
+    if (this.amove) { this.amove = false; this.canvas.style.cursor = ''; return; }
+    if (this.placing) this.setPlacing(null);
+    else { this.selection.clear(); this.onSelect(); }
+  }
+
+  // control groups: Ctrl+1..9 assign, 1..9 recall, double-tap centers
+  groupKey(n, assign) {
+    if (assign) {
+      this.groups[n] = this.myUnitIds();
+      this.onOrder({ type: 'ui', sound: 'blip' });
       return;
     }
-    // control groups: Ctrl+1..9 assign, 1..9 recall, double-tap centers
-    const m = e.code.match(/^Digit([1-9])$/);
-    if (m) {
-      e.preventDefault();
-      const n = m[1];
-      if (e.ctrlKey || e.metaKey) {
-        this.groups[n] = this.myUnitIds();
-        this.onOrder({ type: 'ui', sound: 'blip' });
-      } else {
-        const alive = (this.groups[n] ?? []).filter(id => {
-          const u = this.world.entities.get(id);
-          return u && u.state !== 'dying';
-        });
-        this.groups[n] = alive;
-        if (alive.length) {
-          this.selection.clear();
-          for (const id of alive) this.selection.add(id);
-          this.onSelect();
-          const now = performance.now();
-          if (this._groupTap.code === n && now - this._groupTap.t < 450) this.centerOnSelection();
-          this._groupTap = { code: n, t: now };
-        }
-      }
-      return;
+    const alive = (this.groups[n] ?? []).filter(id => {
+      const u = this.world.entities.get(id);
+      return u && u.state !== 'dying';
+    });
+    this.groups[n] = alive;
+    if (alive.length) {
+      this.selection.clear();
+      for (const id of alive) this.selection.add(id);
+      this.onSelect();
+      const now = performance.now();
+      if (this._groupTap.code === n && now - this._groupTap.t < 450) this.centerOnSelection();
+      this._groupTap = { code: n, t: now };
     }
-    switch (e.code) {
-      case 'KeyF': { // attack-move ("fight-move"; A stays camera-pan like WASD)
-        const ids = this.myUnitIds({ militaryOnly: true });
-        if (ids.length) { this.amove = true; this.canvas.style.cursor = 'crosshair'; }
-        break;
-      }
-      case 'KeyX': { // stop (S belongs to camera pan — the old double-binding
-        const ids = this.myUnitIds(); // halted armies while players scrolled)
-        if (ids.length) { this.onOrder({ type: 'stop', ids }); }
-        break;
-      }
-      case 'Period': { // cycle idle workers, RTS-style
-        this.cycleIdleWorker();
-        break;
-      }
-      case 'KeyP': {
-        this.onOrder({ type: 'pause' });
-        break;
-      }
-      case 'KeyE': { // select every soldier on screen
-        this.selectSoldiersOnScreen();
-        break;
-      }
-    }
+  }
+
+  armAttackMove() { // F: attack-move for the selected army
+    const ids = this.myUnitIds({ militaryOnly: true });
+    if (ids.length) { this.amove = true; this.canvas.style.cursor = 'crosshair'; }
+  }
+
+  stopSelection() { // X
+    const ids = this.myUnitIds();
+    if (ids.length) this.onOrder({ type: 'stop', ids });
   }
 
   selectSoldiersOnScreen() {
@@ -147,9 +129,8 @@ export class Controls {
   }
 
   project(x, z) {
-    const v = new THREE.Vector3(x, 0.5, z).project(this.camera);
-    const r = this.canvas.getBoundingClientRect();
-    return { x: (v.x + 1) / 2 * r.width + r.left, y: (-v.y + 1) / 2 * r.height + r.top, behind: v.z > 1 };
+    const s = worldToScreen(this.camera, this.canvas, x, 0.5, z);
+    return s ? { x: s.x, y: s.y, behind: false } : { x: 0, y: 0, behind: true };
   }
 
   pickEntity(cx, cy, { maxPx = 26 } = {}) {
@@ -310,12 +291,9 @@ export class Controls {
     this.onSelect(hit, regionKey);
   }
 
-  // contextual order for the current selection (right-click / long-press)
-  // shared by the Period key and the HUD's 💤 badge
+  // cycle idle workers, RTS-style — shared by the Period key and the HUD's 💤 badge
   cycleIdleWorker() {
-    const idle = [...this.world.entities.values()].filter(u =>
-      u.type === 'unit' && u.owner === this.humanId && u.kind === 'worker'
-      && u.state === 'idle');
+    const idle = this.world.workersOf(this.humanId, { idleOnly: true });
     if (!idle.length) return;
     this._idleCycle = ((this._idleCycle ?? -1) + 1) % idle.length;
     const u = idle[this._idleCycle];
@@ -357,20 +335,13 @@ export class Controls {
       const bId = [...this.selection].find(id => this.world.entities.get(id)?.type === 'building');
       const b = bId && this.world.entities.get(bId);
       if (b && b.owner === this.humanId) {
-        b.rally = { x: p.x, z: p.z };
-        this.onOrder({ type: 'rally', x: p.x, z: p.z });
+        this.onOrder({ type: 'rally', buildingId: b.id, x: p.x, z: p.z });
       }
       return;
     }
 
-    if (hit && hit.owner !== this.humanId && hit.owner !== undefined && !(hit.owner === null && hit.type === 'building' && hit.kind === 'village')) {
-      // enemy or neutral guard: attack
-      if (hit.owner !== this.humanId) {
-        this.onOrder({ type: 'attack', ids, targetId: hit.id });
-        return;
-      }
-    }
-    if (hit && hit.owner === null && hit.type === 'building') {
+    if (hit && hit.owner !== this.humanId && hit.owner !== undefined) {
+      // enemy, or a neutral guard/building: attack
       this.onOrder({ type: 'attack', ids, targetId: hit.id });
       return;
     }
@@ -405,7 +376,7 @@ export class Controls {
   cycleDamagedBuilding() {
     const hurt = [...this.world.entities.values()].filter(b =>
       b.type === 'building' && b.owner === this.humanId && b.progress >= 1
-      && b.hp < b.maxHp * 0.6);
+      && b.hp < b.maxHp * REPAIR.damagedFrac);
     if (!hurt.length) return;
     this._hurtCycle = ((this._hurtCycle ?? -1) + 1) % hurt.length;
     const b = hurt[this._hurtCycle];

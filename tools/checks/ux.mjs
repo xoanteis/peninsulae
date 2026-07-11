@@ -1,6 +1,5 @@
 // Verifies the UX round: build gating, auto-construction, mountain hint, region labels.
 export async function run(page, { shot, sleep, report }) {
-  await sleep(900);
 
   // 1. build menu with only a SOLDIER selected still arms (nation owns workers),
   //    and placement drafts the nearest worker so building starts at once

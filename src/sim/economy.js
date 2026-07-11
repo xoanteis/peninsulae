@@ -73,7 +73,7 @@ export function updateEconomy(world, dt) {
     if (f.bonus.caminoIdentity) {
       const converted = Object.values(world.regions)
         .filter(r => r.owner === p.id && r.converted && !r.meta.capitalOf).length;
-      p.res.identity += converted * f.bonus.caminoIdentity * (p.techs?.camino ? 2 : 1) * dt;
+      p.res.identity += converted * f.bonus.caminoIdentity * eraTechMul(p, f, 'caminoMul') * dt;
     }
     // As Minas de Gallaecia: the land's scattered gold, tin and wolfram workings
     // pay a steady trickle — the war-chest an Identity economy can't otherwise raise
@@ -81,7 +81,7 @@ export function updateEconomy(world, dt) {
     // Catalan trade network: markets pay per region held
     if (f.bonus.marketPerRegion && marketOwners.has(p.id)) {
       const owned = perPlayerRegions[p.id] ?? 0;
-      p.res.gold += owned * f.bonus.marketPerRegion * (p.techs?.consolat ? 2 : 1) * dt;
+      p.res.gold += owned * f.bonus.marketPerRegion * eraTechMul(p, f, 'marketMul') * dt;
     }
 
     // era advance timer
@@ -97,27 +97,26 @@ export function updateEconomy(world, dt) {
   }
 }
 
-// Signature techs land when a nation reaches a new era (see GAME_DESIGN.md)
+// Signature techs land when a nation reaches a new era (see GAME_DESIGN.md).
+// Their numbers live in config (factions.eraTechBonus / ERAS), gated on p.era at
+// the use sites — NEVER copy them onto the shared FACTIONS object: writing to it
+// leaks era bonuses across games in one process (it biased the balance harness
+// for months).
 function applyEraTech(world, p) {
-  p.techs ??= {};
   const f = FACTIONS[p.id];
   if (p.era === 1) {
-    // NEVER mutate FACTIONS here — it is a shared module object, and writing to
-    // it leaks era bonuses across games in one process (it biased the balance
-    // harness for months). Signature techs live on the player and are read by
-    // regionConvertCost / regionTribute.
-    switch (p.id) {
-      case 'galicia': p.techs.camino = true; break;              // Camino doubled
-      case 'basque': p.techs.foruak = true; break;               // extra armor
-      case 'catalonia': p.techs.consolat = true; break;          // markets x2, conversions -25%
-      case 'portugal': p.techs.sagres = true; break;             // coastal tribute 1.5
-      case 'castile': p.techs.tercios = true; p.upgrades.dmg += 2; break;
-    }
-    if (p.id === 'basque') p.upgrades.armor += 1;
+    const tech = f.eraTechBonus ?? {};
+    if (tech.dmg) p.upgrades.dmg += tech.dmg;
+    if (tech.armor) p.upgrades.armor += tech.armor;
     world.pushEvent({ type: 'signature_tech', owner: p.id, name: f.eraTech });
   }
   if (p.era === 2) {
     // Golden Age: everyone's workers and soldiers sharpen
-    p.upgrades.dmg += 1;
+    p.upgrades.dmg += ERAS[2].dmg;
   }
+}
+
+// signature-tech multipliers apply once the nation reaches the Kingdom era
+function eraTechMul(p, f, key) {
+  return p.era >= 1 ? (f.eraTechBonus?.[key] ?? 1) : 1;
 }

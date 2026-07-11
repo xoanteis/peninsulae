@@ -1,7 +1,6 @@
 // Verifies the audit fix pack: pause, cancel-train, idle cycle, X-stop, spectate,
 // minimap rect, region-panel warnings, work_pulse, rally flag element.
 export async function run(page, { sleep, report }) {
-  await sleep(900);
 
   report.checks.pack1 = await page.evaluate(() => {
     const g = window.__game, w = g.world, pid = g.controls.humanId;

@@ -10,8 +10,9 @@ import { NODES } from '../config/rules.js';
 const SNAP_EVERY = 20; // seconds of sim time between snapshots
 const BACKUP_EVERY_SNAPS = 3; // localStorage backup cadence (~1 min)
 
-// one row of ints per player per snapshot, in this column order
-export const SNAP_COLS = [
+// one row of ints per player per snapshot, in this column order — written into
+// the log's meta.snapCols; tools/analyze-match.mjs reads it from the log JSON
+const SNAP_COLS = [
   'food', 'wood', 'gold', 'identity', 'pop', 'popCap',
   'workers', 'idleWorkers', 'army', 'regions', 'era', 'lossesArmy', 'lossesWorkers',
 ];
@@ -161,15 +162,6 @@ export class MatchRecorder {
     } catch { /* nothing stored */ }
   }
 
-  attachHotkey() {
-    if (typeof window === 'undefined') return;
-    window.addEventListener('keydown', e => {
-      if (e.code !== 'F2') return;
-      e.preventDefault();
-      if (e.shiftKey) MatchRecorder.downloadBackup();
-      else this.download();
-    });
-  }
 }
 
 function saveFile(text, name) {

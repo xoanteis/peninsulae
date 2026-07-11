@@ -2,17 +2,14 @@
 // typical death) across N games — the diagnostic for "what does the AI actually
 // build with this kit". Pattern: change config/patch, re-run, compare averages.
 //   N=8 node tools/probes/probe_gal.mjs
-import { World } from '../../src/sim/world.js';
-import { AIController } from '../../src/sim/ai.js';
+import { runGame } from '../headless.mjs';
 
-function runGame() {
-  const world = new World('galicia');
-  world.ai.push(new AIController(world, 'galicia')); // nobody idles
+function probe() {
   let snap = null;
-  for (let step = 0; step < 75 * 60 * 10; step++) {
-    world.step();
-    world.events.length = 0;
-    if (!snap && world.time >= 12 * 60) {
+  runGame({
+    minutes: 75,
+    onTick(world) {
+      if (snap || world.time < 12 * 60) return;
       const gal = [...world.entities.values()].filter(e => e.owner === 'galicia');
       const p = world.players.galicia;
       snap = {
@@ -23,16 +20,15 @@ function runGame() {
         regions: Object.values(world.regions).filter(r => r.owner === 'galicia').length,
         gold: Math.round(p.res.gold), alive: p.alive,
       };
-    }
-    if (world.winner) break;
-  }
+    },
+  });
   return snap;
 }
 
 const N = Number(process.env.N || 8);
 const agg = { towers: 0, soldiers: 0, workers: 0, barracks: 0, regions: 0, gold: 0, n: 0 };
 for (let g = 0; g < N; g++) {
-  const s = runGame();
+  const s = probe();
   if (!s) { console.log(`game ${g}: ended before min 12`); continue; }
   for (const k of ['towers', 'soldiers', 'workers', 'barracks', 'regions', 'gold']) agg[k] += s[k];
   agg.n++;

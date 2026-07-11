@@ -16,10 +16,10 @@ import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs
 import { cpus } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { FACTION_IDS as FACTIONS } from '../src/config/factions.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const HISTORY = join(HERE, 'balance-history.jsonl');
-const FACTIONS = ['galicia', 'basque', 'catalonia', 'portugal', 'castile'];
 
 const argv = process.argv.slice(2);
 const flag = name => {

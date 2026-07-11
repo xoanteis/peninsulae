@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { cloneModel } from './assets.js';
 import { FACTIONS } from '../config/factions.js';
+import { tileToWorld } from '../sim/hex.js';
 
 // Feedback effects: flying bolts, dust puffs, order pings, region-flip beams.
 
@@ -96,7 +97,7 @@ export class EffectsRenderer {
       case 'building_complete':
       case 'building_destroyed': {
         const t = ev.type === 'building_destroyed' ? 2.4 : 1.4;
-        const { x, z } = world.regions ? tilePos(ev) : ev;
+        const { x, z } = tileToWorld(ev.col, ev.row); // building events carry col/row
         this.puff(x, z, t, 0.4);
         break;
       }
@@ -146,8 +147,3 @@ export class EffectsRenderer {
   }
 }
 
-function tilePos(ev) {
-  // building events carry col/row
-  const COL = 2.0, ROW = 1.7320508;
-  return { x: ev.col * COL + (ev.row & 1 ? 1 : 0), z: ev.row * ROW };
-}

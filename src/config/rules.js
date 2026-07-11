@@ -82,12 +82,16 @@ export const BUILDINGS = {
     upgrades: true,
     desc: 'Forge upgrades for attack and armor. (Kingdom era)',
   },
+  village: { // neutral region villages — spawned by the sim, never in a build menu
+    name: 'Village', hp: 420, cost: {}, buildTime: 0, model: 'home_B', neutral: true,
+  },
 };
 
 export const ERAS = [
   { name: 'County', },
   { name: 'Kingdom', cost: { food: 250, gold: 120, identity: 80 }, time: 30 },
-  { name: 'Golden Age', cost: { food: 500, gold: 300, identity: 200 }, time: 45 },
+  // dmg: the Golden Age sharpens every nation's blades (applied in applyEraTech)
+  { name: 'Golden Age', cost: { food: 500, gold: 300, identity: 200 }, time: 45, dmg: 1 },
 ];
 
 export const SMITH_UPGRADES = {
@@ -115,6 +119,7 @@ export const REPAIR = {
   hpPerSec: 30,     // per worker on the scaffold
   woodShare: 0.35,  // wood cost of a full 0->max restore, as share of build wood
   fallbackWood: 120, // for buildings with no wood cost (the capital)
+  damagedFrac: 0.6, // below this HP fraction a building counts for the 🔧 badge/cycler
 };
 
 // gathering

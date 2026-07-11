@@ -1,5 +1,4 @@
 export async function run(page, { shot, sleep, report }) {
-  await sleep(700);
 
   // overview of the new 63x46 map
   await page.evaluate(() => { const g = window.__game; g.rig.goalDist = 82; g.rig.jumpTo(63, 40); });

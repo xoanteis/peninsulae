@@ -1,6 +1,6 @@
 // Nation selection screen shown before the world spawns.
 
-import { FACTIONS } from '../config/factions.js';
+import { FACTIONS, cssColor } from '../config/factions.js';
 
 export function pickFaction() {
   const preset = new URLSearchParams(location.search).get('faction');
@@ -15,7 +15,7 @@ export function pickFaction() {
         <p class="fs-sub">Five nations. One Iberia. Only one banner will fly from Fisterra to Cap de Creus.</p>
         <div class="fs-cards">
           ${Object.entries(FACTIONS).map(([id, f]) => `
-            <button class="fs-card" data-id="${id}" style="--fc:#${f.color.toString(16).padStart(6, '0')}">
+            <button class="fs-card" data-id="${id}" style="--fc:${cssColor(f.color)}">
               <span class="fs-crest"></span>
               <span class="fs-name">${f.name}</span>
               <span class="fs-motto">${f.motto}</span>
