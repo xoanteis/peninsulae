@@ -15,7 +15,8 @@ raw tournament JSONL, or old conversations. Bootstrap browser checks once per se
   REPAIR 30hp/s @35% wood · FORESTS REGROW (NODES.wood.regrowTime 210s @ 0.75; 0 disables)
 - map (R19): Pinhal de Leiria (Lisboa +5 forest) · Serra do Alentejo (+2 mtn → 8 mine sites).
   Pre-R19 Lisboa+Alentejo had ZERO forest/mountain — the map, not the kit, was Portugal's 0%.
-- AI meta: era techs PER-PLAYER (p.techs — never mutate FACTIONS!) · nearest-rival targeting
+- AI meta: era techs in config (factions.eraTechBonus + ERAS[2].dmg), gated on p.era at use
+  sites — never mutate FACTIONS! · nearest-rival targeting
   (army x2 deterrence, dominator heat x90) · lateGame 900s, hegemon 660s · early sieges +4 ·
   capital siege recalls army · zombie nations dissolve · trainQueue cap 10
 - UX register (ALL asserted in tools/checks/feedback.mjs — add new UX assertions THERE):
@@ -27,6 +28,15 @@ raw tournament JSONL, or old conversations. Bootstrap browser checks once per se
   signpost rocks (only beside sierra) · icons 🌾🌲💰📜 (pre-2015 emoji ONLY) · real worker
   plurals (unitNames.workers) · command bar on desktop · domination bar right-anchored
 - recorder v2: meta.rules build fingerprint (forestRegrow) + forests cut/grown counters
+- Code-org refactor (2026-07): one definition per rule — capitalStands/enemiesInRegion exported
+  from regions.js; World.unitCost mirrors buildingCost (HUD renders prices from the sim);
+  killUnit/destroyBuilding + bodyRadius in combat.js; collapseNation extracted; village is a
+  BUILDINGS entry (hp patchable); all hotkeys in ui/hotkeys.js (one input guard); minimap and
+  sel-panel are own widgets (ui/minimap.js, ui/selpanel.js; hud keeps delegates for checks);
+  ui/project.js = the one world→screen projection; tools/headless.mjs = the one sim runner
+  (tournament/simtest/probes); verify.mjs owns the post-boot settle + ffwd helper — new check
+  scripts must NOT open with their own sleep. Verified balance-neutral: 60-game dry round
+  reproduced R19 exactly (galicia 38.3 [27.1-51]).
 
 ## Standings (portugal-terrain-full = R19, 60 games, shipped — the reference round)
 galicia 38.3 [27.1-51] · catalonia 28.3 [18.5-40.8] · castile 15 [8.1-26.1] ·

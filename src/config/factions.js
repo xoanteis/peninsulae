@@ -17,6 +17,7 @@ export const FACTIONS = {
       fishRate: 1.5, churchCostMul: 0.7, caminoIdentity: 0.1, // per converted region /s
       capitalHpMul: 1.3, mineralTrickle: 0.15, unitHpMul: 1.15,
     },
+    eraTechBonus: { caminoMul: 2 }, // Camino identity doubled
     aiStyle: { aggression: 0.4, convictionLove: 0.95, expandCoastal: 0.6, economy: 0.7, turtle: 0.7 },
   },
   basque: {
@@ -31,6 +32,7 @@ export const FACTIONS = {
       mineRate: 1.5, buildingHpMul: 1.22, unitHpMul: 1.22,
       foruPact: true, // conquest by pact, not subjugation ('loyal' = stronger variant, untested at scale)
     },
+    eraTechBonus: { armor: 1 }, // the Foruak harden every Basque
     aiStyle: { aggression: 0.65, convictionLove: 0.4, expandCoastal: 0.3, economy: 0.6, turtle: 0.6 },
   },
   catalonia: {
@@ -44,6 +46,7 @@ export const FACTIONS = {
     bonus: {
       buildCostMul: 0.75, marketPerRegion: 0.12, // gold/s per owned region if a market stands
     },
+    eraTechBonus: { marketMul: 2, convertCostMul: 0.75 }, // Consolat: markets ×2, sermons -25%
     aiStyle: { aggression: 0.3, convictionLove: 0.7, expandCoastal: 0.5, economy: 0.95 },
   },
   portugal: {
@@ -59,6 +62,7 @@ export const FACTIONS = {
       // era-tech leak that gave Portugal permanent Sagres — fixed now.
       workerSpeedMul: 1.2, coastalConvertMul: 0.7, coastalTributeMul: 1.25,
     },
+    eraTechBonus: { coastalTributeMul: 1.5 }, // Sagres supersedes the base coastal bonus
     aiStyle: { aggression: 0.5, convictionLove: 0.6, expandCoastal: 1.0, economy: 0.75, turtle: 0.4 },
   },
   castile: {
@@ -72,8 +76,12 @@ export const FACTIONS = {
     bonus: {
       soldierCostMul: 0.75, trainTimeMul: 0.7,
     },
+    eraTechBonus: { dmg: 2 }, // the Tercios arrive
     aiStyle: { aggression: 0.95, convictionLove: 0.2, expandCoastal: 0.2, economy: 0.5 },
   },
 };
 
 export const FACTION_IDS = Object.keys(FACTIONS);
+
+// faction color int -> '#rrggbb' — the one CSS formatter for the UI layer
+export const cssColor = c => `#${c.toString(16).padStart(6, '0')}`;

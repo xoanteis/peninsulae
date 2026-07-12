@@ -1,7 +1,6 @@
 // Regression check for the worker-feedback fix pack: repair->slot handoff,
 // slot-full worker_idle events, labeled slot work_pulses, and the HUD 💤 badge.
 export async function run(page, { sleep, report }) {
-  await sleep(900);
   report.checks.feedback = await page.evaluate(() => {
     const g = window.__game, w = g.world, pid = g.controls.humanId;
     const p = w.players[pid];

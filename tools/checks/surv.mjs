@@ -1,7 +1,6 @@
 // Boot as Galicia: config sanity (fortress capital HP, faction table in help),
 // then a minute of sim to be sure nothing throws with the current config.
 export async function run(page, { shot, sleep, report }) {
-  await sleep(900);
   report.checks.surv = await page.evaluate(() => {
     const g = window.__game, w = g.world;
     const cap = w.entities.get(w.players.galicia.capitalId);

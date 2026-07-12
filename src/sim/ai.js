@@ -6,7 +6,7 @@ import { FACTIONS } from '../config/factions.js';
 import { UNITS, BUILDINGS, ERAS, CONVICTION } from '../config/rules.js';
 import { REGIONS } from '../config/map.js';
 import { worldToTile, hexDistance, neighbors } from './hex.js';
-import { regionConvertCost } from './regions.js';
+import { regionConvertCost, capitalStands } from './regions.js';
 import { nearestForest } from './units.js';
 
 export class AIController {
@@ -266,8 +266,7 @@ export class AIController {
     // pick a target region
     const targets = Object.values(w.regions).filter(r => {
       if (r.owner === this.pid) return false;
-      const capOf = r.meta.capitalOf;
-      if (!endgame && capOf && capOf !== this.pid && r.owner === capOf && w.players[capOf].alive) return false;
+      if (!endgame && r.meta.capitalOf !== this.pid && capitalStands(w, r)) return false;
       return true;
     });
     if (!targets.length) return;
@@ -358,9 +357,8 @@ export class AIController {
     if (!targetRegion || targetRegion.owner === this.pid) return;
 
     // a living nation's home region can only fall with its castle — raze it
-    const capOf = targetRegion.meta.capitalOf;
-    if (capOf && targetRegion.owner === capOf && w.players[capOf].alive) {
-      const cap = w.entities.get(w.players[capOf].capitalId);
+    if (capitalStands(w, targetRegion)) {
+      const cap = w.entities.get(w.players[targetRegion.meta.capitalOf].capitalId);
       // storming a castle early takes a real siege army, not a raiding party
       const needed = assaultSize + (w.time < 900 ? 4 : 0);
       if (cap && army.length >= needed) {

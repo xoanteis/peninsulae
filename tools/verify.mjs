@@ -52,9 +52,19 @@ try {
     report.screenshots.push(p);
   };
 
-  const helpers = { shot, report, sleep: ms => new Promise(r => setTimeout(r, ms)) };
+  // fast-forward the sim in-page (default 9000 ticks = minute 15, armies out),
+  // draining the event backlog so the UI isn't flooded
+  const ffwd = (ticks = 9000) => page.evaluate(n => {
+    const w = window.__game.world;
+    for (let i = 0; i < n; i++) w.step();
+    w.events.length = 0;
+  }, ticks);
 
-  if (report.checks.ready) await page.waitForTimeout(1200); // let loading fade + first frames settle
+  const helpers = { shot, report, ffwd, sleep: ms => new Promise(r => setTimeout(r, ms)) };
+
+  // let loading fade + first frames settle — the ONE post-boot settle; check
+  // scripts must not open with their own sleep
+  if (report.checks.ready) await page.waitForTimeout(1800);
   if (scriptPath) {
     const mod = await import(scriptPath);
     await mod.run(page, helpers);

@@ -3,30 +3,25 @@
 // Chain it into the analyzer to test the whole pipeline:
 //   node tools/probes/recorder-headless.mjs /tmp/m.json && node tools/analyze-match.mjs /tmp/m.json
 import { writeFileSync } from 'node:fs';
-import { World } from '../../src/sim/world.js';
-import { AIController } from '../../src/sim/ai.js';
+import { runGame } from '../headless.mjs';
 import { MatchRecorder } from '../../src/ui/recorder.js';
-import { TICK_MS } from '../../src/config/rules.js';
 
 const out = process.argv[2] || '/tmp/peninsulae-match-test.json';
-const world = new World('galicia');
-world.ai.push(new AIController(world, 'galicia'));
-const rec = new MatchRecorder(world, 'galicia');
+let rec;
 
-// simulate a few human orders through the funnel
-rec.recordOrder({ type: 'move' });
-rec.recordOrder({ type: 'place', kind: 'house' });
-rec.recordOrder({ type: 'amove' });
-rec.recordOrder({ type: 'ui' }); // must be skipped
-
-const maxTicks = 45 * 60000 / TICK_MS;
-for (let t = 0; t < maxTicks; t++) {
-  world.step();
-  for (const ev of world.events) rec.handleEvent(ev);
-  world.events.length = 0;
-  rec.update();
-  if (world.winner) break;
-}
+runGame({
+  minutes: 45,
+  onStart(world) {
+    rec = new MatchRecorder(world, 'galicia');
+    // simulate a few human orders through the funnel
+    rec.recordOrder({ type: 'move' });
+    rec.recordOrder({ type: 'place', kind: 'house' });
+    rec.recordOrder({ type: 'amove' });
+    rec.recordOrder({ type: 'ui' }); // must be skipped
+  },
+  onEvent(ev) { rec.handleEvent(ev); },
+  onTick() { rec.update(); },
+});
 
 const json = rec.serialize();
 const log = JSON.parse(json);

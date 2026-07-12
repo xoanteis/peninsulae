@@ -1,7 +1,11 @@
 // Combat: swings, damage, deaths, tower fire, auto-acquire.
 
 import { UNITS, BUILDINGS } from '../config/rules.js';
-import { worldToTile, hexDistance } from './hex.js';
+
+// melee engagement geometry: how far from a target's center an attacker can
+// stand. The fighting<->toFight handshake in units.js reads the SAME radius —
+// if the two ever diverge, units oscillate between the states.
+export const bodyRadius = t => t.type === 'building' ? 0.95 : 0.3;
 
 export function acquireTarget(world, u) {
   const stats = UNITS[u.kind];
@@ -29,8 +33,7 @@ export function tryAttack(world, u, dt) {
     return;
   }
   const stats = UNITS[u.kind];
-  const targetR = t.type === 'building' ? 0.95 : 0.3;
-  const d = dist(u, t) - targetR;
+  const d = dist(u, t) - bodyRadius(t);
   if (d > stats.range + 0.25) { u.state = 'toFight'; u.path = null; u.chaseGoal = null; return; }
 
   u.facing = Math.atan2(t.x - u.x, t.z - u.z);
@@ -54,7 +57,7 @@ function targetArmor(world, t) {
   return (UNITS[t.kind].armor ?? 0) + (p?.upgrades.armor ?? 0);
 }
 
-export function dealDamage(world, t, dmg, attackerOwner) {
+function dealDamage(world, t, dmg, attackerOwner) {
   if (t.hp <= 0) return;
   t.hp -= dmg;
   t.lastHitAt = world.time;
@@ -103,19 +106,26 @@ function lastAttackerId(world, t, attackerOwner) {
 }
 
 function kill(world, t, attackerOwner) {
-  if (t.type === 'unit') {
-    t.state = 'dying';
-    t.anim = 'die';
-    t.dyingT = 0;
-    t.hp = 0;
-    if (t.owner && UNITS[t.kind]) world.players[t.owner].pop -= UNITS[t.kind].pop;
-    t.owner_atDeath = t.owner;
-    t.owner = '__dead__'; // stop being targetable / counted
-    world.pushEvent({ type: 'unit_died', id: t.id, x: t.x, z: t.z, kind: t.kind, owner: t.owner_atDeath });
-  } else {
-    world.pushEvent({ type: 'building_destroyed', id: t.id, kind: t.kind, owner: t.owner, col: t.col, row: t.row, by: attackerOwner });
-    world.removeEntity(t.id);
-  }
+  if (t.type === 'unit') killUnit(world, t);
+  else destroyBuilding(world, t, attackerOwner);
+}
+
+// THE unit death sequence — combat kills and nation dissolution share it, so any
+// change to death semantics (pop refunds, event fields) lands in one place
+export function killUnit(world, t) {
+  t.state = 'dying';
+  t.anim = 'die';
+  t.dyingT = 0;
+  t.hp = 0;
+  if (t.owner && UNITS[t.kind]) world.players[t.owner].pop -= UNITS[t.kind].pop;
+  t.owner_atDeath = t.owner;
+  t.owner = '__dead__'; // stop being targetable / counted
+  world.pushEvent({ type: 'unit_died', id: t.id, x: t.x, z: t.z, kind: t.kind, owner: t.owner_atDeath });
+}
+
+export function destroyBuilding(world, b, by = null) {
+  world.pushEvent({ type: 'building_destroyed', id: b.id, kind: b.kind, owner: b.owner, col: b.col, row: b.row, by });
+  world.removeEntity(b.id);
 }
 
 export function updateCombat(world, dt) {

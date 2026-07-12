@@ -11,13 +11,8 @@
 // texture count. Analyze PROF_OUT grouped by file/function (V8 cpuprofile JSON).
 import { writeFileSync } from 'node:fs';
 
-export async function run(page, { sleep, report }) {
-  await sleep(1800);
-  await page.evaluate(() => {
-    const w = window.__game.world;
-    for (let i = 0; i < 9000; i++) w.step(); // minute 15 — armies out
-    w.events.length = 0; // don't flood the UI with the backlog
-  });
+export async function run(page, { sleep, report, ffwd }) {
+  await ffwd(); // minute 15 — armies out
   await sleep(500);
 
   await page.evaluate(() => {

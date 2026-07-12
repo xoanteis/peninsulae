@@ -37,7 +37,8 @@ export function regionConvertCost(world, pid, key) {
   let cost = ownsNeighbor ? CONVICTION.adjacentCost : CONVICTION.baseCost;
   if (region.owner && region.resent) cost *= CONVICTION.resentDiscount;
   if (region.coastal && f.bonus.coastalConvertMul) cost *= f.bonus.coastalConvertMul;
-  if (world.players[pid].techs?.consolat) cost *= 0.75; // Consolat de Mar (era tech)
+  // Consolat de Mar (era tech)
+  if (world.players[pid].era >= 1 && f.eraTechBonus?.convertCostMul) cost *= f.eraTechBonus.convertCostMul;
   // empire fatigue: every region past the second makes the next sermon pricier —
   // a message that spread like fire in three valleys strains across a peninsula
   const owned = Object.values(world.regions).filter(r => r.owner === pid).length;
@@ -52,8 +53,9 @@ export function updateRegions(world, dt) {
   }
 }
 
-function enemiesInRegion(world, region, pid) {
-  // armed enemy units near the village suppress conversion
+// armed enemy units near the village suppress conversion — the HUD warns with
+// the same predicate before the identity is spent
+export function enemiesInRegion(world, region, pid) {
   const list = world.unitsNear(region.center.x, region.center.z, 5.5);
   return list.filter(u => u.owner && u.owner !== pid && u.owner !== '__dead__' && u.kind !== 'worker');
 }
@@ -75,11 +77,13 @@ function updateConversion(world, region, dt) {
 
 // A nation's home region cannot change allegiance while its capital stands —
 // you break a nation at its head (raze the castle), not by picketing its square.
-function capitalStands(world, region) {
+// The ONE definition of this rule: conquest, conversion, the AI's target lists
+// and the HUD hint all call it.
+export function capitalStands(world, region) {
   const capOf = region.meta.capitalOf;
   if (!capOf) return false;
   const p = world.players[capOf];
-  return p.alive && region.owner === capOf && world.entities.get(p.capitalId);
+  return !!(p.alive && region.owner === capOf && world.entities.get(p.capitalId));
 }
 
 function updateConquest(world, region, dt) {
@@ -120,7 +124,7 @@ function updateConquest(world, region, dt) {
   }
 }
 
-export function flipRegion(world, region, pid, how) {
+function flipRegion(world, region, pid, how) {
   const prev = region.owner;
   region.owner = pid;
   region.conversion = null;
@@ -166,7 +170,7 @@ export function regionTribute(world, region) {
   let mul = region.resent ? CONVICTION.resentTributeMul : 1;
   if (region.coastal) {
     // Escola de Sagres (era tech) supersedes the base coastal bonus
-    const coastMul = p?.techs?.sagres ? 1.5 : f.bonus.coastalTributeMul;
+    const coastMul = (p?.era >= 1 && f.eraTechBonus?.coastalTributeMul) || f.bonus.coastalTributeMul;
     if (coastMul) mul *= coastMul;
   }
   for (const [k, v] of Object.entries(region.meta.tribute)) out[k] = v * mul;

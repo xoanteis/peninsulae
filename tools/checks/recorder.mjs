@@ -1,7 +1,6 @@
 // Verifies the match recorder: presence, order funnel, snapshot cadence,
 // localStorage backup, and the end-screen save button.
 export async function run(page, { sleep, report }) {
-  await sleep(900);
 
   report.checks.wiring = await page.evaluate(() => {
     const g = window.__game, r = g.recorder;

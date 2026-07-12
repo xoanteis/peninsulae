@@ -18,7 +18,7 @@ function paletteFor(owner) {
   return { color: 'blue', material: getPaletteMaterial('basque') }; // basque
 }
 
-const MODEL_OF_KIND = kind => kind === 'village' ? 'home_B' : (BUILDINGS[kind]?.model ?? 'home_A');
+const MODEL_OF_KIND = kind => BUILDINGS[kind]?.model ?? 'home_A';
 
 export class BuildingRenderer {
   constructor(scene, world) {
@@ -37,11 +37,10 @@ export class BuildingRenderer {
     const modelKind = MODEL_OF_KIND(b.kind);
     const { color, material } = paletteFor(b.owner);
     const grain = modelKind === 'grain'; // farms are neutral models
-    const key = grain || b.kind === 'village' && false ? 'building_grain'
-      : `building_${modelKind}_${color}`;
+    const key = grain ? 'building_grain' : `building_${modelKind}_${color}`;
     let mesh;
     try {
-      mesh = cloneModel(grain ? 'building_grain' : key);
+      mesh = cloneModel(key);
     } catch {
       mesh = cloneModel('building_home_A_blue');
     }
